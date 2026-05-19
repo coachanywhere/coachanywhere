@@ -87,9 +87,9 @@ exports.handler = async (event) => {
     mentorSessRes,
     authUsersRes
   ] = await Promise.all([
-    admin.from("profiles").select("id, role, first_name, last_name, created_at, avatar_url, selected_tier, profile_status, spotlight_active, spotlight_activated_at, tier_status, tier_activated_at"),
+    admin.from("profiles").select("id, role, first_name, last_name, created_at, avatar_url, selected_tier, profile_status, spotlight_active, spotlight_activated_at, spotlight_cancelled_at, spotlight_cancellation_reason, spotlight_cancellation_feedback_offer, tier_status, tier_activated_at, tier_cancelled_at, tier_cancellation_reason, tier_cancellation_feedback_offer"),
     admin.from("submissions").select("id, athlete_id, coach_id, video_url, status, created_at, updated_at"),
-    admin.from("subscriptions").select("id, athlete_id, coach_id, status, package_name, created_at, updated_at"),
+    admin.from("subscriptions").select("id, athlete_id, coach_id, status, package_name, created_at, updated_at, cancelled_at, cancellation_reason, cancellation_feedback_offer"),
     admin.from("athlete_coaches").select("id, athlete_id, coach_id, created_at"),
     admin.from("feedback").select("id, coach_id, athlete_id, created_at"),
     admin.from("mentor_relationships").select("id, mentee_id, mentor_id, mentee_name, mentor_name, status, created_at, updated_at"),
@@ -172,6 +172,45 @@ exports.handler = async (event) => {
   const conversionToPaid = totalAthletes > 0
     ? (athletesWithSub.size / totalAthletes)
     : 0;
+
+  // ── CANCELLATIONS ─────────────────────────────────────────────
+  // Pulled from all three places that record cancellations:
+  //   subscriptions.cancelled_at (athlete packages)
+  //   profiles.tier_cancelled_at (coach tier)
+  //   profiles.spotlight_cancelled_at (spotlight add-on)
+  // Anything within the current calendar month counts toward
+  // 'thisMonthTotal'. Reasons + offer outcomes are aggregated across
+  // all three sources.
+  const cancellations = [];
+  subscriptions.forEach(s => {
+    if (s.cancelled_at) cancellations.push({
+      ts: s.cancelled_at, reason: s.cancellation_reason || "unspecified",
+      offer: s.cancellation_feedback_offer || "none", source: "athlete_sub"
+    });
+  });
+  coaches.forEach(c => {
+    if (c.tier_cancelled_at) cancellations.push({
+      ts: c.tier_cancelled_at, reason: c.tier_cancellation_reason || "unspecified",
+      offer: c.tier_cancellation_feedback_offer || "none", source: "coach_tier"
+    });
+    if (c.spotlight_cancelled_at) cancellations.push({
+      ts: c.spotlight_cancelled_at, reason: c.spotlight_cancellation_reason || "unspecified",
+      offer: c.spotlight_cancellation_feedback_offer || "none", source: "spotlight"
+    });
+  });
+  const thisMonthCancellations = cancellations.filter(c => c.ts >= monthStart);
+  const byReason = {};
+  const bySource = { athlete_sub: 0, coach_tier: 0, spotlight: 0 };
+  const offerOutcomes = {};
+  thisMonthCancellations.forEach(c => {
+    byReason[c.reason]  = (byReason[c.reason] || 0) + 1;
+    bySource[c.source]  = (bySource[c.source] || 0) + 1;
+    offerOutcomes[c.offer] = (offerOutcomes[c.offer] || 0) + 1;
+  });
+  // Latest 10 cancellations for the dashboard list
+  const recentCancellations = cancellations
+    .sort((a,b) => (b.ts || "").localeCompare(a.ts || ""))
+    .slice(0, 10);
 
   // ── MENTOR FUNNEL ─────────────────────────────────────────────
   const mentorRel = {
@@ -324,11 +363,18 @@ exports.handler = async (event) => {
       uploadsThisMonth, completedThisMonth, avgResponseHours,
       conversionToPaid,
 
-      mentorRel, mentorSessions
+      mentorRel, mentorSessions,
+
+      // Cancellations panel data
+      cancellationsThisMonth: thisMonthCancellations.length,
+      cancellationsByReason:  byReason,
+      cancellationsBySource:  bySource,
+      cancellationOfferOutcomes: offerOutcomes
     },
     charts: { weeks },
     topCoaches,
     activityFeed,
+    recentCancellations,
     health: {
       storageBytes, failedSubmissions,
       coachesNoAthletes, athletesNoCoach, unconfirmed

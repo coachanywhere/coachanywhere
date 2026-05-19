@@ -287,6 +287,27 @@
     </div>
   </section>
 
+  <!-- ══ Cancellations panel ══ -->
+  <section>
+    <div class="row-label">Cancellations <span style="color:var(--muted2);font-weight:500;text-transform:none;letter-spacing:0;margin-left:8px;">this month</span></div>
+    <div class="panels-grid">
+      <div class="panel">
+        <div class="panel-title">Cancellation reasons</div>
+        <div class="panel-sub">Across athlete packages, coach tiers, and Spotlight</div>
+        <div id="cancelReasonChart" style="margin-top:12px;">
+          <div class="empty">Loading…</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Recent cancellations</div>
+        <div class="panel-sub">Latest 10 events with their reason + save-offer outcome</div>
+        <div id="cancelList" class="activity-list" style="margin-top:12px;">
+          <div class="empty">Loading…</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ══ ROW 5 — Platform health ══ -->
   <section>
     <div class="row-label">Platform Health</div>
@@ -400,6 +421,7 @@
       renderCharts(data.charts);
       renderTopCoaches(data.topCoaches);
       renderActivity(data.activityFeed);
+      renderCancellations(data.kpis, data.recentCancellations || []);
       renderHealth(data.health);
 
       document.getElementById("lastUpdated").textContent =
@@ -682,6 +704,87 @@
         <div class="insight-ic">${iconFor(i.type)}</div>
         <div class="insight-msg">${escapeHTML(i.message || "")}</div>
       </div>`).join("");
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // RENDER — Cancellations panel
+  // ──────────────────────────────────────────────────────────────
+  const REASON_LABELS = {
+    too_expensive: "Too expensive",
+    not_using:     "Not using it enough",
+    found_another: "Found another service",
+    issue_coach:   "Issue with coach",
+    taking_break:  "Taking a break",
+    other:         "Other",
+    unspecified:   "Unspecified"
+  };
+  const SOURCE_LABELS = {
+    athlete_sub: "Athlete package",
+    coach_tier:  "Coach tier",
+    spotlight:   "Spotlight"
+  };
+
+  function renderCancellations(k, recent){
+    const total = k.cancellationsThisMonth || 0;
+    const reasonChart = document.getElementById("cancelReasonChart");
+    const list        = document.getElementById("cancelList");
+
+    if (!total) {
+      reasonChart.innerHTML = `<div class="empty" style="padding:24px;">
+        <div style="font-weight:700;color:var(--text);margin-bottom:4px;font-size:14px;">No cancellations this month</div>
+        <div>When a user cancels, their reason and any save-offer outcome will appear here.</div>
+      </div>`;
+      list.innerHTML = `<div class="empty">No recent cancellations</div>`;
+      return;
+    }
+
+    // Reason breakdown — sort by count desc, render as horizontal bars
+    const byReason = k.cancellationsByReason || {};
+    const bySource = k.cancellationsBySource || {};
+    const entries = Object.entries(byReason).sort((a,b) => b[1] - a[1]);
+    const max = Math.max(...entries.map(e => e[1]), 1);
+
+    const headlineHTML = `
+      <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:14px;">
+        <div style="font-size:32px;font-weight:800;color:var(--red2);line-height:1;">${total}</div>
+        <div style="font-size:11px;color:var(--muted);">total this month —
+          ${bySource.athlete_sub || 0} athlete · ${bySource.coach_tier || 0} tier · ${bySource.spotlight || 0} spotlight
+        </div>
+      </div>`;
+
+    const barsHTML = entries.map(([reason, count]) => {
+      const pct = (count / max) * 100;
+      const label = REASON_LABELS[reason] || reason;
+      return `
+        <div style="margin-bottom:9px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text);margin-bottom:4px;">
+            <span>${escapeHTML(label)}</span>
+            <span style="color:var(--muted);">${count}</span>
+          </div>
+          <div style="height:6px;border-radius:999px;background:rgba(148,163,184,.12);overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--red),var(--amber));border-radius:999px;"></div>
+          </div>
+        </div>`;
+    }).join("");
+
+    reasonChart.innerHTML = headlineHTML + barsHTML;
+
+    // Recent list
+    list.innerHTML = recent.map(c => {
+      const reason = REASON_LABELS[c.reason] || c.reason;
+      const source = SOURCE_LABELS[c.source] || c.source;
+      const offer  = (c.offer && c.offer !== "none")
+        ? `<span style="font-size:10px;color:var(--blue2);margin-left:6px;">offer: ${escapeHTML(c.offer)}</span>`
+        : "";
+      return `
+        <div class="activity-item">
+          <div class="activity-dot" style="background:var(--red2);"></div>
+          <div class="activity-text">
+            <strong style="color:#f1f5f9;">${escapeHTML(source)}</strong> — ${escapeHTML(reason)}${offer}
+          </div>
+          <div class="activity-ts">${timeAgo(c.ts)}</div>
+        </div>`;
+    }).join("");
   }
 
   // ──────────────────────────────────────────────────────────────
