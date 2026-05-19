@@ -4,514 +4,507 @@
   <meta charset="UTF-8"/>
   <title>Find a Coach Mentor – CoachAnywhere</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="description" content="Connect with elite coach mentors on CoachAnywhere. Weekly group sessions, 1-on-1 video reviews and coaching philosophy guidance for coaches at every level."/>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
   <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
-    :root{--amber:#fbbf24;--blue:#3b82f6;--purple:#a78bfa;--text:#e5e7eb;--muted:#94a3b8;--border:rgba(148,163,184,.15);--transition:160ms ease-out;--card:rgba(11,18,44,.85);}
-    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 0%,#1a0a2e 0%,#0a0620 40%,#020617 100%);color:var(--text);min-height:100vh;}
+    :root{
+      --bg:#020617;--bg2:#020B24;--bg3:#1a0f00;
+      --card:rgba(15,23,42,.78);--card2:rgba(15,23,42,.92);
+      --border:rgba(148,163,184,.16);--border-strong:rgba(148,163,184,.3);
+      --text:#e5e7eb;--muted:#94a3b8;--muted2:#64748b;
+      --amber:#fbbf24;--amber2:#d97706;--amber3:#f59e0b;
+      --blue:#3b82f6;--blue2:#60a5fa;
+      --green:#22c55e;--green2:#86efac;
+      --red:#ef4444;
+      --purple:#a78bfa;
+      --tr:160ms ease-out;
+    }
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+      background:radial-gradient(circle at 20% 0%,var(--bg3) 0%,var(--bg2) 50%,var(--bg) 100%);
+      color:var(--text);min-height:100vh;line-height:1.5;
+    }
     a{text-decoration:none;color:inherit;}
+    button{font-family:inherit;cursor:pointer;}
 
-    /* NAV */
-    header{position:sticky;top:0;z-index:20;backdrop-filter:blur(18px);background:linear-gradient(to bottom,rgba(3,7,18,.97),rgba(3,7,18,.9),transparent);border-bottom:1px solid rgba(139,92,246,.25);}
-    .nav{display:flex;align-items:center;justify-content:space-between;padding:12px 32px;max-width:1400px;margin:0 auto;}
+    /* ── HEADER ── */
+    header{
+      position:sticky;top:0;z-index:20;backdrop-filter:blur(18px);
+      background:linear-gradient(to bottom,rgba(3,7,18,.96),rgba(3,7,18,.88));
+      border-bottom:1px solid rgba(180,83,9,.3);
+    }
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;max-width:1400px;margin:0 auto;}
     .nav-wordmark{font-size:18px;font-weight:800;letter-spacing:.04em;color:#fff;text-transform:uppercase;}
-    .nav-wordmark span{color:#60a5fa;}
+    .nav-wordmark span{color:var(--blue2);}
     .nav-right{display:flex;align-items:center;gap:14px;}
-    .nav-back{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:5px;transition:color var(--transition);}
+    .nav-back{
+      font-size:13px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;
+      transition:color var(--tr);
+    }
     .nav-back:hover{color:#fff;}
     .nav-back svg{width:14px;height:14px;}
 
-    /* HERO */
-    .page-hero{max-width:1400px;margin:0 auto;padding:40px 32px 28px;}
-    .hero-inner{border-radius:22px;padding:36px 40px;background:linear-gradient(135deg,rgba(109,40,217,.18),rgba(139,92,246,.1),rgba(15,23,42,.4));border:1px solid rgba(167,139,250,.2);position:relative;overflow:hidden;margin-bottom:28px;}
-    .hero-inner::before{content:'';position:absolute;top:-80px;right:-80px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.12),transparent 70%);pointer-events:none;}
-    .hero-inner::after{content:'';position:absolute;bottom:-60px;left:60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(109,40,217,.08),transparent 70%);pointer-events:none;}
-    .hero-eyebrow{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:rgba(139,92,246,.15);border:1px solid rgba(167,139,250,.3);font-size:11px;font-weight:700;color:#c4b5fd;text-transform:uppercase;letter-spacing:.14em;margin-bottom:16px;}
-    .hero-title{font-size:clamp(28px,4vw,44px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:10px;line-height:1.1;}
-    .hero-title span{color:#c4b5fd;}
-    .hero-sub{font-size:15px;color:rgba(226,232,240,.65);max-width:560px;line-height:1.65;margin-bottom:24px;}
-    .hero-features{display:flex;gap:20px;flex-wrap:wrap;}
-    .hero-feature{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(226,232,240,.8);}
-    .hero-feature svg{width:16px;height:16px;color:#a78bfa;flex-shrink:0;}
-    .hero-stats{display:flex;gap:28px;margin-top:20px;padding-top:20px;border-top:1px solid rgba(167,139,250,.15);}
-    .hero-stat-val{font-size:22px;font-weight:800;color:#f9fafb;}
-    .hero-stat-label{font-size:11px;color:var(--muted);}
+    /* ── HERO ── */
+    .page-wrap{max-width:1300px;margin:0 auto;padding:28px 32px 80px;}
+    .hero{
+      border-radius:18px;padding:32px 36px;margin-bottom:24px;
+      background:linear-gradient(135deg,rgba(180,83,9,.18),rgba(251,191,36,.04),rgba(15,23,42,.4));
+      border:1px solid rgba(251,191,36,.22);
+      position:relative;overflow:hidden;
+    }
+    .hero::before{
+      content:'';position:absolute;top:-100px;right:-100px;width:340px;height:340px;border-radius:50%;
+      background:radial-gradient(circle,rgba(251,191,36,.1),transparent 70%);pointer-events:none;
+    }
+    .hero-eyebrow{
+      display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:999px;
+      background:rgba(234,179,8,.12);border:1px solid rgba(251,191,36,.3);
+      font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.16em;
+      margin-bottom:14px;
+    }
+    .hero-title{font-size:clamp(24px,3.6vw,36px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:8px;line-height:1.15;}
+    .hero-title span{color:var(--amber);}
+    .hero-sub{font-size:14px;color:rgba(226,232,240,.7);max-width:600px;line-height:1.7;}
 
-    /* WHAT IS MENTOR */
-    .mentor-explainer{max-width:1400px;margin:0 auto;padding:0 32px 28px;}
-    .explainer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-    .explainer-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative;overflow:hidden;}
-    .explainer-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0;}
-    .explainer-card.purple::before{background:linear-gradient(90deg,#7c3aed,#a78bfa);}
-    .explainer-card.blue::before{background:linear-gradient(90deg,#2563eb,#60a5fa);}
-    .explainer-card.amber::before{background:linear-gradient(90deg,#d97706,#fbbf24);}
-    .explainer-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
-    .explainer-icon svg{width:20px;height:20px;}
-    .explainer-icon.purple{background:rgba(139,92,246,.15);color:#a78bfa;}
-    .explainer-icon.blue{background:rgba(37,99,235,.15);color:#60a5fa;}
-    .explainer-icon.amber{background:rgba(234,179,8,.12);color:#fbbf24;}
-    .explainer-title{font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:6px;}
-    .explainer-desc{font-size:13px;color:rgba(226,232,240,.7);line-height:1.65;}
+    /* ── FILTERS ── */
+    .filters{
+      display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+      background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:12px 16px;margin-bottom:18px;
+    }
+    .filter-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:4px;}
+    .filter-select{
+      padding:8px 12px;border-radius:8px;border:1px solid var(--border);
+      background:rgba(255,255,255,.04);color:var(--text);
+      font-size:13px;font-family:inherit;outline:none;
+      transition:border-color var(--tr);
+    }
+    .filter-select:hover,.filter-select:focus{border-color:var(--amber);}
+    .filter-spacer{flex:1;}
+    .filter-count{font-size:12px;color:var(--muted);}
 
-    /* FILTERS */
-    .filters-wrap{max-width:1400px;margin:0 auto;padding:0 32px 20px;}
-    .filters-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:rgba(11,18,44,.7);border:1px solid var(--border);border-radius:14px;padding:16px 20px;}
-    .filter-group{display:flex;flex-direction:column;gap:5px;}
-    .filter-label{font-size:10px;font-weight:700;color:rgba(148,163,184,.6);text-transform:uppercase;letter-spacing:.1em;}
-    .filter-select{padding:8px 12px;border-radius:9px;border:1px solid var(--border);background:rgba(15,23,42,.9);color:#f1f5f9;font-size:13px;font-family:inherit;outline:none;cursor:pointer;min-width:130px;transition:border-color var(--transition);}
-    .filter-select:focus{border-color:rgba(167,139,250,.5);}
-    .filter-select option{background:#0d1b3e;}
-    .filters-right{margin-left:auto;display:flex;gap:10px;align-items:flex-end;}
-    .filter-reset{padding:8px 14px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;transition:all var(--transition);align-self:flex-end;}
-    .filter-reset:hover{border-color:#fff;color:#fff;}
-    .results-count{font-size:12px;color:var(--muted);align-self:flex-end;white-space:nowrap;}
+    /* ── CARD GRID ── */
+    .mentor-grid{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+    }
+    .mentor-card{
+      background:var(--card);border:1px solid var(--border);border-radius:16px;
+      padding:22px;transition:border-color var(--tr),transform var(--tr);
+      display:flex;flex-direction:column;
+    }
+    .mentor-card:hover{border-color:var(--amber);transform:translateY(-2px);}
+    .mc-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;}
+    .mc-avatar{
+      width:64px;height:64px;border-radius:50%;flex-shrink:0;
+      background:linear-gradient(135deg,#d97706,#92400e);
+      color:#fff;font-weight:800;font-size:21px;
+      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;border:2px solid rgba(251,191,36,.4);
+    }
+    .mc-avatar img{width:100%;height:100%;object-fit:cover;}
+    .mc-name{font-size:16px;font-weight:800;color:#f9fafb;margin-bottom:4px;letter-spacing:-.01em;}
+    .mc-meta{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .level-badge{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:3px 9px;border-radius:6px;font-size:10px;font-weight:700;
+      background:rgba(234,179,8,.13);color:var(--amber);
+      border:1px solid rgba(251,191,36,.35);letter-spacing:.06em;
+    }
+    .mc-rating{color:var(--amber);font-weight:700;}
+    .mc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;}
+    .mc-tag{
+      font-size:10px;padding:3px 8px;border-radius:999px;
+      background:rgba(234,179,8,.08);color:var(--amber);
+      border:1px solid rgba(251,191,36,.2);font-weight:600;
+    }
+    .mc-bio{font-size:12px;color:rgba(226,232,240,.75);line-height:1.6;margin-bottom:16px;flex:1;}
+    .mc-bio-clip{
+      display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+    }
+    .mc-actions{display:flex;gap:8px;margin-top:auto;}
+    .btn{
+      padding:9px 14px;border-radius:9px;font-size:12px;font-weight:600;
+      border:1px solid var(--border-strong);background:rgba(255,255,255,.03);
+      color:var(--text);transition:all var(--tr);
+      display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;
+    }
+    .btn:hover{background:rgba(255,255,255,.07);border-color:var(--amber);}
+    .btn.primary{
+      background:linear-gradient(135deg,var(--amber),var(--amber2));
+      border-color:transparent;color:#fff;
+      box-shadow:0 6px 16px rgba(180,83,9,.3);
+    }
+    .btn.primary:hover{transform:translateY(-1px);border-color:transparent;}
+    .btn.requested{
+      background:rgba(34,197,94,.12);color:var(--green2);
+      border-color:rgba(34,197,94,.3);cursor:default;
+    }
+    .btn.requested:hover{transform:none;}
+    .btn:disabled{opacity:.6;cursor:wait;}
 
-    /* MENTOR GRID */
-    .section-wrap{max-width:1400px;margin:0 auto;padding:0 32px 60px;}
-    .mentor-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;}
+    /* ── EMPTY STATE ── */
+    .empty-state{
+      padding:60px 30px;text-align:center;color:var(--muted);
+      background:var(--card);border:1px solid var(--border);border-radius:16px;
+    }
+    .empty-state h3{font-size:18px;font-weight:800;color:#f9fafb;margin-bottom:8px;}
+    .empty-state p{font-size:13px;line-height:1.7;max-width:420px;margin:0 auto;}
 
-    /* MENTOR CARD */
-    .mentor-card{background:linear-gradient(160deg,rgba(13,20,50,.92),rgba(9,14,35,.96));border:1px solid rgba(167,139,250,.2);border-radius:20px;overflow:hidden;cursor:pointer;transition:transform var(--transition),border-color var(--transition),box-shadow var(--transition);position:relative;display:flex;flex-direction:column;}
-    .mentor-card:hover{transform:translateY(-5px);border-color:rgba(167,139,250,.5);box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 20px rgba(139,92,246,.1);}
-    .mentor-photo{width:100%;height:200px;object-fit:cover;object-position:center top;display:block;}
-    .mentor-photo-placeholder{width:100%;height:200px;display:flex;align-items:center;justify-content:center;font-size:52px;font-weight:800;color:#c4b5fd;background:linear-gradient(135deg,#2d1b69,#1a0f40);}
-    .mentor-badge-wrap{position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:5px;}
-    .mentor-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
-    .badge-mentor{background:rgba(139,92,246,.9);color:#fff;}
-    .badge-sport{background:rgba(0,0,0,.65);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);color:rgba(226,232,240,.85);}
-    .mentor-tier-badge{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
-    .tier-3{background:rgba(180,83,9,.85);border:1px solid rgba(251,191,36,.5);color:#fde68a;}
-    .tier-4{background:rgba(17,24,39,.9);border:1px solid rgba(251,191,36,.8);color:#fbbf24;}
+    /* ── MODAL ── */
+    .modal-overlay{
+      position:fixed;inset:0;background:rgba(2,6,23,.78);backdrop-filter:blur(10px);
+      display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
+    }
+    .modal-overlay.open{display:flex;}
+    .modal{
+      width:100%;max-width:520px;
+      background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(9,14,35,.99));
+      border:1px solid var(--border-strong);border-radius:18px;padding:28px;
+      box-shadow:0 30px 80px rgba(0,0,0,.6);
+      max-height:90vh;overflow-y:auto;
+    }
+    .modal h2{font-size:20px;font-weight:800;color:#f9fafb;margin-bottom:6px;}
+    .modal .sub{font-size:13px;color:var(--muted);margin-bottom:18px;}
+    .modal-field{margin-bottom:14px;}
+    .modal-field-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+    .modal-field-value{font-size:13px;color:var(--text);}
+    .modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
 
-    .mentor-body{padding:16px;flex:1;display:flex;flex-direction:column;gap:10px;}
-    .mentor-name{font-size:17px;font-weight:800;color:#f9fafb;letter-spacing:-.01em;}
-    .mentor-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-    .star-rating{display:flex;align-items:center;gap:4px;}
-    .stars{display:flex;gap:1px;}
-    .star{width:11px;height:11px;color:#fbbf24;}
-    .star.empty{color:rgba(148,163,184,.25);}
-    .rating-val{font-size:12px;font-weight:700;color:#f9fafb;}
-    .rating-count{font-size:11px;color:var(--muted);}
-    .mentor-tagline{font-size:13px;color:rgba(226,232,240,.75);line-height:1.55;font-style:italic;}
-    .mentor-includes{display:flex;flex-direction:column;gap:5px;}
-    .mentor-include{display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(226,232,240,.8);}
-    .mentor-include svg{width:12px;height:12px;color:#a78bfa;flex-shrink:0;}
-    .mentor-footer{margin-top:auto;padding-top:10px;border-top:1px solid rgba(148,163,184,.08);display:flex;align-items:center;justify-content:space-between;}
-    .mentor-price{font-size:13px;color:var(--muted);}
-    .mentor-price strong{font-size:15px;font-weight:800;color:#c4b5fd;}
-    .view-btn{padding:7px 14px;border-radius:999px;background:linear-gradient(135deg,#6d28d9,#4c1d95);color:#fff;font-size:12px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all var(--transition);}
-    .view-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(109,40,217,.4);}
-
-    /* EMPTY */
-    .empty-state{text-align:center;padding:60px 20px;grid-column:1/-1;}
-    .empty-title{font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:6px;}
-    .empty-sub{font-size:14px;color:var(--muted);}
-
-    /* SKELETON */
-    .skeleton{border-radius:20px;background:rgba(15,23,42,.6);border:1px solid var(--border);overflow:hidden;animation:shimmer 1.5s ease-in-out infinite;}
-    .skeleton-photo{height:200px;background:rgba(255,255,255,.04);}
-    .skeleton-body{padding:16px;display:flex;flex-direction:column;gap:10px;}
-    .skeleton-line{height:12px;border-radius:6px;background:rgba(255,255,255,.05);}
-    .skeleton-line.w70{width:70%;}.skeleton-line.w40{width:40%;}.skeleton-line.w55{width:55%;}
-    @keyframes shimmer{0%,100%{opacity:.6}50%{opacity:1}}
-
-    /* MODAL */
-    .modal-overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(2,6,23,.88);backdrop-filter:blur(10px);overflow-y:auto;padding:40px 20px;}
-    .modal-overlay.open{display:flex;align-items:flex-start;justify-content:center;}
-    .modal{background:linear-gradient(145deg,#0d1b3e,#060f26);border:1px solid rgba(167,139,250,.2);border-radius:24px;width:100%;max-width:700px;overflow:hidden;}
-    .modal-photo{width:100%;height:260px;object-fit:cover;object-position:center top;display:block;}
-    .modal-photo-placeholder{width:100%;height:260px;display:flex;align-items:center;justify-content:center;font-size:80px;font-weight:800;color:#c4b5fd;background:linear-gradient(135deg,#2d1b69,#1a0f40);}
-    .modal-body{padding:28px;}
-    .modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;}
-    .modal-name{font-size:28px;font-weight:800;color:#f9fafb;letter-spacing:-.02em;}
-    .modal-close{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:var(--muted);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--transition);flex-shrink:0;}
-    .modal-close:hover{background:rgba(255,255,255,.15);color:#fff;}
-    .modal-section{margin-bottom:22px;}
-    .modal-section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;}
-    .modal-bio{font-size:14px;color:rgba(226,232,240,.85);line-height:1.75;}
-
-    /* PACKAGES IN MODAL */
-    .pkg-list{display:flex;flex-direction:column;gap:10px;}
-    .pkg-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:12px;background:rgba(139,92,246,.06);border:1px solid rgba(167,139,250,.15);}
-    .pkg-row-left{}
-    .pkg-row-name{font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:3px;}
-    .pkg-row-desc{font-size:12px;color:var(--muted);}
-    .pkg-row-price{font-size:18px;font-weight:800;color:#c4b5fd;flex-shrink:0;margin-left:14px;}
-
-    /* ZOOM SESSION BOX */
-    .zoom-box{background:rgba(37,99,235,.06);border:1px solid rgba(59,130,246,.2);border-radius:12px;padding:16px;display:flex;align-items:flex-start;gap:14px;}
-    .zoom-icon{width:40px;height:40px;border-radius:10px;background:rgba(37,99,235,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .zoom-icon svg{width:20px;height:20px;color:#60a5fa;}
-    .zoom-title{font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:4px;}
-    .zoom-desc{font-size:12px;color:var(--muted);line-height:1.55;}
-    .zoom-schedule{font-size:12px;font-weight:600;color:#60a5fa;margin-top:6px;}
-
-    /* SUBSCRIBE BTN */
-    .subscribe-btn{width:100%;padding:15px;border-radius:999px;background:linear-gradient(135deg,#6d28d9,#4c1d95);color:#fff;font-weight:700;font-size:16px;border:none;cursor:pointer;box-shadow:0 14px 35px rgba(109,40,217,.4);transition:all var(--transition);font-family:inherit;margin-top:6px;}
-    .subscribe-btn:hover{transform:translateY(-2px);box-shadow:0 18px 42px rgba(109,40,217,.6);}
-    .subscribe-sub{text-align:center;margin-top:10px;font-size:12px;color:rgba(148,163,184,.5);}
-
-    /* REVIEWS */
-    .reviews-list{display:flex;flex-direction:column;gap:10px;}
-    .review-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
-    .review-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-    .review-author{font-size:13px;font-weight:700;color:#f1f5f9;}
-    .review-date{font-size:11px;color:var(--muted);}
-    .review-text{font-size:13px;color:rgba(226,232,240,.82);line-height:1.6;}
-
-    footer{border-top:1px solid rgba(139,92,246,.2);background:rgba(3,7,18,.8);padding:16px 32px;text-align:center;font-size:11px;color:rgba(148,163,184,.5);}
-
-    @media(max-width:900px){.mentor-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.explainer-grid{grid-template-columns:1fr;}}
-    @media(max-width:600px){.mentor-grid{grid-template-columns:minmax(0,1fr);}.nav{padding:10px 16px;}.page-hero,.filters-wrap,.section-wrap,.mentor-explainer{padding-left:16px;padding-right:16px;}}
+    /* ── RESPONSIVE ── */
+    @media(max-width:1000px){.mentor-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:680px){
+      .mentor-grid{grid-template-columns:1fr;}
+      .nav{padding:12px 16px;}
+      .page-wrap{padding:20px 14px 60px;}
+      .hero{padding:24px 22px;}
+      .filters{padding:10px 12px;}
+    }
   </style>
 </head>
 <body>
 
 <header>
   <div class="nav">
-    <a href="index.html" class="nav-wordmark">COACH<span>ANYWHERE</span></a>
+    <a class="nav-wordmark" href="index.html">COACH<span>ANYWHERE</span></a>
     <div class="nav-right">
-      <a href="coach-dashboard.html" class="nav-back" onclick="if(document.referrer&&history.length>1){history.back();return false;}">
+      <a class="nav-back" href="coach-dashboard.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        Back
+        Back to dashboard
       </a>
     </div>
   </div>
 </header>
 
-<!-- HERO -->
-<div class="page-hero">
-  <div class="hero-inner">
+<div class="page-wrap">
+
+  <!-- HERO -->
+  <div class="hero">
     <div class="hero-eyebrow">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-      Coach Mentor Program
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Coach Mentorship
     </div>
-    <h1 class="hero-title">Learn from coaches<br/>who've <span>been there</span></h1>
-    <p class="hero-sub">Connect with elite-level coach mentors for 1-on-1 video session reviews, weekly group Zoom discussions and the coaching knowledge you can't get from a certificate.</p>
-    <div class="hero-features">
-      <div class="hero-feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1-on-1 session reviews</div>
-      <div class="hero-feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Weekly group Zoom</div>
-      <div class="hero-feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Coaching philosophy guidance</div>
-      <div class="hero-feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Available to all coach tiers</div>
+    <div class="hero-title">Find a Coach <span>Mentor</span></div>
+    <div class="hero-sub">
+      Browse Elite (Level 3) and Verified Elite (Level 4) coaches who mentor other coaches. Request a mentor to begin a guided development relationship — they'll see your request in their inbox and accept when ready.
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <span class="filter-label">Sport</span>
+    <select class="filter-select" id="sportFilter">
+      <option value="">All sports</option>
+    </select>
+    <span class="filter-label">Level</span>
+    <select class="filter-select" id="levelFilter">
+      <option value="">All levels</option>
+      <option value="Level 3">Level 3 — Elite</option>
+      <option value="Level 4">Level 4 — Verified Elite</option>
+    </select>
+    <span class="filter-label">Sort</span>
+    <select class="filter-select" id="sortFilter">
+      <option value="newest">Newest</option>
+      <option value="level">Level (high → low)</option>
+      <option value="name">Name (A → Z)</option>
+    </select>
+    <span class="filter-spacer"></span>
+    <span class="filter-count" id="filterCount">Loading…</span>
+  </div>
+
+  <!-- GRID -->
+  <div id="gridWrap">
+    <div class="empty-state">
+      <h3>Loading mentors…</h3>
+      <p>Fetching coaches eligible to mentor.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ VIEW PROFILE MODAL ══ -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal" id="profileModalBody">
+    <h2 id="pmName">—</h2>
+    <div class="sub" id="pmTier">—</div>
+
+    <div class="modal-field">
+      <div class="modal-field-label">About</div>
+      <div class="modal-field-value" id="pmBio">—</div>
+    </div>
+    <div class="modal-field">
+      <div class="modal-field-label">Sport</div>
+      <div class="modal-field-value" id="pmSport">—</div>
+    </div>
+    <div class="modal-field">
+      <div class="modal-field-label">Coaching style</div>
+      <div class="modal-field-value" id="pmStyle">—</div>
+    </div>
+    <div class="modal-field">
+      <div class="modal-field-label">Qualifications</div>
+      <div class="modal-field-value" id="pmQual">—</div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn" onclick="closeProfile()">Close</button>
+      <button class="btn primary" id="pmRequestBtn" onclick="requestFromModal()">Request as mentor</button>
     </div>
   </div>
 </div>
-
-<!-- WHAT'S INCLUDED -->
-<div class="mentor-explainer">
-  <div class="explainer-grid">
-    <div class="explainer-card purple">
-      <div class="explainer-icon purple">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-      </div>
-      <div class="explainer-title">1-on-1 Session Reviews</div>
-      <div class="explainer-desc">Upload one of your own coaching sessions or a video of you coaching athletes. Your mentor reviews it, annotates with the same tools coaches use for athletes, and sends back detailed feedback on your technique and approach.</div>
-    </div>
-    <div class="explainer-card blue">
-      <div class="explainer-icon blue">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      </div>
-      <div class="explainer-title">Weekly Group Zoom</div>
-      <div class="explainer-desc">Join your mentor's weekly group session with up to 8 coaches. Discuss coaching philosophy, review game tape together, work through difficult athlete situations and build your network. Max 8 coaches per group for an intimate experience.</div>
-    </div>
-    <div class="explainer-card amber">
-      <div class="explainer-icon amber">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 .99h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-      </div>
-      <div class="explainer-title">Coaching Philosophy Guidance</div>
-      <div class="explainer-desc">Go beyond X's and O's. Your mentor helps you develop your coaching identity — how you communicate with athletes, build trust, handle pressure situations and grow an online coaching business that lasts.</div>
-    </div>
-  </div>
-</div>
-
-<!-- FILTERS -->
-<div class="filters-wrap">
-  <div class="filters-bar">
-    <div class="filter-group">
-      <div class="filter-label">Sport</div>
-      <select class="filter-select" id="filterSport" onchange="applyFilters()">
-        <option value="">All sports</option>
-        <option>Basketball</option><option>AFL</option><option>Soccer</option>
-        <option>Tennis</option><option>Cricket</option><option>Netball</option>
-        <option>Volleyball</option><option>Rugby / League</option><option>Golf</option>
-        <option>Athletics</option><option>Swimming</option><option>Strength & Conditioning</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <div class="filter-label">Experience level</div>
-      <select class="filter-select" id="filterTier" onchange="applyFilters()">
-        <option value="">Any level</option>
-        <option value="Level 3">Level 3 — Elite</option>
-        <option value="Level 4">Level 4 — Verified Elite</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <div class="filter-label">Price</div>
-      <select class="filter-select" id="filterPrice" onchange="applyFilters()">
-        <option value="">Any price</option>
-        <option value="0-100">Under $100/mo</option>
-        <option value="100-200">$100–$200/mo</option>
-        <option value="200-999">$200+/mo</option>
-      </select>
-    </div>
-    <div class="filters-right">
-      <div class="filter-group">
-        <div class="filter-label">Sort by</div>
-        <select class="filter-select" id="sortBy" onchange="applyFilters()">
-          <option value="featured">Featured</option>
-          <option value="rating">Highest rated</option>
-          <option value="price-low">Price: Low → High</option>
-        </select>
-      </div>
-      <button class="filter-reset" onclick="resetFilters()">Reset</button>
-      <div class="results-count" id="resultsCount"></div>
-    </div>
-  </div>
-</div>
-
-<!-- MENTOR GRID -->
-<div class="section-wrap">
-  <div class="mentor-grid" id="mentorGrid">
-    <div class="skeleton"><div class="skeleton-photo"></div><div class="skeleton-body"><div class="skeleton-line w70"></div><div class="skeleton-line w40"></div><div class="skeleton-line w55"></div></div></div>
-    <div class="skeleton"><div class="skeleton-photo"></div><div class="skeleton-body"><div class="skeleton-line w70"></div><div class="skeleton-line w40"></div><div class="skeleton-line w55"></div></div></div>
-    <div class="skeleton"><div class="skeleton-photo"></div><div class="skeleton-body"><div class="skeleton-line w70"></div><div class="skeleton-line w40"></div><div class="skeleton-line w55"></div></div></div>
-  </div>
-</div>
-
-<!-- MODAL -->
-<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
-  <div class="modal"><div id="modalContent"></div></div>
-</div>
-
-<footer>© CoachAnywhere. Built for every athlete, Australia wide.</footer>
 
 <script>
-  const SUPABASE_URL="https://rtaxjewvshhpdnkpojjn.supabase.co";
-  const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
-  const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  // ──────────────────────────────────────────────────────────────
+  // CONFIG
+  // ──────────────────────────────────────────────────────────────
+  const SB_URL = "https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const sb = window.supabase.createClient(SB_URL, SB_KEY, {
+    auth:{ persistSession:true, autoRefreshToken:true, storageKey:"ca-auth", storage:window.localStorage, detectSessionInUrl:true }
+  });
 
-  let allMentors=[], currentUser=null, coachProfile=null;
+  let currentUser  = null;
+  let allMentors   = [];
+  let myRequests   = new Map(); // mentor_id -> status (pending/active/inactive)
+  let modalMentor  = null;
 
-  const SPORT_EMOJI={"Basketball":"🏀","AFL":"🏉","Soccer":"⚽","Tennis":"🎾","Cricket":"🏏","Netball":"🏐","Volleyball":"🏐","Rugby / League":"🏉","Golf":"⛳","Gymnastics":"🤸","Athletics":"🏃","Swimming":"🏊","Strength & Conditioning":"💪","Other":"🎯"};
-
-  async function init(){
-    const {data:{session}}=await supabase.auth.getSession();
-    if(session){
-      currentUser=session.user;
-      const {data:p}=await supabase.from("profiles").select("*").eq("id",session.user.id).single();
-      coachProfile=p;
+  // ──────────────────────────────────────────────────────────────
+  // INIT — coach auth required
+  // ──────────────────────────────────────────────────────────────
+  (async () => {
+    let session = null;
+    for (let i = 0; i < 12 && !session; i++) {
+      const { data } = await sb.auth.getSession();
+      if (data.session) { session = data.session; break; }
+      await new Promise(r => setTimeout(r, 120));
     }
-    await loadMentors();
-  }
+    if (!session) { window.location.href = "login.html"; return; }
+    currentUser = session.user;
 
-  async function loadMentors(){
-    const {data:mentors}=await supabase
-      .from("profiles")
-      .select("*")
-      .eq("mentor_active",true)
-      .eq("role","coach");
-
-    // If no real mentors yet show demo mentors
-    if(!mentors||mentors.length===0){
-      allMentors=getDemoMentors();
-    } else {
-      allMentors=mentors;
-    }
-    applyFilters();
-  }
-
-  function getDemoMentors(){
-    return [
-      {id:"demo1",first_name:"Marcus",last_name:"Reid",sport:"Soccer",location:"Sydney, NSW",selected_tier:"Level 3 — Elite Coach",mentor_tagline:"10 years at A-League academy level. I'll help you coach the details that actually matter.",mentor_bio:"I've spent a decade coaching at national pathway and A-League academy level. On CoachAnywhere I work with coaches who want to take their technical knowledge and game intelligence to the next level. My mentoring focuses on session design, video analysis skills and how to communicate complex concepts to athletes of all ages.",mentor_rate:149,mentor_group_day:"Every Tuesday",mentor_group_time:"7:00pm AEST",mentor_group_max:8,mentor_group_current:3,mentor_qualifications:"AFC B Licence · A-League Academy Head Coach 2017-2022 · FFA Coaching Director Certificate",headshot_url:"https://ui-avatars.com/api/?name=Marcus+Reid&size=400&background=1e3a5f&color=86efac&bold=true&format=png",rating:4.9,review_count:12},
-      {id:"demo2",first_name:"Daniel",last_name:"Walsh",sport:"Basketball",location:"Perth, WA",selected_tier:"Level 3 — Elite Coach",mentor_tagline:"NBL1 background. I'll help you coach the game at a higher level than where you currently play.",mentor_bio:"After a decade at semi-professional level I transitioned into mentoring coaches because I saw how much knowledge wasn't being passed down. I specialise in helping coaches build their basketball IQ, design practice plans that transfer to game day and use video analysis as a core coaching tool.",mentor_rate:129,mentor_group_day:"Every Wednesday",mentor_group_time:"6:30pm AEST",mentor_group_max:8,mentor_group_current:5,mentor_qualifications:"Basketball Australia Level 3 · NBL1 West Assistant Coach · Graduate Diploma Sports Coaching",headshot_url:"https://ui-avatars.com/api/?name=Daniel+Walsh&size=400&background=1a0f00&color=fde68a&bold=true&format=png",rating:4.8,review_count:8},
-      {id:"demo3",first_name:"Aiden",last_name:"Brooks",sport:"AFL",location:"Melbourne, VIC",selected_tier:"Level 3 — Elite Coach",mentor_tagline:"VFL-level experience. I'll show you how to coach contested ball and decision-making at the next level.",mentor_bio:"A decade coaching VFL and state pathway gave me a very specific lens on what separates good coaches from great ones. I work with coaches on contested ball coaching, defensive systems, and how to get more out of your athletes by coaching smarter rather than just harder.",mentor_rate:119,mentor_group_day:"Every Thursday",mentor_group_time:"7:30pm AEST",mentor_group_max:8,mentor_group_current:2,mentor_qualifications:"AFL Level 2 Coach · VFL Club Assistant Coach · Sports Science Diploma",headshot_url:"https://ui-avatars.com/api/?name=Aiden+Brooks&size=400&background=1e3a5f&color=60a5fa&bold=true&format=png",rating:4.7,review_count:5}
-    ];
-  }
-
-  function applyFilters(){
-    const sport=document.getElementById("filterSport").value;
-    const tier=document.getElementById("filterTier").value;
-    const price=document.getElementById("filterPrice").value;
-    const sort=document.getElementById("sortBy").value;
-
-    let filtered=allMentors.filter(m=>{
-      if(sport&&m.sport!==sport)return false;
-      if(tier&&!(m.selected_tier||"").includes(tier))return false;
-      if(price){const [min,max]=price.split("-").map(Number);const r=m.mentor_rate||0;if(r<min||r>max)return false;}
-      return true;
-    });
-
-    if(sort==="rating")filtered.sort((a,b)=>(b.rating||0)-(a.rating||0));
-    else if(sort==="price-low")filtered.sort((a,b)=>(a.mentor_rate||0)-(b.mentor_rate||0));
-
-    document.getElementById("resultsCount").textContent=filtered.length+" mentor"+(filtered.length!==1?"s":"")+" available";
-    renderGrid(filtered);
-  }
-
-  function resetFilters(){
-    ["filterSport","filterTier","filterPrice"].forEach(id=>document.getElementById(id).value="");
-    document.getElementById("sortBy").value="featured";
-    applyFilters();
-  }
-
-  function renderStars(avg){
-    let html='<div class="stars">';
-    for(let i=1;i<=5;i++){
-      html+=`<svg class="star${i<=Math.round(avg)?"":" empty"}" viewBox="0 0 24 24" fill="${i<=Math.round(avg)?"currentColor":"none"}" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
-    }
-    return html+'</div>';
-  }
-
-  function renderGrid(mentors){
-    const grid=document.getElementById("mentorGrid");
-    if(!mentors.length){
-      grid.innerHTML=`<div class="empty-state"><div class="empty-title">No mentors match your filters</div><div class="empty-sub"><button onclick="resetFilters()" style="background:none;border:none;color:#a78bfa;cursor:pointer;font-size:inherit;">Reset filters</button></div></div>`;
+    const { data: me } = await sb.from("profiles").select("role").eq("id", currentUser.id).maybeSingle();
+    if (!me || me.role !== "coach") {
+      // Athletes look for athlete coaches via select-coach.html, not mentors.
+      window.location.href = me?.role === "athlete" ? "select-coach.html" : "login.html";
       return;
     }
-    const tierCls={"Level 3 — Elite Coach":"tier-3","Level 4 — Verified Elite Coach":"tier-4"};
-    const tierLabel={"Level 3 — Elite Coach":"L3 · Elite","Level 4 — Verified Elite Coach":"L4 · Verified Elite"};
-    grid.innerHTML=mentors.map(m=>{
-      const name=(m.first_name||"")+" "+(m.last_name||"");
-      const initials=((m.first_name||"")[0]+(m.last_name||"")[0]).toUpperCase();
-      const sport=m.sport||"Sport";
-      const emoji=SPORT_EMOJI[sport]||"🎯";
-      const tc=tierCls[m.selected_tier]||"tier-3";
-      const tl=tierLabel[m.selected_tier]||"Elite";
-      const rating=m.rating||0;
-      const spotsLeft=(m.mentor_group_max||8)-(m.mentor_group_current||0);
-      const photoHtml=m.headshot_url
-        ?`<img class="mentor-photo" src="${m.headshot_url}" alt="${name}" loading="lazy"/>`
-        :`<div class="mentor-photo-placeholder">${initials}</div>`;
-      return`<div class="mentor-card" onclick="openModal('${m.id}')">
-        <div style="position:relative;">
-          ${photoHtml}
-          <div class="mentor-badge-wrap">
-            <div class="mentor-badge badge-mentor">
-              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-              Mentor
+
+    await Promise.all([loadMentors(), loadMyRequests()]);
+    renderGrid();
+
+    document.getElementById("sportFilter").addEventListener("change", renderGrid);
+    document.getElementById("levelFilter").addEventListener("change", renderGrid);
+    document.getElementById("sortFilter").addEventListener("change",  renderGrid);
+  })();
+
+  async function loadMentors() {
+    // Mentor-eligible: coaches whose selected_tier starts with "Level 3" or "Level 4".
+    // We don't include the current coach (you can't mentor yourself).
+    const { data, error } = await sb.from("profiles")
+      .select("id, first_name, last_name, avatar_url, selected_tier, sport, bio, coaching_style, qualifications")
+      .eq("role", "coach")
+      .or("selected_tier.ilike.Level 3%,selected_tier.ilike.Level 4%")
+      .neq("id", currentUser.id);
+    if (error) {
+      console.warn("[find-mentor] read failed:", error.message);
+      allMentors = [];
+      return;
+    }
+    allMentors = data || [];
+
+    // Populate sport filter from the real data
+    const sports = [...new Set(allMentors.map(m => m.sport).filter(Boolean))].sort();
+    const sel = document.getElementById("sportFilter");
+    sports.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s; opt.textContent = s;
+      sel.appendChild(opt);
+    });
+  }
+
+  async function loadMyRequests() {
+    const { data } = await sb.from("mentor_relationships")
+      .select("mentor_id, status")
+      .eq("mentee_id", currentUser.id);
+    (data || []).forEach(r => myRequests.set(r.mentor_id, r.status));
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // RENDER
+  // ──────────────────────────────────────────────────────────────
+  function renderGrid() {
+    const sport = document.getElementById("sportFilter").value;
+    const level = document.getElementById("levelFilter").value;
+    const sort  = document.getElementById("sortFilter").value;
+
+    let rows = allMentors.slice();
+    if (sport) rows = rows.filter(m => m.sport === sport);
+    if (level) rows = rows.filter(m => (m.selected_tier || "").startsWith(level));
+
+    if (sort === "level") {
+      rows.sort((a, b) => (b.selected_tier || "").localeCompare(a.selected_tier || ""));
+    } else if (sort === "name") {
+      rows.sort((a, b) => fullName(a).localeCompare(fullName(b)));
+    } // newest = original DB order (which is by id; functional default)
+
+    const count = rows.length;
+    document.getElementById("filterCount").textContent =
+      count === 1 ? "1 mentor" : `${count} mentors`;
+
+    const wrap = document.getElementById("gridWrap");
+    if (!count) {
+      wrap.innerHTML = `<div class="empty-state">
+        <h3>No mentor coaches match your filters</h3>
+        <p>Try clearing the sport or level filter. Mentor-eligible coaches are Level 3 or Level 4 — if none have signed up in your sport yet, check back soon.</p>
+      </div>`;
+      return;
+    }
+    wrap.innerHTML = `<div class="mentor-grid">${rows.map(cardHTML).join("")}</div>`;
+  }
+
+  function cardHTML(m) {
+    const status = myRequests.get(m.id);
+    const initials = getInitials(m);
+    const tags = (m.coaching_style || "").split(",").map(s => s.trim()).filter(Boolean).slice(0,3);
+    let btn;
+    if (status === "active") {
+      btn = `<button class="btn requested">✓ Active mentor</button>`;
+    } else if (status === "pending") {
+      btn = `<button class="btn requested">✓ Request sent</button>`;
+    } else {
+      btn = `<button class="btn primary" onclick="requestMentor('${m.id}')">Request Mentor</button>`;
+    }
+    return `
+      <div class="mentor-card">
+        <div class="mc-top">
+          <div class="mc-avatar">${m.avatar_url ? `<img src="${escapeHTML(m.avatar_url)}" alt=""/>` : escapeHTML(initials)}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="mc-name">${escapeHTML(fullName(m))}</div>
+            <div class="mc-meta">
+              <span class="level-badge">${escapeHTML(shortLevel(m.selected_tier))}</span>
+              <span class="mc-rating">★ 4.9</span>
+              ${m.sport ? `<span>${escapeHTML(m.sport)}</span>` : ""}
             </div>
-            <div class="mentor-badge badge-sport">${emoji} ${sport}</div>
           </div>
-          <div class="mentor-tier-badge ${tc}">${tl}</div>
         </div>
-        <div class="mentor-body">
-          <div class="mentor-name">${name}</div>
-          <div class="mentor-meta">
-            ${rating>0?`<div class="star-rating">${renderStars(rating)}<span class="rating-val">${rating}</span><span class="rating-count">(${m.review_count||0})</span></div>`:""}
-            ${m.location?`<span>📍 ${m.location}</span>`:""}
-          </div>
-          ${m.mentor_tagline?`<div class="mentor-tagline">"${m.mentor_tagline}"</div>`:""}
-          <div class="mentor-includes">
-            <div class="mentor-include"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1-on-1 session video reviews</div>
-            <div class="mentor-include"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Weekly group Zoom — ${m.mentor_group_day||"weekly"}</div>
-            <div class="mentor-include"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>${spotsLeft} spot${spotsLeft!==1?"s":""} remaining in group</div>
-          </div>
-          <div class="mentor-footer">
-            <div class="mentor-price">from <strong>$${m.mentor_rate||99}</strong>/mo</div>
-            <button class="view-btn" onclick="event.stopPropagation();openModal('${m.id}')">View profile</button>
-          </div>
+        ${tags.length ? `<div class="mc-tags">${tags.map(t => `<span class="mc-tag">${escapeHTML(t)}</span>`).join("")}</div>` : ""}
+        <div class="mc-bio mc-bio-clip">${escapeHTML(m.bio || "This coach hasn't added a bio yet.")}</div>
+        <div class="mc-actions">
+          <button class="btn" onclick="viewProfile('${m.id}')">View Profile</button>
+          ${btn}
         </div>
       </div>`;
-    }).join("");
   }
 
-  function openModal(mentorId){
-    const m=allMentors.find(x=>x.id===mentorId);
-    if(!m)return;
-    const name=(m.first_name||"")+" "+(m.last_name||"");
-    const initials=((m.first_name||"")[0]+(m.last_name||"")[0]).toUpperCase();
-    const sport=m.sport||"Sport";
-    const emoji=SPORT_EMOJI[sport]||"🎯";
-    const spotsLeft=(m.mentor_group_max||8)-(m.mentor_group_current||0);
-    const tierCls={"Level 3 — Elite Coach":"tier-3","Level 4 — Verified Elite Coach":"tier-4"};
-    const tc=tierCls[m.selected_tier]||"tier-3";
-    const photoHtml=m.headshot_url
-      ?`<img class="modal-photo" src="${m.headshot_url}" alt="${name}"/>`
-      :`<div class="modal-photo-placeholder">${initials}</div>`;
+  // ──────────────────────────────────────────────────────────────
+  // REQUEST MENTOR
+  // ──────────────────────────────────────────────────────────────
+  async function requestMentor(mentorId) {
+    const mentor = allMentors.find(m => m.id === mentorId);
+    if (!mentor) return;
+    const name = fullName(mentor);
+    if (!confirm(`Send a mentor request to ${name}?`)) return;
 
-    document.getElementById("modalContent").innerHTML=`
-      ${photoHtml}
-      <div class="modal-body">
-        <div class="modal-header">
-          <div>
-            <div class="modal-name">${name}</div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:13px;color:var(--muted);">
-              <span class="mentor-tier-badge ${tc}" style="position:static;">${m.selected_tier||"Elite Coach"}</span>
-              <span>${emoji} ${sport}</span>
-              ${m.location?`<span>📍 ${m.location}</span>`:""}
-              ${m.rating?`<span style="display:flex;align-items:center;gap:4px;">${renderStars(m.rating)}<strong style="color:#f9fafb;">${m.rating}</strong><span style="color:var(--muted);">(${m.review_count||0})</span></span>`:""}
-            </div>
-          </div>
-          <button class="modal-close" onclick="closeModal()">×</button>
-        </div>
+    // Upsert pending row (in case the user previously had a non-active one)
+    const { error: relErr } = await sb.from("mentor_relationships").upsert({
+      mentee_id: currentUser.id,
+      mentor_id: mentorId,
+      status:    "pending",
+      updated_at: new Date().toISOString()
+    }, { onConflict: "mentee_id,mentor_id" });
+    if (relErr) { alert("Couldn't send request: " + relErr.message); return; }
 
-        ${m.mentor_bio?`<div class="modal-section"><div class="modal-section-title">About ${m.first_name}</div><div class="modal-bio">${m.mentor_bio}</div></div>`:""}
-
-        ${m.mentor_qualifications?`<div class="modal-section"><div class="modal-section-title">Qualifications</div><div style="font-size:14px;color:rgba(226,232,240,.8);line-height:1.65;">${m.mentor_qualifications}</div></div>`:""}
-
-        <!-- Weekly Group Session -->
-        <div class="modal-section">
-          <div class="modal-section-title">Weekly group session</div>
-          <div class="zoom-box">
-            <div class="zoom-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg></div>
-            <div>
-              <div class="zoom-title">Live Zoom — ${m.mentor_group_day||"Weekly"}</div>
-              <div class="zoom-desc">Max 8 coaches per group for an intimate, high-quality experience. Discuss coaching philosophy, review game tape together and build your network with like-minded coaches.</div>
-              <div class="zoom-schedule">${m.mentor_group_day||"Weekly"} at ${m.mentor_group_time||"7:00pm AEST"} · ${spotsLeft} of ${m.mentor_group_max||8} spots remaining</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Packages -->
-        <div class="modal-section">
-          <div class="modal-section-title">What's included</div>
-          <div class="pkg-list">
-            <div class="pkg-row">
-              <div class="pkg-row-left">
-                <div class="pkg-row-name">Monthly Mentorship</div>
-                <div class="pkg-row-desc">1-on-1 session review + weekly group Zoom access + coaching philosophy guidance</div>
-              </div>
-              <div class="pkg-row-price">$${m.mentor_rate||99}/mo</div>
-            </div>
-            <div class="pkg-row">
-              <div class="pkg-row-left">
-                <div class="pkg-row-name">Single Session Review</div>
-                <div class="pkg-row-desc">One coaching session reviewed with full video annotations and written feedback</div>
-              </div>
-              <div class="pkg-row-price">$${Math.round((m.mentor_rate||99)*0.6)}</div>
-            </div>
-          </div>
-        </div>
-
-        <button class="subscribe-btn" onclick="subscribeToMentor('${m.id}','${name}')">
-          Subscribe to ${m.first_name||"this mentor"} →
-        </button>
-        <div class="subscribe-sub">$${m.mentor_rate||99}/month · Cancel anytime · Zoom link sent on signup</div>
-      </div>
-    `;
-    document.getElementById("modalOverlay").classList.add("open");
-    document.body.style.overflow="hidden";
-  }
-
-  function closeModal(){document.getElementById("modalOverlay").classList.remove("open");document.body.style.overflow="";}
-  function handleOverlayClick(e){if(e.target===document.getElementById("modalOverlay"))closeModal();}
-
-  async function subscribeToMentor(mentorId,mentorName){
-    if(!currentUser){window.location.href="login.html";return;}
-    const btn=document.querySelector(".subscribe-btn");
-    btn.textContent="Processing...";btn.disabled=true;
-    // Stripe integration ready — for now record interest
-    const {error}=await supabase.from("mentor_subscriptions").insert({
-      coach_id:currentUser.id,mentor_id:mentorId,status:"pending"
+    // Intro message
+    await sb.from("messages").insert({
+      from_id: currentUser.id,
+      to_id:   mentorId,
+      message: `Hi ${mentor.first_name || "Coach"} — I'd like to request you as my coach mentor. Looking forward to learning from you.`
     });
-    btn.textContent="✓ Request sent!";
-    btn.style.background="linear-gradient(135deg,#16a34a,#15803d)";
-    setTimeout(()=>closeModal(),1500);
-  }
 
-  init();
+    myRequests.set(mentorId, "pending");
+    renderGrid();
+    closeProfile();
+    alert(`Request sent to ${name}. They'll see it in their messages and accept from their mentor dashboard.`);
+  }
+  window.requestMentor = requestMentor;
+
+  // ──────────────────────────────────────────────────────────────
+  // VIEW PROFILE MODAL
+  // ──────────────────────────────────────────────────────────────
+  function viewProfile(mentorId) {
+    const m = allMentors.find(x => x.id === mentorId);
+    if (!m) return;
+    modalMentor = m;
+    document.getElementById("pmName").textContent  = fullName(m);
+    document.getElementById("pmTier").textContent  = m.selected_tier || "Coach";
+    document.getElementById("pmBio").textContent   = m.bio            || "No bio yet.";
+    document.getElementById("pmSport").textContent = m.sport          || "—";
+    document.getElementById("pmStyle").textContent = m.coaching_style || "—";
+    document.getElementById("pmQual").textContent  = m.qualifications || "—";
+
+    const btn = document.getElementById("pmRequestBtn");
+    const status = myRequests.get(m.id);
+    if (status === "active") {
+      btn.textContent = "✓ Active mentor"; btn.disabled = true;
+    } else if (status === "pending") {
+      btn.textContent = "✓ Request sent";  btn.disabled = true;
+    } else {
+      btn.textContent = "Request as mentor"; btn.disabled = false;
+    }
+    document.getElementById("profileModal").classList.add("open");
+  }
+  function closeProfile() {
+    document.getElementById("profileModal").classList.remove("open");
+    modalMentor = null;
+  }
+  function requestFromModal() {
+    if (modalMentor) requestMentor(modalMentor.id);
+  }
+  window.viewProfile       = viewProfile;
+  window.closeProfile      = closeProfile;
+  window.requestFromModal  = requestFromModal;
+
+  // ──────────────────────────────────────────────────────────────
+  // UTIL
+  // ──────────────────────────────────────────────────────────────
+  function fullName(m){
+    return ((m?.first_name||"") + " " + (m?.last_name||"")).trim() || "Coach";
+  }
+  function getInitials(m){
+    return ((m?.first_name?.[0]||"") + (m?.last_name?.[0]||"")).toUpperCase() || "C";
+  }
+  function shortLevel(t){
+    if (!t) return "Coach";
+    const m = String(t).match(/^Level\s+\d+/i);
+    return m ? m[0] : t;
+  }
+  function escapeHTML(s){
+    return String(s == null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
 </script>
+
 </body>
 </html>

@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Coach Mentorship – CoachAnywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#020617;--bg2:#020B24;--bg3:#1a0f00;
+      --card:rgba(15,23,42,.78);--card2:rgba(15,23,42,.92);
+      --border:rgba(148,163,184,.16);--border-strong:rgba(148,163,184,.3);
+      --text:#e5e7eb;--muted:#94a3b8;--muted2:#64748b;
+      --amber:#fbbf24;--amber2:#d97706;--amber3:#f59e0b;
+      --blue:#3b82f6;--blue2:#60a5fa;
+      --green:#22c55e;--green2:#86efac;
+      --red:#ef4444;--red2:#fca5a5;
+      --purple:#a78bfa;
+      --tr:160ms ease-out;
+    }
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+      background:radial-gradient(circle at 20% 0%,var(--bg3) 0%,var(--bg2) 50%,var(--bg) 100%);
+      color:var(--text);line-height:1.5;min-height:100vh;
+    }
+    a{text-decoration:none;color:inherit;}
+    button{font-family:inherit;cursor:pointer;}
+
+    /* ── LAYOUT SHELL ───────────────────────────────────────── */
+    .shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+
+    /* ── SIDEBAR ────────────────────────────────────────────── */
+    .sidebar{
+      background:rgba(3,7,18,.94);border-right:1px solid rgba(30,64,175,.3);
+      display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+    }
+    .sidebar-brand{
+      padding:18px 20px;border-bottom:1px solid rgba(180,83,9,.25);
+      display:flex;align-items:center;gap:10px;
+    }
+    .sidebar-mark{font-size:14px;font-weight:800;letter-spacing:.04em;color:#fff;text-transform:uppercase;}
+    .sidebar-mark span{color:var(--blue2);}
+    .sidebar-tag{
+      font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--amber);border:1px solid rgba(251,191,36,.35);
+      background:rgba(234,179,8,.08);padding:2px 7px;border-radius:5px;
+    }
+    .sidebar-mentee{
+      padding:14px 16px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:10px;
+    }
+    .mentee-av{
+      width:36px;height:36px;border-radius:50%;flex-shrink:0;
+      background:linear-gradient(135deg,#3b82f6,#1d4ed8);
+      color:#fff;font-weight:700;font-size:13px;
+      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;
+    }
+    .mentee-av img{width:100%;height:100%;object-fit:cover;}
+    .mentee-meta{min-width:0;}
+    .mentee-name{font-size:13px;font-weight:600;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .mentee-role{font-size:11px;color:var(--muted);}
+    .sidebar-nav{flex:1;padding:8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;min-height:0;}
+    .nav-item{
+      display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;
+      font-size:13px;font-weight:500;color:var(--muted);border:none;background:transparent;
+      width:100%;text-align:left;transition:all var(--tr);
+    }
+    .nav-item:hover{background:rgba(255,255,255,.05);color:var(--text);}
+    .nav-item.active{background:linear-gradient(135deg,var(--amber),var(--amber2));color:#fff;font-weight:600;}
+    .nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.75;}
+    .nav-item.active svg{opacity:1;}
+    .sidebar-back{
+      padding:10px 16px;border-top:1px solid var(--border);
+      font-size:12px;color:var(--muted);
+      display:flex;align-items:center;gap:6px;
+    }
+    .sidebar-back:hover{color:#fff;}
+    .sidebar-back svg{width:13px;height:13px;}
+
+    /* ── MAIN AREA ──────────────────────────────────────────── */
+    .main{padding:24px 28px;display:flex;flex-direction:column;gap:22px;}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;}
+    .greeting{font-size:22px;font-weight:800;color:#f9fafb;letter-spacing:-.02em;}
+    .greeting-sub{font-size:13px;color:var(--muted);margin-top:2px;}
+    .topbar-right{display:flex;align-items:center;gap:10px;}
+    .schedule-cta{
+      padding:10px 18px;border-radius:999px;border:none;
+      background:linear-gradient(135deg,var(--amber),var(--amber2));
+      color:#fff;font-weight:700;font-size:13px;
+      box-shadow:0 10px 26px rgba(180,83,9,.35);
+      display:inline-flex;align-items:center;gap:7px;
+      transition:transform var(--tr);
+    }
+    .schedule-cta:hover{transform:translateY(-1px);}
+    .schedule-cta svg{width:14px;height:14px;}
+
+    /* ── SECTIONS ───────────────────────────────────────────── */
+    .section{display:none;flex-direction:column;gap:18px;}
+    .section.active{display:flex;}
+
+    .row-label{
+      font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;
+    }
+    .row-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+    /* ── STATS CARDS ────────────────────────────────────────── */
+    .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+    .stat-card{
+      background:var(--card);border:1px solid var(--border);border-radius:14px;
+      padding:16px 18px;transition:border-color var(--tr),background var(--tr);
+    }
+    .stat-card:hover{border-color:var(--border-strong);}
+    .stat-card.amber{border-left:3px solid var(--amber);}
+    .stat-card.blue{border-left:3px solid var(--blue2);}
+    .stat-card.purple{border-left:3px solid var(--purple);}
+    .stat-card.green{border-left:3px solid var(--green2);}
+    .stat-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+    .stat-value{font-size:24px;font-weight:800;color:#f9fafb;line-height:1.15;letter-spacing:-.02em;}
+    .stat-sub{font-size:11px;color:var(--muted2);margin-top:4px;}
+    .stat-edit{
+      width:100%;border:none;background:transparent;color:#f9fafb;font:inherit;font-size:18px;font-weight:800;
+      outline:none;padding:2px 0;border-bottom:1px dashed transparent;transition:border-color var(--tr);
+    }
+    .stat-edit:focus{border-color:var(--amber);}
+    .stat-edit::placeholder{color:rgba(148,163,184,.4);font-weight:600;font-size:15px;}
+
+    .level-badge{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:5px 10px;border-radius:7px;font-size:11px;font-weight:700;
+      background:rgba(234,179,8,.13);color:var(--amber);border:1px solid rgba(251,191,36,.35);
+      letter-spacing:.06em;
+    }
+
+    /* ── PANELS ─────────────────────────────────────────────── */
+    .panel{
+      background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 22px;
+    }
+    .panel-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+    .panel-title{font-size:14px;font-weight:700;color:#f1f5f9;}
+    .panel-link{
+      font-size:12px;color:var(--amber);background:none;border:none;
+      display:inline-flex;align-items:center;gap:4px;
+    }
+    .panel-link svg{width:13px;height:13px;}
+    .panel-empty{
+      padding:32px 16px;text-align:center;color:var(--muted);font-size:13px;
+    }
+    .panel-empty .pe-title{font-weight:700;color:#f1f5f9;font-size:14px;margin-bottom:4px;}
+
+    /* ── OVERVIEW LAYOUT ────────────────────────────────────── */
+    .overview-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;align-items:start;}
+
+    /* ── MENTOR PROFILE CARD ────────────────────────────────── */
+    .mentor-card{padding:24px 22px;}
+    .mentor-top{display:flex;align-items:flex-start;gap:16px;margin-bottom:18px;}
+    .mentor-av{
+      width:78px;height:78px;border-radius:50%;flex-shrink:0;
+      background:linear-gradient(135deg,#d97706,#92400e);
+      color:#fff;font-weight:800;font-size:26px;
+      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;border:2px solid rgba(251,191,36,.4);
+    }
+    .mentor-av img{width:100%;height:100%;object-fit:cover;}
+    .mentor-info{flex:1;min-width:0;}
+    .mentor-name{font-size:20px;font-weight:800;color:#f9fafb;margin-bottom:4px;letter-spacing:-.01em;}
+    .mentor-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+    .mentor-rating{color:var(--amber);font-weight:700;display:inline-flex;align-items:center;gap:3px;}
+    .mentor-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+    .mentor-tag{
+      font-size:11px;padding:4px 10px;border-radius:999px;
+      background:rgba(234,179,8,.1);color:var(--amber);
+      border:1px solid rgba(251,191,36,.25);font-weight:600;
+    }
+    .mentor-bio{font-size:13px;color:rgba(226,232,240,.85);line-height:1.65;margin-bottom:18px;}
+    .mentor-actions{display:flex;gap:8px;flex-wrap:wrap;}
+    .btn{
+      padding:9px 14px;border-radius:9px;font-size:13px;font-weight:600;
+      border:1px solid var(--border-strong);background:rgba(255,255,255,.03);
+      color:var(--text);transition:all var(--tr);font-family:inherit;
+      display:inline-flex;align-items:center;gap:6px;
+    }
+    .btn:hover{background:rgba(255,255,255,.07);border-color:var(--amber);}
+    .btn svg{width:14px;height:14px;}
+    .btn.primary{
+      background:linear-gradient(135deg,var(--amber),var(--amber2));
+      border-color:transparent;color:#fff;
+      box-shadow:0 8px 20px rgba(180,83,9,.3);
+    }
+    .btn.primary:hover{border-color:transparent;transform:translateY(-1px);}
+
+    /* ── SESSIONS LIST ──────────────────────────────────────── */
+    .session-list{display:flex;flex-direction:column;gap:8px;}
+    .session-item{
+      display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;
+      padding:12px 14px;border-radius:11px;background:rgba(255,255,255,.03);
+      border:1px solid var(--border);transition:border-color var(--tr);
+    }
+    .session-item:hover{border-color:var(--amber);}
+    .session-date-pill{
+      width:48px;text-align:center;padding:6px 8px;border-radius:9px;
+      background:rgba(234,179,8,.1);border:1px solid rgba(251,191,36,.25);
+    }
+    .session-date-pill .sdp-month{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--amber);}
+    .session-date-pill .sdp-day{font-size:18px;font-weight:800;color:#f9fafb;line-height:1.1;}
+    .session-meta-name{font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:3px;}
+    .session-meta-sub{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .session-action{
+      font-size:12px;padding:7px 12px;border-radius:8px;
+      background:rgba(59,130,246,.12);color:var(--blue2);
+      border:1px solid rgba(59,130,246,.3);font-weight:600;
+    }
+    .session-action.muted{
+      background:rgba(148,163,184,.08);color:var(--muted);border-color:var(--border);
+    }
+
+    /* ── GOALS ──────────────────────────────────────────────── */
+    .goal-list{display:flex;flex-direction:column;gap:14px;}
+    .goal-row{display:flex;flex-direction:column;gap:6px;}
+    .goal-top{display:flex;align-items:center;justify-content:space-between;}
+    .goal-name{font-size:13px;font-weight:600;color:#f1f5f9;}
+    .goal-pct{font-size:12px;color:var(--amber);font-weight:700;}
+    .goal-bar{height:6px;border-radius:999px;background:rgba(148,163,184,.12);overflow:hidden;}
+    .goal-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--amber),var(--amber3));transition:width 400ms ease-out;}
+
+    /* ── RESOURCES ──────────────────────────────────────────── */
+    .resource-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+    .resource-card{
+      background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;
+      padding:18px;transition:border-color var(--tr),transform var(--tr);
+    }
+    .resource-card:hover{border-color:var(--amber);transform:translateY(-2px);}
+    .resource-type{
+      font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;
+      color:var(--purple);margin-bottom:10px;display:inline-flex;align-items:center;gap:6px;
+    }
+    .resource-type svg{width:13px;height:13px;}
+    .resource-title{font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:6px;line-height:1.35;}
+    .resource-meta{font-size:11px;color:var(--muted);}
+
+    /* ── PROGRESS TAB ───────────────────────────────────────── */
+    .progress-hero{
+      padding:28px 26px;border-radius:16px;
+      background:linear-gradient(135deg,rgba(180,83,9,.12),rgba(251,191,36,.04),rgba(15,23,42,.4));
+      border:1px solid rgba(251,191,36,.25);text-align:center;
+    }
+    .progress-pct{font-size:48px;font-weight:800;color:var(--amber);letter-spacing:-.02em;line-height:1;}
+    .progress-label{font-size:13px;color:var(--muted);margin-top:6px;}
+
+    /* ── MODAL ──────────────────────────────────────────────── */
+    .modal-overlay{
+      position:fixed;inset:0;background:rgba(2,6,23,.78);backdrop-filter:blur(10px);
+      display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
+    }
+    .modal-overlay.open{display:flex;}
+    .modal{
+      width:100%;max-width:480px;
+      background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(9,14,35,.99));
+      border:1px solid var(--border-strong);border-radius:18px;padding:26px;
+      box-shadow:0 30px 80px rgba(0,0,0,.6);
+    }
+    .modal-title{font-size:18px;font-weight:800;color:#f9fafb;margin-bottom:6px;}
+    .modal-sub{font-size:13px;color:var(--muted);margin-bottom:18px;}
+    .modal-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+    .modal-field label{
+      font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+    }
+    .modal-input,.modal-select,.modal-textarea{
+      padding:10px 12px;border-radius:9px;border:1px solid var(--border);
+      background:rgba(255,255,255,.05);color:#f1f5f9;font-size:13px;
+      font-family:inherit;outline:none;width:100%;
+      transition:border-color var(--tr);
+    }
+    .modal-input:focus,.modal-select:focus,.modal-textarea:focus{border-color:var(--amber);}
+    .modal-textarea{resize:vertical;min-height:80px;}
+    .modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;}
+
+    /* ── RESPONSIVE ─────────────────────────────────────────── */
+    @media (max-width:1100px){
+      .stats-grid{grid-template-columns:repeat(3,1fr);}
+      .overview-grid{grid-template-columns:1fr;}
+      .resource-grid{grid-template-columns:repeat(2,1fr);}
+    }
+    @media (max-width:820px){
+      .shell{grid-template-columns:1fr;}
+      .sidebar{position:relative;height:auto;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid rgba(30,64,175,.3);}
+      .sidebar-brand,.sidebar-mentee{display:none;}
+      .sidebar-nav{flex-direction:row;overflow-x:auto;padding:6px;}
+      .nav-item{white-space:nowrap;}
+      .sidebar-back{display:none;}
+      .main{padding:18px 14px;}
+      .stats-grid{grid-template-columns:repeat(2,1fr);}
+      .resource-grid{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body style="visibility:hidden">
+
+<div class="shell">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <a class="sidebar-mark" href="index.html">COACH<span>ANYWHERE</span></a>
+      <span class="sidebar-tag">Mentorship</span>
+    </div>
+    <div class="sidebar-mentee">
+      <div class="mentee-av" id="menteeAv">C</div>
+      <div class="mentee-meta">
+        <div class="mentee-name" id="menteeName">Coach</div>
+        <div class="mentee-role" id="menteeTier">—</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="showSection('overview')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Overview
+      </button>
+      <button class="nav-item" onclick="showSection('mymentor')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>
+        My Mentor
+      </button>
+      <button class="nav-item" onclick="showSection('sessions')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Sessions
+      </button>
+      <button class="nav-item" onclick="showSection('resources')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        Resources
+      </button>
+      <button class="nav-item" onclick="showSection('goals')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        Goals
+      </button>
+      <button class="nav-item" onclick="showSection('progress')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Progress
+      </button>
+    </nav>
+    <a class="sidebar-back" href="coach-dashboard.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to coach dashboard
+    </a>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div>
+        <div class="greeting" id="greeting">Coach Mentorship</div>
+        <div class="greeting-sub" id="greetingSub">Track your growth as a coach</div>
+      </div>
+      <div class="topbar-right">
+        <button class="schedule-cta" onclick="openSchedule()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Schedule Session
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ OVERVIEW SECTION ══ -->
+    <section class="section active" id="section-overview">
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card amber">
+          <div class="stat-label">Mentorship Level</div>
+          <div class="stat-value" id="statLevel">—</div>
+          <div class="stat-sub" id="statLevelSub">From your coach tier</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Next Session</div>
+          <div class="stat-value" id="statNext" style="font-size:16px;line-height:1.3;">—</div>
+          <div class="stat-sub" id="statNextSub">No session scheduled</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Sessions Completed</div>
+          <div class="stat-value" id="statCompleted">0</div>
+          <div class="stat-sub">This month</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-label">Focus Area</div>
+          <input class="stat-edit" id="statFocus" placeholder="Set focus area" maxlength="60"/>
+          <div class="stat-sub">Click to edit, blur to save</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-label">Mentorship Progress</div>
+          <div class="stat-value" id="statProgress">0%</div>
+          <div class="stat-sub">Unlocks after 5 sessions</div>
+        </div>
+      </div>
+
+      <!-- Mentor + Sessions row -->
+      <div class="overview-grid">
+
+        <!-- Mentor profile -->
+        <div class="panel mentor-card">
+          <div class="row-label" style="margin-bottom:14px;">Your Mentor</div>
+          <div class="mentor-top">
+            <div class="mentor-av" id="mentorAv">—</div>
+            <div class="mentor-info">
+              <div class="mentor-name" id="mentorName">Loading…</div>
+              <div class="mentor-meta">
+                <span id="mentorTier" class="level-badge">—</span>
+                <span class="mentor-rating">★ 4.9</span>
+                <span id="mentorSport">—</span>
+              </div>
+              <div class="mentor-tags" id="mentorTags"></div>
+            </div>
+          </div>
+          <div class="mentor-bio" id="mentorBio">—</div>
+          <div class="mentor-actions">
+            <button class="btn" onclick="viewMentorProfile()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              View Profile
+            </button>
+            <button class="btn" onclick="openMessage()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Send Message
+            </button>
+            <button class="btn primary" onclick="openSchedule()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+              Schedule Session
+            </button>
+          </div>
+        </div>
+
+        <!-- Sessions stack -->
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="panel">
+            <div class="panel-hdr">
+              <div class="panel-title">Recent Sessions</div>
+              <button class="panel-link" onclick="showSection('sessions')">View all
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+            <div id="recentSessions">
+              <div class="panel-empty">
+                <div class="pe-title">No completed sessions yet</div>
+                <div>Past mentorship sessions will appear here.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-hdr">
+              <div class="panel-title">Upcoming Sessions</div>
+              <button class="panel-link" onclick="openSchedule()">Schedule
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+            <div id="upcomingSessions">
+              <div class="panel-empty">
+                <div class="pe-title">No sessions scheduled</div>
+                <div>Use Schedule Session above to book one with your mentor.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Goals -->
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title">Development Goals</div>
+          <button class="panel-link" onclick="showSection('goals')">Manage goals
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div id="goalsList">
+          <div class="panel-empty">
+            <div class="pe-title">No development goals set</div>
+            <div>Add goals from your coach profile so your mentor can guide you toward them.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommended Resources -->
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title">Recommended Resources</div>
+          <button class="panel-link" onclick="showSection('resources')">Browse library
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="resource-grid" id="resourcesGrid"></div>
+      </div>
+
+    </section>
+
+    <!-- ══ MY MENTOR SECTION ══ -->
+    <section class="section" id="section-mymentor">
+      <div class="panel mentor-card" id="mymentorPanel">
+        <div class="panel-empty">
+          <div class="pe-title">Mentor details</div>
+          <div>The Overview tab shows your mentor's profile card.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SESSIONS SECTION ══ -->
+    <section class="section" id="section-sessions">
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title">All sessions</div>
+          <button class="panel-link" onclick="openSchedule()">Schedule new
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+        <div id="allSessions">
+          <div class="panel-empty">
+            <div class="pe-title">No sessions yet</div>
+            <div>Scheduled and completed sessions will both appear here.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ RESOURCES SECTION ══ -->
+    <section class="section" id="section-resources">
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title">Mentorship resource library</div>
+        </div>
+        <div class="resource-grid" id="resourcesGridFull"></div>
+      </div>
+    </section>
+
+    <!-- ══ GOALS SECTION ══ -->
+    <section class="section" id="section-goals">
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title">Your development goals</div>
+          <button class="panel-link" onclick="window.location.href='coach-dashboard.html'">Edit on profile
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div id="goalsListFull">
+          <div class="panel-empty">
+            <div class="pe-title">No development goals set</div>
+            <div>Goals you add to your coach profile will show up here for your mentor to see.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PROGRESS SECTION ══ -->
+    <section class="section" id="section-progress">
+      <div class="progress-hero">
+        <div class="progress-pct" id="progressPct">0%</div>
+        <div class="progress-label">Mentorship progress toward next coach level</div>
+        <div style="margin-top:16px;font-size:12px;color:var(--muted);max-width:420px;margin-left:auto;margin-right:auto;line-height:1.7;">
+          Progress tracking unlocks once you complete 5 mentorship sessions. After that, this dial reflects sessions completed, goals achieved, and your mentor's feedback toward your next coach tier.
+        </div>
+      </div>
+      <div class="panel" style="margin-top:14px;">
+        <div class="panel-hdr"><div class="panel-title">Sessions this month</div></div>
+        <div id="progressMonthlyCount" style="font-size:32px;font-weight:800;color:var(--amber);">0</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ══ SCHEDULE SESSION MODAL ══ -->
+<div class="modal-overlay" id="scheduleModal">
+  <div class="modal">
+    <div class="modal-title">Schedule a session</div>
+    <div class="modal-sub" id="scheduleSub">Pick a date, time and topic. Your mentor will get a message with the details.</div>
+    <div class="modal-field">
+      <label>Date &amp; time</label>
+      <input class="modal-input" type="datetime-local" id="schedAt"/>
+    </div>
+    <div class="modal-field">
+      <label>Topic</label>
+      <input class="modal-input" type="text" id="schedTopic" placeholder="e.g. Review my game-day prep routine"/>
+    </div>
+    <div class="modal-field">
+      <label>Duration</label>
+      <select class="modal-select" id="schedDuration">
+        <option value="30">30 min</option>
+        <option value="60" selected>60 min</option>
+        <option value="90">90 min</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Notes (optional)</label>
+      <textarea class="modal-textarea" id="schedNotes" placeholder="Anything specific you want to cover?"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeSchedule()">Cancel</button>
+      <button class="btn primary" id="schedSubmitBtn" onclick="submitSchedule()">Send request</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SEND MESSAGE MODAL ══ -->
+<div class="modal-overlay" id="messageModal">
+  <div class="modal">
+    <div class="modal-title">Message your mentor</div>
+    <div class="modal-sub" id="messageSub">They'll get this in their messages inbox.</div>
+    <div class="modal-field">
+      <label>Message</label>
+      <textarea class="modal-textarea" id="msgBody" placeholder="Type your message…"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeMessage()">Cancel</button>
+      <button class="btn primary" id="msgSendBtn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VIEW PROFILE MODAL ══ -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal" id="profileModalBody">
+    <div class="modal-title" id="pmName">Mentor profile</div>
+    <div class="modal-sub" id="pmTier">—</div>
+    <div id="pmBio" style="font-size:13px;color:rgba(226,232,240,.85);line-height:1.7;margin:14px 0;"></div>
+    <div class="modal-field">
+      <label>Qualifications</label>
+      <div id="pmQual" style="font-size:13px;color:var(--text);">—</div>
+    </div>
+    <div class="modal-field">
+      <label>Coaching style</label>
+      <div id="pmStyle" style="font-size:13px;color:var(--text);">—</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeProfile()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ──────────────────────────────────────────────────────────────
+  // CONFIG
+  // ──────────────────────────────────────────────────────────────
+  const SB_URL = "https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const sb = window.supabase.createClient(SB_URL, SB_KEY, {
+    auth:{ persistSession:true, autoRefreshToken:true, storageKey:"ca-auth", storage:window.localStorage, detectSessionInUrl:true }
+  });
+
+  // Tier → mentorship level mapping (mirrors coach-profile-setup.html TIERS)
+  const LEVEL_NAMES = {
+    "Level 1 — Development Coach":    "Development",
+    "Level 2 — Performance Coach":    "Performance",
+    "Level 3 — Elite Coach":          "Elite",
+    "Level 4 — Verified Elite Coach": "Verified Elite"
+  };
+
+  // Static resources (3 placeholders per spec)
+  const RESOURCES = [
+    { type: "Video",       icon: "video",       title: "How elite coaches structure their week",  duration: "12 min" },
+    { type: "Article",     icon: "article",     title: "From technical drills to game-day reads", duration: "8 min read" },
+    { type: "Masterclass", icon: "masterclass", title: "Building athlete buy-in across cultures", duration: "48 min" }
+  ];
+
+  let currentUser = null;
+  let currentProfile = null;
+  let mentor = null;
+  let relationship = null;
+  let cachedSessions = [];
+
+  // ──────────────────────────────────────────────────────────────
+  // INIT + AUTH GATE
+  // ──────────────────────────────────────────────────────────────
+  (async () => {
+    // Retry session — storage may not be ready on first paint
+    let session = null;
+    for (let i = 0; i < 12 && !session; i++) {
+      const { data } = await sb.auth.getSession();
+      if (data.session) { session = data.session; break; }
+      await new Promise(r => setTimeout(r, 120));
+    }
+    if (!session) { window.location.href = "login.html"; return; }
+    currentUser = session.user;
+
+    // Must be a coach
+    const { data: profile } = await sb.from("profiles").select("*").eq("id", currentUser.id).maybeSingle();
+    if (!profile || profile.role !== "coach") { window.location.href = "athlete-dashboard.html"; return; }
+    currentProfile = profile;
+
+    // Must have an active mentor relationship
+    const { data: rel } = await sb.from("mentor_relationships")
+      .select("*")
+      .eq("mentee_id", currentUser.id)
+      .eq("status", "active")
+      .limit(1)
+      .maybeSingle();
+    if (!rel) { window.location.href = "find-mentor.html"; return; }
+    relationship = rel;
+
+    // Fetch the mentor's profile (separate query to avoid RLS-with-embed surprises)
+    const { data: mentorProfile } = await sb.from("profiles")
+      .select("id, first_name, last_name, avatar_url, selected_tier, sport, bio, coaching_style, qualifications")
+      .eq("id", rel.mentor_id)
+      .maybeSingle();
+    if (!mentorProfile) { window.location.href = "find-mentor.html"; return; }
+    mentor = mentorProfile;
+
+    // We're clear — paint
+    document.body.style.visibility = "visible";
+
+    renderMentee();
+    renderMentor();
+    renderResources();
+    await loadSessions();
+    await loadGoals();
+    renderFocusAreaInput();
+  })();
+
+  // ──────────────────────────────────────────────────────────────
+  // RENDER HELPERS
+  // ──────────────────────────────────────────────────────────────
+  function getInitials(p) {
+    return ((p?.first_name?.[0] || "") + (p?.last_name?.[0] || "")).toUpperCase() || "C";
+  }
+  function fullName(p) {
+    return ((p?.first_name || "") + " " + (p?.last_name || "")).trim() || "Coach";
+  }
+  function escapeHTML(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month:"short", day:"numeric" })
+      + " · " + d.toLocaleTimeString(undefined, { hour:"numeric", minute:"2-digit" });
+  }
+
+  function renderMentee() {
+    document.getElementById("menteeName").textContent = fullName(currentProfile);
+    document.getElementById("menteeTier").textContent = currentProfile.selected_tier || "Coach";
+    document.getElementById("menteeAv").textContent   = getInitials(currentProfile);
+    if (currentProfile.avatar_url) {
+      document.getElementById("menteeAv").innerHTML =
+        `<img src="${escapeHTML(currentProfile.avatar_url)}" alt=""/>`;
+    }
+
+    document.getElementById("greeting").textContent =
+      "Welcome back, " + (currentProfile.first_name || "Coach");
+    document.getElementById("greetingSub").textContent =
+      "Track your growth with " + fullName(mentor);
+
+    const level = LEVEL_NAMES[currentProfile.selected_tier] || "Coach";
+    document.getElementById("statLevel").textContent = level;
+    document.getElementById("statLevelSub").textContent = currentProfile.selected_tier || "Coach tier";
+  }
+
+  function renderMentor() {
+    document.getElementById("mentorName").textContent = fullName(mentor);
+    document.getElementById("mentorAv").textContent   = getInitials(mentor);
+    if (mentor.avatar_url) {
+      document.getElementById("mentorAv").innerHTML =
+        `<img src="${escapeHTML(mentor.avatar_url)}" alt=""/>`;
+    }
+    document.getElementById("mentorTier").textContent  = mentor.selected_tier || "Coach";
+    document.getElementById("mentorSport").textContent = mentor.sport ? "Sport: " + mentor.sport : "";
+    document.getElementById("mentorBio").textContent   = mentor.bio || "No bio available yet.";
+
+    // Tags from coaching_style (comma-separated). Cap at 4.
+    const tags = (mentor.coaching_style || "")
+      .split(",").map(s => s.trim()).filter(Boolean).slice(0,4);
+    document.getElementById("mentorTags").innerHTML = tags.length
+      ? tags.map(t => `<span class="mentor-tag">${escapeHTML(t)}</span>`).join("")
+      : "";
+
+    // Also fill My Mentor full panel
+    document.getElementById("mymentorPanel").innerHTML = `
+      <div class="row-label" style="margin-bottom:14px;">Mentor Profile</div>
+      <div class="mentor-top">
+        <div class="mentor-av">${mentor.avatar_url ? `<img src="${escapeHTML(mentor.avatar_url)}" alt=""/>` : escapeHTML(getInitials(mentor))}</div>
+        <div class="mentor-info">
+          <div class="mentor-name">${escapeHTML(fullName(mentor))}</div>
+          <div class="mentor-meta">
+            <span class="level-badge">${escapeHTML(mentor.selected_tier || "Coach")}</span>
+            <span class="mentor-rating">★ 4.9</span>
+            ${mentor.sport ? `<span>Sport: ${escapeHTML(mentor.sport)}</span>` : ""}
+          </div>
+          <div class="mentor-tags">${tags.map(t => `<span class="mentor-tag">${escapeHTML(t)}</span>`).join("")}</div>
+        </div>
+      </div>
+      <div class="mentor-bio">${escapeHTML(mentor.bio || "No bio available yet.")}</div>
+      ${mentor.qualifications ? `<div style="font-size:13px;color:var(--muted);margin-bottom:14px;"><strong style="color:#f1f5f9;">Qualifications:</strong> ${escapeHTML(mentor.qualifications)}</div>` : ""}
+      <div class="mentor-actions">
+        <button class="btn" onclick="openMessage()">Send Message</button>
+        <button class="btn primary" onclick="openSchedule()">Schedule Session</button>
+      </div>
+    `;
+  }
+
+  function renderResources() {
+    const renderCard = r => `
+      <div class="resource-card">
+        <div class="resource-type">
+          ${iconFor(r.icon)}
+          ${escapeHTML(r.type)}
+        </div>
+        <div class="resource-title">${escapeHTML(r.title)}</div>
+        <div class="resource-meta">${escapeHTML(r.duration)} · Coming soon</div>
+      </div>`;
+    document.getElementById("resourcesGrid").innerHTML     = RESOURCES.map(renderCard).join("");
+    document.getElementById("resourcesGridFull").innerHTML = RESOURCES.map(renderCard).join("");
+  }
+  function iconFor(name) {
+    if (name === "video")       return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>`;
+    if (name === "article")     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
+    if (name === "masterclass") return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9 12 2"/></svg>`;
+    return "";
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // SESSIONS
+  // ──────────────────────────────────────────────────────────────
+  async function loadSessions() {
+    const { data, error } = await sb.from("mentor_sessions")
+      .select("*")
+      .eq("mentee_id", currentUser.id)
+      .order("scheduled_at", { ascending: false });
+    if (error) {
+      console.warn("[mentor-dashboard] sessions read failed:", error.message);
+      return;
+    }
+    cachedSessions = data || [];
+
+    const now = new Date().toISOString();
+    const upcoming = cachedSessions
+      .filter(s => s.status === "scheduled" && s.scheduled_at >= now)
+      .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
+      .slice(0, 3);
+    const recent = cachedSessions
+      .filter(s => s.status === "completed")
+      .slice(0, 5);
+
+    // Monthly count
+    const monthStart = new Date();
+    monthStart.setUTCDate(1); monthStart.setUTCHours(0,0,0,0);
+    const completedThisMonth = cachedSessions.filter(
+      s => s.status === "completed" && new Date(s.updated_at) >= monthStart
+    ).length;
+    document.getElementById("statCompleted").textContent       = completedThisMonth;
+    document.getElementById("progressMonthlyCount").textContent = completedThisMonth;
+
+    // Next-session stat card
+    const nextOne = upcoming[0];
+    if (nextOne) {
+      document.getElementById("statNext").textContent    = fmtDate(nextOne.scheduled_at);
+      document.getElementById("statNextSub").textContent = nextOne.topic || "No topic set";
+    } else {
+      document.getElementById("statNext").textContent    = "—";
+      document.getElementById("statNextSub").textContent = "No session scheduled";
+    }
+
+    renderSessionList("recentSessions",  recent,   "recent");
+    renderSessionList("upcomingSessions", upcoming, "upcoming");
+    renderSessionList("allSessions",      cachedSessions, "all");
+  }
+
+  function renderSessionList(containerId, rows, kind) {
+    const c = document.getElementById(containerId);
+    if (!c) return;
+    if (!rows.length) {
+      const copy = kind === "recent"
+        ? { title: "No completed sessions yet", sub: "Past mentorship sessions will appear here." }
+        : kind === "upcoming"
+        ? { title: "No sessions scheduled",     sub: "Use Schedule Session to book one." }
+        : { title: "No sessions yet",           sub: "Scheduled and completed sessions will both appear here." };
+      c.innerHTML = `<div class="panel-empty">
+        <div class="pe-title">${copy.title}</div>
+        <div>${copy.sub}</div>
+      </div>`;
+      return;
+    }
+    c.innerHTML = `<div class="session-list">${rows.map(s => sessionRowHTML(s)).join("")}</div>`;
+  }
+  function sessionRowHTML(s) {
+    const d = new Date(s.scheduled_at);
+    const month = d.toLocaleDateString(undefined, { month:"short" }).toUpperCase();
+    const day   = d.getDate();
+    const time  = d.toLocaleTimeString(undefined, { hour:"numeric", minute:"2-digit" });
+    const statusLabel =
+      s.status === "completed"  ? "Completed" :
+      s.status === "scheduled"  ? "Scheduled" :
+      s.status === "cancelled"  ? "Cancelled" : s.status;
+    const action = s.status === "completed"
+      ? (s.recording_url
+          ? `<a class="session-action" href="${escapeHTML(s.recording_url)}" target="_blank" rel="noopener">Watch recording</a>`
+          : `<span class="session-action muted">Recording pending</span>`)
+      : s.status === "scheduled"
+        ? `<span class="session-action">Upcoming</span>`
+        : `<span class="session-action muted">${escapeHTML(statusLabel)}</span>`;
+    return `
+      <div class="session-item">
+        <div class="session-date-pill">
+          <div class="sdp-month">${escapeHTML(month)}</div>
+          <div class="sdp-day">${day}</div>
+        </div>
+        <div>
+          <div class="session-meta-name">${escapeHTML(s.topic || "Mentorship session")}</div>
+          <div class="session-meta-sub">
+            <span>${escapeHTML(time)}</span>
+            <span>${s.duration_minutes || 60} min</span>
+            <span>${escapeHTML(statusLabel)}</span>
+          </div>
+        </div>
+        ${action}
+      </div>`;
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // GOALS
+  // ──────────────────────────────────────────────────────────────
+  async function loadGoals() {
+    const goals = currentProfile.goals;
+    const arr = Array.isArray(goals) ? goals : [];
+    const html = arr.length
+      ? `<div class="goal-list">${arr.map(g => goalRowHTML(g)).join("")}</div>`
+      : `<div class="panel-empty">
+           <div class="pe-title">No development goals set</div>
+           <div>Add goals from your coach profile so your mentor can guide you toward them.</div>
+         </div>`;
+    document.getElementById("goalsList").innerHTML     = html;
+    document.getElementById("goalsListFull").innerHTML = html;
+  }
+  function goalRowHTML(g) {
+    const pct = Math.max(0, Math.min(100, parseInt(g.progress) || 0));
+    return `
+      <div class="goal-row">
+        <div class="goal-top">
+          <div class="goal-name">${escapeHTML(g.name || "Goal")}</div>
+          <div class="goal-pct">${pct}%</div>
+        </div>
+        <div class="goal-bar"><div class="goal-fill" style="width:${pct}%"></div></div>
+      </div>`;
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // FOCUS AREA — inline edit, save on blur
+  // ──────────────────────────────────────────────────────────────
+  function renderFocusAreaInput() {
+    const el = document.getElementById("statFocus");
+    el.value = currentProfile.mentor_focus_area || "";
+    el.addEventListener("blur", async () => {
+      const v = el.value.trim();
+      if (v === (currentProfile.mentor_focus_area || "")) return;
+      const { error } = await sb.from("profiles").update({ mentor_focus_area: v || null }).eq("id", currentUser.id);
+      if (error) { alert("Couldn't save focus area: " + error.message); return; }
+      currentProfile.mentor_focus_area = v;
+    });
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // SECTION NAV
+  // ──────────────────────────────────────────────────────────────
+  function showSection(id) {
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.getElementById("section-" + id).classList.add("active");
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+    [...document.querySelectorAll(".nav-item")].find(
+      n => n.getAttribute("onclick")?.includes("'" + id + "'")
+    )?.classList.add("active");
+    window.scrollTo(0,0);
+  }
+  window.showSection = showSection;
+
+  // ──────────────────────────────────────────────────────────────
+  // SCHEDULE MODAL
+  // ──────────────────────────────────────────────────────────────
+  function openSchedule() {
+    // Pre-fill datetime to tomorrow 10am local
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(10, 0, 0, 0);
+    const local = d.toISOString().slice(0,16);  // YYYY-MM-DDTHH:mm
+    document.getElementById("schedAt").value     = local;
+    document.getElementById("schedTopic").value  = "";
+    document.getElementById("schedDuration").value = "60";
+    document.getElementById("schedNotes").value  = "";
+    document.getElementById("scheduleSub").textContent =
+      `Pick a date, time and topic — ${fullName(mentor)} will get a message.`;
+    document.getElementById("scheduleModal").classList.add("open");
+  }
+  function closeSchedule() {
+    document.getElementById("scheduleModal").classList.remove("open");
+  }
+  window.openSchedule  = openSchedule;
+  window.closeSchedule = closeSchedule;
+
+  async function submitSchedule() {
+    const btn = document.getElementById("schedSubmitBtn");
+    btn.disabled = true; btn.textContent = "Sending…";
+    try {
+      const at       = document.getElementById("schedAt").value;
+      const topic    = document.getElementById("schedTopic").value.trim();
+      const duration = parseInt(document.getElementById("schedDuration").value) || 60;
+      const notes    = document.getElementById("schedNotes").value.trim();
+      if (!at) { alert("Pick a date and time."); btn.disabled=false; btn.textContent="Send request"; return; }
+
+      const iso = new Date(at).toISOString();
+
+      const { error: sErr } = await sb.from("mentor_sessions").insert({
+        mentee_id:        currentUser.id,
+        mentor_id:        mentor.id,
+        scheduled_at:     iso,
+        duration_minutes: duration,
+        topic:            topic || null,
+        notes:            notes || null,
+        status:           "scheduled"
+      });
+      if (sErr) { alert("Couldn't schedule: " + sErr.message); btn.disabled=false; btn.textContent="Send request"; return; }
+
+      // Drop a message so the mentor sees it without polling sessions
+      await sb.from("messages").insert({
+        from_id: currentUser.id,
+        to_id:   mentor.id,
+        message: `📅 Session request: ${topic || "(no topic set)"} — ${new Date(iso).toLocaleString()} · ${duration} min` +
+                 (notes ? "\n\nNotes: " + notes : "")
+      });
+
+      closeSchedule();
+      await loadSessions();
+    } catch (e) {
+      alert("Couldn't schedule: " + (e?.message || e));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Send request";
+    }
+  }
+  window.submitSchedule = submitSchedule;
+
+  // ──────────────────────────────────────────────────────────────
+  // MESSAGE MODAL
+  // ──────────────────────────────────────────────────────────────
+  function openMessage() {
+    document.getElementById("msgBody").value = "";
+    document.getElementById("messageSub").textContent = `Sending to ${fullName(mentor)}.`;
+    document.getElementById("messageModal").classList.add("open");
+  }
+  function closeMessage() {
+    document.getElementById("messageModal").classList.remove("open");
+  }
+  window.openMessage  = openMessage;
+  window.closeMessage = closeMessage;
+
+  async function sendMessage() {
+    const body = document.getElementById("msgBody").value.trim();
+    if (!body) { alert("Message can't be empty."); return; }
+    const btn = document.getElementById("msgSendBtn");
+    btn.disabled = true; btn.textContent = "Sending…";
+    try {
+      const { error } = await sb.from("messages").insert({
+        from_id: currentUser.id,
+        to_id:   mentor.id,
+        message: body
+      });
+      if (error) { alert("Couldn't send: " + error.message); return; }
+      closeMessage();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Send";
+    }
+  }
+  window.sendMessage = sendMessage;
+
+  // ──────────────────────────────────────────────────────────────
+  // VIEW PROFILE MODAL
+  // ──────────────────────────────────────────────────────────────
+  function viewMentorProfile() {
+    document.getElementById("pmName").textContent  = fullName(mentor);
+    document.getElementById("pmTier").textContent  = mentor.selected_tier || "Coach";
+    document.getElementById("pmBio").textContent   = mentor.bio || "No bio available yet.";
+    document.getElementById("pmQual").textContent  = mentor.qualifications || "—";
+    document.getElementById("pmStyle").textContent = mentor.coaching_style || "—";
+    document.getElementById("profileModal").classList.add("open");
+  }
+  function closeProfile() {
+    document.getElementById("profileModal").classList.remove("open");
+  }
+  window.viewMentorProfile = viewMentorProfile;
+  window.closeProfile      = closeProfile;
+</script>
+
+</body>
+</html>
