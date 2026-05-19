@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Checkout – CoachAnywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --amber:#d97706;--amber2:#92400e;--amber3:#f59e0b;
+      --bg:#0d1117;--bg2:#131920;--bg3:#1a2230;
+      --card:#161d2a;--card2:#1e2a3a;
+      --text:#e8edf5;--muted:#6b7a99;--muted2:#9ca3af;
+      --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+      --green:#22c55e;--tr:150ms ease-out;
+    }
+    body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+    button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
+    a{color:var(--amber3);text-decoration:none;}
+
+    .wrap{width:480px;max-width:100%;}
+    .logo{text-align:center;font-size:16px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-bottom:20px;}
+    .logo span{color:var(--amber3);}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+    .card-hdr{padding:20px;border-bottom:1px solid var(--border);}
+    .card-title{font-size:17px;font-weight:800;}
+    .card-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+    .card-body{padding:20px;}
+
+    .coach-row{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+    .coach-av{width:48px;height:48px;border-radius:11px;background:linear-gradient(135deg,#1e3a5f,#0d2a6e);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#93c5fd;flex-shrink:0;}
+    .coach-name{font-size:15px;font-weight:800;}
+    .coach-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+
+    .line{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+    .line:last-of-type{border-bottom:none;}
+    .line-name{font-size:13px;font-weight:600;color:var(--text);}
+    .line-desc{font-size:11px;color:var(--muted);margin-top:1px;}
+    .line-amt{font-size:13px;font-weight:700;white-space:nowrap;}
+    .line-tag{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:2px;}
+
+    .total{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px dashed var(--border2);}
+    .total-lbl{font-size:14px;font-weight:800;}
+    .total-amt{font-size:24px;font-weight:800;color:var(--amber3);}
+
+    .promo-row{display:flex;gap:8px;margin-top:16px;}
+    .promo-input{flex:1;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;outline:none;}
+    .promo-input:focus{border-color:rgba(217,119,6,.4);}
+    .promo-input::placeholder{color:var(--muted);}
+    .promo-btn{padding:10px 16px;border-radius:9px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:12px;font-weight:700;}
+    .promo-msg{font-size:11px;margin-top:6px;display:none;}
+    .promo-msg.ok{color:var(--green);display:block;}
+    .promo-msg.err{color:#ef4444;display:block;}
+
+    .pay-btn{width:100%;margin-top:18px;padding:14px;border-radius:11px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:#fff;font-size:15px;font-weight:800;border:none;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform var(--tr);}
+    .pay-btn:hover{transform:translateY(-1px);}
+    .pay-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .pay-btn svg{width:16px;height:16px;}
+
+    .stripe-note{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--muted);margin-top:12px;}
+    .stripe-note svg{width:12px;height:12px;}
+
+    .placeholder-banner{background:rgba(217,119,6,.1);border:1px solid rgba(217,119,6,.3);border-radius:9px;padding:10px 12px;font-size:11px;color:var(--amber3);line-height:1.5;margin-top:14px;}
+
+    .back-link{display:block;text-align:center;font-size:12px;color:var(--muted);margin-top:16px;}
+
+    /* SUCCESS STATE */
+    .success{display:none;text-align:center;padding:20px 0;}
+    .success.show{display:block;}
+    .success-ic{width:64px;height:64px;border-radius:50%;background:rgba(34,197,94,.14);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+    .success-ic svg{width:30px;height:30px;color:var(--green);}
+    .success-title{font-size:18px;font-weight:800;}
+    .success-sub{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6;}
+    .success-btn{margin-top:18px;padding:12px 24px;border-radius:10px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:#fff;font-size:13px;font-weight:700;border:none;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">COACH<span>ANYWHERE</span></div>
+
+  <div class="card">
+    <!-- CHECKOUT STATE -->
+    <div id="checkoutState">
+      <div class="card-hdr">
+        <div class="card-title">Confirm your coaching plan</div>
+        <div class="card-sub">Review your selection before payment</div>
+      </div>
+      <div class="card-body">
+        <div class="coach-row">
+          <div class="coach-av" id="coachAv">C</div>
+          <div>
+            <div class="coach-name" id="coachName">Coach</div>
+            <div class="coach-sub">Your selected coach</div>
+          </div>
+        </div>
+
+        <div id="lineItems"><!-- filled by JS --></div>
+
+        <div class="total">
+          <div class="total-lbl">Total due today</div>
+          <div class="total-amt" id="grandTotal">$0</div>
+        </div>
+
+        <div class="promo-row">
+          <input class="promo-input" id="promoInput" placeholder="Discount code"/>
+          <button class="promo-btn" onclick="applyPromo()">Apply</button>
+        </div>
+        <div class="promo-msg" id="promoMsg"></div>
+
+        <button class="pay-btn" id="payBtn" onclick="handlePay()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Pay with Stripe
+        </button>
+
+        <div class="stripe-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          Secure payment processed by Stripe
+        </div>
+
+        <div class="placeholder-banner">
+          <strong>Setup note:</strong> This is a placeholder checkout. To go live, replace the Pay button action with your Stripe Payment Link or Checkout session. See instructions sent with this page.
+        </div>
+      </div>
+    </div>
+
+    <!-- SUCCESS STATE -->
+    <div class="success" id="successState">
+      <div class="card-body">
+        <div class="success-ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="success-title">You're all set!</div>
+        <div class="success-sub" id="successSub">Your coaching plan is confirmed.<br>Your coach will be in touch shortly.</div>
+        <button class="success-btn" onclick="window.location.href='athlete-dashboard.html'">Go to Dashboard</button>
+      </div>
+    </div>
+  </div>
+
+  <a class="back-link" href="select-coach.html">← Back to coaches</a>
+</div>
+
+<script>
+  const SB_URL="https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ca-auth",storage:window.localStorage,detectSessionInUrl:true}});
+
+  // Standard add-on packages (must match select-coach.html)
+  const ADDONS={
+    skill_clip:{name:"Skill Clip Review",price:15},
+    session:{name:"Session Review",price:35},
+    half_game:{name:"Half Game / Long Session Review",price:75},
+    full_game:{name:"Full Game Review",price:120},
+    elite_pkg:{name:"Elite Package",price:199}
+  };
+
+  const params=new URLSearchParams(window.location.search);
+  const coachId=params.get("coach")||"";
+  const coachName=params.get("coachName")||"Your Coach";
+  const tierName=params.get("tier")||"Coaching Plan";
+  const tierPrice=parseInt(params.get("tierPrice"))||0;
+  const addonIds=(params.get("addons")||"").split(",").filter(Boolean);
+
+  let discount=0; // dollars off
+  let currentUser=null;
+
+  function recomputeTotal(){
+    let addonTotal=0;
+    addonIds.forEach(id=>{if(ADDONS[id])addonTotal+=ADDONS[id].price;});
+    let grand=tierPrice+addonTotal-discount;
+    if(grand<0)grand=0;
+    document.getElementById("grandTotal").textContent="$"+grand;
+    return grand;
+  }
+
+  function renderLines(){
+    let html=`
+      <div class="line">
+        <div>
+          <div class="line-name">${tierName}</div>
+          <div class="line-tag">Monthly subscription</div>
+        </div>
+        <div class="line-amt">$${tierPrice}/mo</div>
+      </div>`;
+    addonIds.forEach(id=>{
+      const a=ADDONS[id];
+      if(!a)return;
+      html+=`
+      <div class="line">
+        <div>
+          <div class="line-name">${a.name}</div>
+          <div class="line-tag">One-off add-on</div>
+        </div>
+        <div class="line-amt">+$${a.price}</div>
+      </div>`;
+    });
+    document.getElementById("lineItems").innerHTML=html;
+  }
+
+  function applyPromo(){
+    const code=document.getElementById("promoInput").value.trim().toUpperCase();
+    const msg=document.getElementById("promoMsg");
+    if(!code){msg.className="promo-msg err";msg.textContent="Enter a code first.";return;}
+    // Placeholder discount logic — replace with real Stripe promotion codes when live.
+    if(code==="FREE"||code==="LAUNCH100"){
+      let addonTotal=0;
+      addonIds.forEach(id=>{if(ADDONS[id])addonTotal+=ADDONS[id].price;});
+      discount=tierPrice+addonTotal; // 100% off
+      msg.className="promo-msg ok";
+      msg.textContent="✓ Code applied — 100% off.";
+    } else {
+      discount=0;
+      msg.className="promo-msg err";
+      msg.textContent="That code isn't valid.";
+    }
+    recomputeTotal();
+  }
+
+  async function handlePay(){
+    const btn=document.getElementById("payBtn");
+    btn.disabled=true;
+    btn.textContent="Processing...";
+    const grand=recomputeTotal();
+
+    // ── PLACEHOLDER ──
+    // Real Stripe goes here. Two options once you have credentials:
+    //   A) Payment Link:  window.location.href = "https://buy.stripe.com/your_link";
+    //   B) Checkout session: fetch your Netlify function, then redirect to the returned URL.
+    // For now we record the subscription + coach link in Supabase and show the success screen.
+
+    if(!currentUser || !coachId){
+      btn.disabled=false; btn.textContent="Pay now";
+      alert("Missing athlete session or coach. Please refresh and try again.");
+      return;
+    }
+
+    // 1) subscriptions — REQUIRED. athlete-dashboard.html's loadCoach() reads this
+    //    table to populate the My Coach panel.
+    //    Note: supabase-js does NOT throw on DB errors — it returns {error}. The
+    //    previous try/catch never fired and silently masked RLS / schema failures.
+    const {error: subErr} = await sb.from("subscriptions").insert({
+      athlete_id:   currentUser.id,
+      coach_id:     coachId,
+      status:       "active",
+      package_name: tierName,
+      billing_cycle:"Monthly"
+    });
+    if(subErr){
+      btn.disabled=false; btn.textContent="Pay now";
+      const hint = /row-level security|permission denied/i.test(subErr.message)
+        ? "\n\nYour 'subscriptions' table is rejecting the insert (RLS). Run migration_subscriptions_policies.sql in the Supabase SQL editor."
+        : /relation .* does not exist/i.test(subErr.message)
+          ? "\n\nThe 'subscriptions' table doesn't exist yet. Run migration_subscriptions_policies.sql."
+          : "";
+      alert("Couldn't link you to this coach.\n\n" + subErr.message + hint);
+      return;
+    }
+
+    // 2) athlete_coaches — BEST-EFFORT. coach-dashboard.html reads this table to
+    //    list athletes. The athlete-side My Coach panel still works without this,
+    //    so a failure here is a warning, not an abort.
+    const {error: linkErr} = await sb.from("athlete_coaches").insert({
+      athlete_id: currentUser.id,
+      coach_id:   coachId
+    });
+    if(linkErr) console.warn("athlete_coaches link warning:", linkErr.message);
+
+    // Small UX delay so the "Processing..." state is visible before the swap.
+    setTimeout(()=>{
+      document.getElementById("checkoutState").style.display="none";
+      document.getElementById("successState").classList.add("show");
+      document.getElementById("successSub").innerHTML =
+        (grand===0 ? "Your plan is confirmed at no charge." : "Your $" + grand + " payment is confirmed.") +
+        "<br>Coach " + coachName + " will be in touch shortly.";
+    },400);
+  }
+
+  async function init(){
+    document.getElementById("coachName").textContent=coachName;
+    document.getElementById("coachAv").textContent=
+      (coachName.split(" ").map(w=>w[0]).join("").substring(0,2)||"C").toUpperCase();
+    renderLines();
+    recomputeTotal();
+    try{
+      const {data:{session}}=await sb.auth.getSession();
+      if(session)currentUser=session.user;
+    }catch(e){}
+  }
+  init();
+</script>
+</body>
+</html>

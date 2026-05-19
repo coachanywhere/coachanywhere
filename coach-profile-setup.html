@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Coach Profile Setup – CoachAnywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{--amber:#fbbf24;--amber2:#d97706;--navy:#020617;--text:#e5e7eb;--muted:#94a3b8;--border:rgba(148,163,184,.18);--transition:160ms ease-out;}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 0%,#1a0f00 0%,#020B24 50%,#020617 100%);color:var(--text);line-height:1.6;min-height:100vh;}
+    a{text-decoration:none;color:inherit;}
+
+    header{position:sticky;top:0;z-index:20;backdrop-filter:blur(18px);background:rgba(3,7,18,.96);border-bottom:1px solid rgba(180,83,9,.3);}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:12px 40px;}
+    .nav-wordmark{font-size:18px;font-weight:800;letter-spacing:.04em;color:#fff;text-transform:uppercase;}
+    .nav-wordmark span{color:#60a5fa;}
+    .nav-step{font-size:13px;color:var(--muted);}
+
+    .page-wrap{max-width:680px;margin:0 auto;padding:44px 24px 100px;}
+    .page-header{text-align:center;margin-bottom:36px;}
+    .coach-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:rgba(234,179,8,.1);border:1px solid rgba(251,191,36,.3);font-size:11px;font-weight:700;color:#fbbf24;text-transform:uppercase;letter-spacing:.16em;margin-bottom:14px;}
+    .page-title{font-size:clamp(24px,4vw,34px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:6px;}
+    .page-sub{font-size:15px;color:var(--muted);}
+
+    .section-card{background:rgba(15,23,42,.7);border:1px solid var(--border);border-radius:18px;padding:24px;margin-bottom:18px;}
+    .section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+    .section-title::after{content:'';flex:1;height:1px;background:rgba(148,163,184,.1);}
+    .section-title svg{width:14px;height:14px;flex-shrink:0;}
+
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+    .form-row.single{grid-template-columns:1fr;}
+    .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+    .form-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+    .form-input,.form-select,.form-textarea{padding:11px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#f1f5f9;font-size:14px;font-family:inherit;outline:none;width:100%;transition:border-color var(--transition),background var(--transition);}
+    .form-input::placeholder,.form-textarea::placeholder{color:rgba(148,163,184,.4);}
+    .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:rgba(251,191,36,.4);background:rgba(255,255,255,.07);}
+    .form-select{background:rgba(15,23,42,.95);cursor:pointer;}
+    .form-select option{background:#0d1b3e;color:#f1f5f9;}
+    .form-textarea{resize:vertical;}
+
+    /* PHOTO */
+    .photo-upload{width:100%;border:2px dashed rgba(251,191,36,.2);border-radius:14px;padding:24px;text-align:center;cursor:pointer;transition:all var(--transition);background:rgba(234,179,8,.03);position:relative;}
+    .photo-upload:hover{border-color:rgba(251,191,36,.45);background:rgba(234,179,8,.06);}
+    .photo-upload input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .photo-preview{display:none;width:90px;height:90px;border-radius:50%;object-fit:cover;margin:0 auto 12px;border:3px solid rgba(251,191,36,.4);}
+    .photo-upload-icon{margin-bottom:8px;}
+    .photo-upload-text{font-size:13px;color:var(--muted);}
+
+    /* STYLE TILES */
+    .style-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+    .style-option{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);cursor:pointer;transition:all var(--transition);font-size:13px;color:var(--muted);user-select:none;}
+    .style-option:hover{border-color:rgba(251,191,36,.3);color:#f1f5f9;}
+    .style-option.selected{border-color:rgba(251,191,36,.6);background:rgba(234,179,8,.1);color:#fbbf24;font-weight:600;}
+    .style-check{width:16px;height:16px;border-radius:4px;flex-shrink:0;border:1.5px solid rgba(148,163,184,.25);display:flex;align-items:center;justify-content:center;transition:all var(--transition);}
+    .style-option.selected .style-check{background:#fbbf24;border-color:#fbbf24;}
+    .style-check svg{width:10px;height:10px;color:#000;opacity:0;}
+    .style-option.selected .style-check svg{opacity:1;}
+    .style-limit{font-size:11px;color:rgba(148,163,184,.5);margin-top:8px;}
+
+    /* AI TIER */
+    .ai-run-btn{width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,rgba(109,40,217,.2),rgba(139,92,246,.1));border:1px solid rgba(167,139,250,.35);color:#c4b5fd;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all var(--transition);}
+    .ai-run-btn:hover{background:linear-gradient(135deg,rgba(109,40,217,.35),rgba(139,92,246,.2));border-color:rgba(167,139,250,.6);}
+    .ai-run-btn svg{width:18px;height:18px;}
+    .ai-loading{display:none;text-align:center;padding:28px;border-radius:14px;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);}
+    .ai-spinner{width:36px;height:36px;border-radius:50%;margin:0 auto 10px;border:3px solid rgba(139,92,246,.2);border-top-color:#a78bfa;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .ai-result{display:none;}
+
+    /* PLATFORM FEE EXPLAINER */
+    .fee-explainer{background:rgba(37,99,235,.07);border:1px solid rgba(59,130,246,.2);border-radius:12px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:flex-start;gap:12px;}
+    .fee-explainer svg{width:18px;height:18px;color:#60a5fa;flex-shrink:0;margin-top:1px;}
+    .fee-explainer-text{font-size:13px;color:rgba(226,232,240,.8);line-height:1.6;}
+    .fee-explainer-text strong{color:#f1f5f9;}
+
+    /* TIER CARDS */
+    .tier-cards{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
+    .tier-card{border-radius:14px;border:1.5px solid var(--border);padding:16px 18px;cursor:pointer;transition:all var(--transition);background:rgba(255,255,255,.03);display:flex;align-items:center;gap:14px;}
+    .tier-card:hover{border-color:rgba(251,191,36,.3);background:rgba(234,179,8,.04);}
+    .tier-card.selected{border-color:rgba(251,191,36,.7);background:rgba(234,179,8,.09);}
+    .tier-card.ai-pick{border-color:rgba(139,92,246,.4);background:rgba(109,40,217,.07);}
+    .tier-card.ai-pick.selected{border-color:#fbbf24;background:rgba(234,179,8,.09);}
+    .tier-check-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;border:2px solid rgba(148,163,184,.3);display:flex;align-items:center;justify-content:center;transition:all var(--transition);}
+    .tier-card.selected .tier-check-dot{border-color:#fbbf24;background:#fbbf24;}
+    .tier-check-inner{width:8px;height:8px;border-radius:50%;background:#000;display:none;}
+    .tier-card.selected .tier-check-inner{display:block;}
+    .tier-card-info{flex:1;}
+    .tier-card-name{font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .ai-pick-label{font-size:10px;font-weight:700;color:#a78bfa;background:rgba(139,92,246,.15);border:1px solid rgba(167,139,250,.3);border-radius:4px;padding:2px 7px;}
+    .tier-card-desc{font-size:12px;color:var(--muted);}
+    .tier-card-pricing{text-align:right;flex-shrink:0;}
+    .tier-price-main{font-size:17px;font-weight:800;color:#fbbf24;}
+    .tier-price-alt{font-size:11px;color:var(--muted);margin-bottom:3px;}
+    .tier-foundation{font-size:10px;font-weight:700;color:#fbbf24;background:rgba(234,179,8,.15);border:1px solid rgba(251,191,36,.3);border-radius:4px;padding:2px 6px;display:inline-block;}
+
+    /* AI RECOMMENDATION CARD */
+    .ai-rec-card{border-radius:14px;border:1px solid rgba(139,92,246,.4);background:linear-gradient(145deg,rgba(109,40,217,.12),rgba(15,23,42,.9));padding:20px;margin-bottom:4px;}
+    .ai-rec-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .ai-badge-pill{background:rgba(139,92,246,.2);border:1px solid rgba(167,139,250,.4);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#c4b5fd;text-transform:uppercase;letter-spacing:.1em;}
+    .ai-rec-tier-name{font-size:18px;font-weight:800;color:#e9d5ff;margin-bottom:4px;}
+    .ai-rec-reasoning{font-size:13px;color:rgba(226,232,240,.8);line-height:1.65;margin-bottom:10px;}
+    .ai-confidence-row{display:flex;align-items:center;gap:8px;font-size:12px;color:#a78bfa;font-weight:600;}
+    .ai-confidence-bar{width:80px;height:5px;background:rgba(139,92,246,.2);border-radius:3px;overflow:hidden;}
+    .ai-confidence-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#7c3aed,#a78bfa);}
+    .ai-agree-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+    .ai-agree-btn{padding:9px 20px;border-radius:999px;font-size:13px;font-weight:700;border:1px solid rgba(167,139,250,.4);background:rgba(139,92,246,.1);color:#c4b5fd;cursor:pointer;transition:all var(--transition);font-family:inherit;}
+    .ai-agree-btn:hover{background:rgba(139,92,246,.25);}
+    .ai-agree-btn.active{background:#7c3aed;border-color:#7c3aed;color:#fff;}
+    .ai-override-warn{display:none;margin-top:10px;padding:10px 14px;border-radius:8px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);font-size:12px;color:#fca5a5;line-height:1.5;}
+
+    /* BILLING */
+    .billing-toggle{display:flex;gap:10px;margin-top:4px;}
+    .billing-opt{flex:1;padding:13px;border-radius:12px;border:1.5px solid var(--border);text-align:center;cursor:pointer;transition:all var(--transition);background:rgba(255,255,255,.03);}
+    .billing-opt:hover{border-color:rgba(251,191,36,.3);}
+    .billing-opt.selected{border-color:rgba(251,191,36,.7);background:rgba(234,179,8,.09);}
+    .billing-opt-name{font-size:14px;font-weight:700;color:#f1f5f9;}
+    .billing-opt-price{font-size:13px;color:#fbbf24;font-weight:600;margin-top:3px;}
+    .billing-opt-foundation{font-size:11px;color:rgba(251,191,36,.65);margin-top:2px;}
+
+    /* SERVICE PACKAGES — TOGGLE STYLE */
+    .pkg-toggle-list{display:flex;flex-direction:column;gap:10px;}
+    .pkg-toggle-item{border-radius:14px;border:1.5px solid var(--border);background:rgba(255,255,255,.03);overflow:hidden;transition:all var(--transition);}
+    .pkg-toggle-item.active{border-color:rgba(251,191,36,.55);background:rgba(234,179,8,.07);}
+    .pkg-toggle-item.locked{opacity:.4;pointer-events:none;}
+    .pkg-toggle-header{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;}
+    .pkg-toggle-switch{width:44px;height:24px;border-radius:999px;background:rgba(148,163,184,.15);border:1px solid rgba(148,163,184,.2);position:relative;flex-shrink:0;transition:all var(--transition);}
+    .pkg-toggle-item.active .pkg-toggle-switch{background:rgba(251,191,36,.9);border-color:#fbbf24;}
+    .pkg-toggle-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:all var(--transition);box-shadow:0 1px 4px rgba(0,0,0,.3);}
+    .pkg-toggle-item.active .pkg-toggle-knob{left:23px;}
+    .pkg-toggle-info{flex:1;min-width:0;}
+    .pkg-toggle-name{font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:2px;}
+    .pkg-toggle-tagline{font-size:12px;color:var(--muted);}
+    .pkg-toggle-pricing{text-align:right;flex-shrink:0;}
+    .pkg-toggle-price{font-size:17px;font-weight:800;color:#fbbf24;}
+    .pkg-toggle-earn{font-size:11px;color:rgba(148,163,184,.6);margin-top:1px;}
+    .pkg-toggle-body{display:none;padding:0 16px 14px;}
+    .pkg-toggle-item.active .pkg-toggle-body{display:block;}
+    .pkg-toggle-body-inner{border-top:1px solid rgba(148,163,184,.1);padding-top:12px;}
+    .pkg-inclusion{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(226,232,240,.8);margin-bottom:6px;}
+    .pkg-inclusion svg{width:12px;height:12px;color:#34d399;flex-shrink:0;}
+    .pkg-lock-note{font-size:11px;color:#f87171;display:flex;align-items:center;gap:5px;margin-top:4px;}
+    .pkg-lock-note svg{width:12px;height:12px;flex-shrink:0;}
+
+    /* SUMMARY */
+    .summary-list{display:flex;flex-direction:column;gap:8px;}
+    .summary-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(148,163,184,.08);}
+    .summary-label{font-size:13px;color:rgba(226,232,240,.8);}
+    .summary-value{font-size:13px;font-weight:700;color:#f9fafb;}
+    .earnings-highlight{margin-top:14px;padding:14px 16px;border-radius:12px;background:rgba(22,163,74,.07);border:1px solid rgba(34,197,94,.2);}
+    .earnings-highlight-label{font-size:11px;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;}
+    .earnings-highlight-text{font-size:13px;color:rgba(226,232,240,.8);line-height:1.6;}
+    .earnings-highlight-text strong{color:#34d399;}
+
+    /* SUBMIT */
+    .submit-btn{width:100%;padding:15px;border-radius:999px;background:linear-gradient(135deg,#d97706,#92400e);color:#fff;font-weight:700;font-size:16px;border:none;cursor:pointer;box-shadow:0 14px 35px rgba(180,83,9,.4);transition:all var(--transition);font-family:inherit;margin-top:8px;}
+    .submit-btn:hover{transform:translateY(-2px);box-shadow:0 18px 42px rgba(180,83,9,.6);}
+    .submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .save-later-btn{width:100%;padding:13px;border-radius:999px;background:transparent;color:var(--muted);font-weight:600;font-size:14px;border:1px solid var(--border);cursor:pointer;transition:all var(--transition);font-family:inherit;margin-top:10px;}
+    .save-later-btn:hover{color:#f1f5f9;border-color:rgba(251,191,36,.35);background:rgba(234,179,8,.05);}
+    .save-later-btn:disabled{opacity:.6;cursor:not-allowed;}
+
+    /* SUCCESS MODAL */
+    .modal-overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(2,6,23,.92);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:linear-gradient(145deg,#0d1b3e,#060f26);border:1px solid rgba(251,191,36,.25);border-radius:22px;width:100%;max-width:480px;padding:40px;text-align:center;}
+    .modal-icon{width:64px;height:64px;border-radius:20px;background:rgba(22,163,74,.15);border:1px solid rgba(34,197,94,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+    .modal-icon svg{width:32px;height:32px;color:#34d399;}
+    .modal-title{font-size:28px;font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:8px;}
+    .modal-sub{font-size:15px;color:rgba(226,232,240,.65);line-height:1.65;margin-bottom:24px;}
+    .modal-live-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;border-radius:999px;background:rgba(22,163,74,.12);border:1px solid rgba(34,197,94,.3);font-size:13px;font-weight:700;color:#86efac;margin-bottom:28px;}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse-live 1.5s ease-in-out infinite;}
+    @keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+    .modal-btn{width:100%;padding:14px;border-radius:999px;background:linear-gradient(135deg,#d97706,#92400e);color:#fff;font-weight:700;font-size:15px;border:none;cursor:pointer;font-family:inherit;box-shadow:0 10px 28px rgba(180,83,9,.4);transition:all var(--transition);}
+    .modal-btn:hover{transform:translateY(-1px);}
+
+    footer{border-top:1px solid rgba(180,83,9,.2);background:rgba(3,7,18,.8);padding:14px 0;text-align:center;font-size:11px;color:rgba(148,163,184,.5);}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a href="index.html" class="nav-wordmark">COACH<span>ANYWHERE</span></a>
+    <div class="nav-step">Profile setup</div>
+  </div>
+</header>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <div class="coach-badge">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Coach Sign Up
+    </div>
+    <h1 class="page-title">Build your coach profile</h1>
+    <p class="page-sub">Complete your profile to go live and start attracting athletes.</p>
+  </div>
+
+  <!-- BASIC INFO -->
+  <div class="section-card">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
+      Basic information
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">First name</label>
+        <input class="form-input" type="text" id="firstName" placeholder="First name"/>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Last name</label>
+        <input class="form-input" type="text" id="lastName" placeholder="Last name"/>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:14px;">
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Primary sport</label>
+        <select class="form-select" id="sport">
+          <option value="" disabled selected>Select sport</option>
+          <option>Basketball</option><option>AFL</option><option>Soccer</option>
+          <option>Tennis</option><option>Cricket</option><option>Netball</option>
+          <option>Volleyball</option><option>Rugby / League</option><option>Golf</option>
+          <option>Gymnastics</option><option>Athletics</option><option>Swimming</option>
+          <option>Strength & Conditioning</option><option>Lacrosse</option><option>Pickleball</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Location</label>
+        <input class="form-input" type="text" id="location" placeholder="e.g. Melbourne, VIC"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADSHOT -->
+  <div class="section-card">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Profile photo
+    </div>
+    <div class="photo-upload" id="photoUpload">
+      <input type="file" accept="image/*" onchange="previewPhoto(this)"/>
+      <img class="photo-preview" id="photoPreview" src="" alt="Preview"/>
+      <div class="photo-upload-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(251,191,36,.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="photo-upload-text">Click to upload your photo</div>
+      <div style="font-size:11px;color:rgba(148,163,184,.4);margin-top:4px;">JPG or PNG · Max 5MB · Square crop works best</div>
+    </div>
+  </div>
+
+  <!-- BIO -->
+  <div class="section-card">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Your coaching story
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bio</label>
+      <textarea class="form-textarea" id="bio" rows="5" placeholder="Tell athletes about your coaching background, experience and what makes your sessions different. Be specific — athletes want to know who they're working with." maxlength="600"></textarea>
+      <div style="font-size:11px;color:rgba(148,163,184,.4);text-align:right;margin-top:3px;"><span id="bioCount">0</span>/600</div>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">Qualifications</label>
+      <input class="form-input" type="text" id="qualifications" placeholder="e.g. Basketball Australia Level 2, NBL Academy Coach, Bachelor of Sports Science"/>
+    </div>
+  </div>
+
+  <!-- COACHING STYLE -->
+  <div class="section-card">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Coaching style
+      <span style="font-size:10px;color:rgba(148,163,184,.5);font-weight:400;text-transform:none;letter-spacing:0;">Select up to 5</span>
+    </div>
+    <div class="style-grid" id="styleGrid"></div>
+    <div class="style-limit"><span id="styleCount">0</span>/5 selected</div>
+  </div>
+
+  <!-- AI TIER -->
+  <div class="section-card">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      Your platform tier & monthly fee
+    </div>
+
+    <!-- FEE EXPLAINER -->
+    <div class="fee-explainer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="fee-explainer-text">
+        <strong>This is your monthly platform fee</strong> — it gives you access to CoachAnywhere's athlete marketplace, AI video review tools, coach profile page and all platform features. This is separate from what athletes pay you for coaching packages. <strong>You keep 80% of every package sold.</strong>
+      </div>
+    </div>
+
+    <button class="ai-run-btn" id="aiRunBtn" onclick="runAIRecommendation()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      Get my AI tier recommendation
+    </button>
+
+    <div class="ai-loading" id="aiLoading">
+      <div class="ai-spinner"></div>
+      <div style="font-size:14px;color:#c4b5fd;font-weight:500;">Analysing your profile...</div>
+      <div style="font-size:12px;color:rgba(148,163,184,.5);margin-top:4px;">Comparing your experience against our tier criteria</div>
+    </div>
+
+    <div class="ai-result" id="aiResult">
+      <div class="ai-rec-card" id="aiRecCard">
+        <div class="ai-rec-header">
+          <div class="ai-badge-pill">AI Recommendation</div>
+          <div style="font-size:13px;color:var(--muted);" id="aiRecTitle">Here's your recommended tier</div>
+        </div>
+        <div class="ai-rec-tier-name" id="aiRecTierName"></div>
+        <div class="ai-rec-reasoning" id="aiRecReasoning"></div>
+        <div class="ai-confidence-row">
+          Confidence:
+          <div class="ai-confidence-bar"><div class="ai-confidence-fill" id="aiConfFill" style="width:0%"></div></div>
+          <span id="aiConfPct"></span>
+        </div>
+        <div class="ai-agree-row">
+          <div style="font-size:13px;color:var(--muted);width:100%;margin-bottom:4px;">Does this feel right?</div>
+          <button class="ai-agree-btn" id="btnAgree" onclick="agreeWithAI()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+            Yes, this fits me
+          </button>
+          <button class="ai-agree-btn" id="btnChoose" onclick="chooseDifferentTier()">Choose a different tier</button>
+        </div>
+        <div class="ai-override-warn" id="aiOverrideWarn">
+          Selecting a tier above your recommendation may result in fewer athlete matches. Athletes are AI-matched to coaches at their level — a mismatch could mean fewer subscribers. You can proceed, but we recommend starting at your recommended tier.
+        </div>
+      </div>
+
+      <!-- TIER SELECTOR — shown inline after AI result -->
+      <div class="tier-cards" id="tierCards"></div>
+    </div>
+  </div>
+
+  <!-- BILLING CYCLE -->
+  <div class="section-card" id="billingSection" style="display:none;">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Billing cycle
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">As a Foundation Member, you get <strong style="color:#fbbf24;">20% off</strong> your platform fee for the life of your subscription.</div>
+    <div class="billing-toggle" id="billingToggle"></div>
+  </div>
+
+  <!-- SERVICE MENU -->
+  <div class="section-card" id="serviceSection" style="display:none;">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Monthly inclusions for your athletes
+    </div>
+    <div style="font-size:13px;color:rgba(226,232,240,.7);line-height:1.65;margin-bottom:18px;">Toggle on the review packages you want to offer athletes each month. Only the packages you activate will appear on your coach profile. If you don't have time for a full game review, simply leave it off — athletes will only see what you offer.</div>
+    <div class="pkg-toggle-list" id="pkgToggleList"></div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="section-card" id="summarySection" style="display:none;">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Your profile summary
+    </div>
+    <div class="summary-list" id="summaryList"></div>
+    <div class="earnings-highlight" id="earningsHighlight"></div>
+  </div>
+
+  <button class="submit-btn" id="submitBtn" onclick="submitProfile()" style="display:none;">Go live now →</button>
+  <button class="save-later-btn" id="saveLaterBtn" onclick="saveAndCompleteLater()">Save &amp; complete later</button>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="modal-title">Your profile is live!</div>
+    <div class="modal-sub">Athletes can now find and subscribe to you on CoachAnywhere. Your Foundation Member pricing is locked in — keep your subscription active to keep it.</div>
+    <div class="modal-live-badge"><div class="live-dot"></div>Now visible to athletes</div>
+    <button class="modal-btn" onclick="window.location.href='coach-dashboard.html'">Go to my dashboard →</button>
+  </div>
+</div>
+
+<footer><p>© CoachAnywhere · coach.coachanywhere247.com</p></footer>
+
+<script>
+  const SUPABASE_URL="https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ca-auth",storage:window.localStorage,detectSessionInUrl:true}});
+
+  let currentUser=null;
+  let selectedTier=null;
+  let aiRecommendedTier=null;
+  let agreedWithAI=null;
+  let selectedBilling="monthly";
+  let selectedStyles=[];
+  let selectedPackages=[];
+
+  const STYLES=["Technical","Analytical","Motivational","Tactical","High Performance","Player Development","Mental Performance","Strength & Conditioning","Junior Development","Fundamentals First","Athlete-Centred","Leadership Development","Game Simulation","Discipline Focused","Communication Focused","Rehabilitation Support","Recruitment Pathway","Performance Science","Full Game Reviews","Video Analysis Focused"];
+
+  const TIERS=[
+    {id:"Level 1 — Development Coach",label:"Level 1 — Development Coach",desc:"Emerging & grassroots coaches, junior development",monthly:49,fortnightly:24,foundation:39,foundationFN:19},
+    {id:"Level 2 — Performance Coach",label:"Level 2 — Performance Coach",desc:"Experienced representative & academy coaches",monthly:99,fortnightly:49,foundation:79,foundationFN:39},
+    {id:"Level 3 — Elite Coach",label:"Level 3 — Elite Coach",desc:"State-level, national pathway & high performance specialists",monthly:199,fortnightly:95,foundation:159,foundationFN:79},
+    {id:"Level 4 — Verified Elite Coach",label:"Level 4 — Verified Elite Coach",desc:"Professional, national-level & Olympic pathway coaches",monthly:399,fortnightly:null,foundation:319,foundationFN:null}
+  ];
+
+  const PACKAGES=[
+    {id:"starter",name:"Skill Clip Review",tagline:"One focused skill reviewed per submission",price:15,earn:12,minTier:0,inclusions:["1 skill clip per submission","Written feedback & corrections","Drill recommendation to reinforce improvement","Response within 48 hours"]},
+    {id:"standard",name:"Session Review",tagline:"Up to 15 min of footage reviewed",price:35,earn:28,minTier:0,inclusions:["Up to 15 min training footage","Multi-skill written feedback report","Key technique corrections","Next session tips","Response within 48 hours"]},
+    {id:"pro",name:"Half Game / Long Session Review",tagline:"30 min footage — technique, decisions, positioning",price:75,earn:60,minTier:1,inclusions:["Up to 30 min game or session footage","Multi-phase technique analysis","Decision-making & positioning feedback","Key moments highlighted","Written breakdown + drill plan","Response within 48 hours"]},
+    {id:"elite",name:"Full Game Review",tagline:"Complete game breakdown with action plan",price:120,earn:96,minTier:1,inclusions:["Full game footage reviewed","Comprehensive written report","Technique, tactics & positioning","Performance trends identified","Personalised improvement action plan","Response within 72 hours"]},
+    {id:"premium",name:"Elite Package",tagline:"Full review + Zoom session + training plan",price:199,earn:159,minTier:2,inclusions:["Full game or session footage reviewed","Live Zoom debrief session (30 min)","Personalised monthly training plan","Priority response within 48 hours","Ongoing progress tracking"]}
+  ];
+
+  // ── INIT ──
+  async function init(){
+    // Retry getting session — storage may not be ready on first paint
+    let session=null,tries=0;
+    while(tries<15){
+      const {data}=await sb.auth.getSession();
+      if(data.session){session=data.session;break;}
+      await new Promise(r=>setTimeout(r,120));
+      tries++;
+    }
+    if(!session){window.location.href="login.html";return;}
+    currentUser=session.user;
+    // Pre-fill from existing profile — and if none exists (first arrival
+    // after email confirmation), create one from user_metadata stashed
+    // during signUp.
+    let {data:profile}=await sb.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
+    if(!profile){
+      const meta = session.user.user_metadata || {};
+      const newRow = {
+        id: session.user.id,
+        role: "coach",
+        first_name: meta.first_name || null,
+        last_name:  meta.last_name  || null
+      };
+      await sb.from("profiles").upsert(newRow);
+      profile = newRow;
+    }
+    if(profile){
+      // If setup is already complete (selected_tier set by setup save), skip setup.
+      // Mirrors coach-dashboard.html's gate so we don't bounce between pages.
+      if(profile.selected_tier && String(profile.selected_tier).trim()){
+        window.location.href="coach-dashboard.html";return;
+      }
+      if(profile.first_name)document.getElementById("firstName").value=profile.first_name;
+      if(profile.last_name)document.getElementById("lastName").value=profile.last_name;
+      if(profile.sport){const sel=document.getElementById("sport");for(let o of sel.options){if(o.value===profile.sport){sel.value=profile.sport;break;}}}
+      if(profile.location)document.getElementById("location").value=profile.location;
+      if(profile.bio)document.getElementById("bio").value=profile.bio;
+      if(profile.qualifications)document.getElementById("qualifications").value=profile.qualifications;
+      // Pre-select existing coaching styles
+      if(profile.coaching_style){
+        selectedStyles=profile.coaching_style.split(",").map(s=>s.trim()).filter(Boolean).slice(0,5);
+      }
+      if(profile.avatar_url){
+        const prev=document.getElementById("photoPreview");
+        if(prev){prev.src=profile.avatar_url;prev.style.display="block";}
+      }
+    }
+    renderStyles();
+    document.getElementById("bio").addEventListener("input",function(){document.getElementById("bioCount").textContent=this.value.length;});
+  }
+
+  // ── STYLES ──
+  function renderStyles(){
+    const grid=document.getElementById("styleGrid");
+    if(!grid)return;
+    grid.innerHTML=STYLES.map(s=>{
+      const sel=selectedStyles.includes(s)?" selected":"";
+      return `<div class="style-option${sel}" onclick="toggleStyle('${s}',this)">
+        <div class="style-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        ${s}
+      </div>`;
+    }).join("");
+    document.getElementById("styleCount").textContent=selectedStyles.length;
+  }
+
+  function toggleStyle(s,el){
+    if(el.classList.contains("selected")){el.classList.remove("selected");selectedStyles=selectedStyles.filter(x=>x!==s);}
+    else if(selectedStyles.length<5){el.classList.add("selected");selectedStyles.push(s);}
+    document.getElementById("styleCount").textContent=selectedStyles.length;
+  }
+
+  // ── PHOTO ──
+  let selectedPhotoFile=null;
+  function previewPhoto(input){
+    if(input.files&&input.files[0]){
+      selectedPhotoFile=input.files[0];
+      const reader=new FileReader();
+      reader.onload=e=>{
+        const prev=document.getElementById("photoPreview");
+        prev.src=e.target.result;prev.style.display="block";
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  async function uploadPhotoIfAny(){
+    if(!selectedPhotoFile)return null;
+    const ext=selectedPhotoFile.name.split(".").pop();
+    const path=currentUser.id+"/avatar_"+Date.now()+"."+ext;
+    const {error}=await sb.storage.from("avatars").upload(path,selectedPhotoFile,{upsert:true});
+    if(error){console.warn("Photo upload failed:",error.message);return null;}
+    const {data}=sb.storage.from("avatars").getPublicUrl(path);
+    return data?.publicUrl||null;
+  }
+
+  // ── AI RECOMMENDATION ──
+  function runAIRecommendation(){
+    const bio=document.getElementById("bio").value.trim();
+    const qual=document.getElementById("qualifications").value.trim();
+    if(!bio){alert("Please add your coaching bio first so the AI can analyse your experience.");return;}
+    document.getElementById("aiRunBtn").style.display="none";
+    document.getElementById("aiLoading").style.display="block";
+    setTimeout(()=>{
+      document.getElementById("aiLoading").style.display="none";
+      document.getElementById("aiResult").style.display="block";
+      const rec=calcTier(bio,qual,selectedStyles);
+      aiRecommendedTier=rec.tier;
+      document.getElementById("aiRecTierName").textContent=rec.tier.label;
+      document.getElementById("aiRecReasoning").textContent=rec.reasoning;
+      document.getElementById("aiConfFill").style.width=rec.confidence+"%";
+      document.getElementById("aiConfPct").textContent=rec.confidence+"%";
+    },2200);
+  }
+
+  function calcTier(bio,qual,styles){
+    const text=(bio+" "+qual+" "+styles.join(" ")).toLowerCase();
+    let score=0;
+    const highKw=["nbl","afl","a-league","state","national","olympic","professional","elite","vfl","nbbl","wnbl","super netball"];
+    const midKw=["representative","academy","level 2","level 3","pathway","advanced","semi-pro","bfc","premier"];
+    const lowKw=["grassroots","junior","beginner","community","club","school","developing","entry","level 1"];
+    highKw.forEach(k=>{if(text.includes(k))score+=3;});
+    midKw.forEach(k=>{if(text.includes(k))score+=2;});
+    lowKw.forEach(k=>{if(text.includes(k))score+=1;});
+    if(styles.includes("High Performance")||styles.includes("Analytical"))score+=1;
+    if(styles.includes("Junior Development")||styles.includes("Fundamentals First"))score-=1;
+    let tier,reasoning,confidence;
+    if(score>=8){tier=TIERS[2];reasoning="Your profile shows elite-level coaching experience with professional or state-level exposure. The Level 3 Elite tier gives you the tools and positioning to attract serious athletes and command premium packages.";confidence=88;}
+    else if(score>=4){tier=TIERS[1];reasoning="Your profile shows solid coaching experience at representative or academy level. The Level 2 Performance tier is the right fit — it positions you above grassroots coaches and gives you access to more advanced athlete packages.";confidence=78;}
+    else{tier=TIERS[0];reasoning="Your profile shows coaching experience at grassroots or junior level. The Level 1 Development tier is the right starting point — it's affordable, gets you live immediately and you can upgrade anytime as your client base grows.";confidence=72;}
+    return{tier,reasoning,confidence};
+  }
+
+  function agreeWithAI(){
+    selectedTier=aiRecommendedTier;
+    agreedWithAI=true;
+    document.getElementById("btnAgree").classList.add("active");
+    document.getElementById("btnChoose").classList.remove("active");
+    document.getElementById("aiOverrideWarn").style.display="none";
+    document.getElementById("tierCards").innerHTML="";
+    showBillingAndPackages();
+  }
+
+  function chooseDifferentTier(){
+    document.getElementById("btnChoose").classList.add("active");
+    document.getElementById("btnAgree").classList.remove("active");
+    agreedWithAI=false;
+    renderTierCards();
+  }
+
+  function renderTierCards(){
+    const container=document.getElementById("tierCards");
+    container.innerHTML=TIERS.map(t=>{
+      const isAI=t.id===aiRecommendedTier?.id;
+      return`<div class="tier-card ${isAI?"ai-pick":""}" onclick="selectTier('${t.id}',this)">
+        <div class="tier-check-dot"><div class="tier-check-inner"></div></div>
+        <div class="tier-card-info">
+          <div class="tier-card-name">${t.label}${isAI?`<span class="ai-pick-label">AI Pick</span>`:""}</div>
+          <div class="tier-card-desc">${t.desc}</div>
+        </div>
+        <div class="tier-card-pricing">
+          <div class="tier-price-main">$${t.monthly}/mo</div>
+          ${t.fortnightly?`<div class="tier-price-alt">$${t.fortnightly}/fortnight</div>`:"<div class='tier-price-alt'>Invite only</div>"}
+          <div class="tier-foundation">Foundation: $${t.foundation}/mo</div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  function selectTier(tierId,el){
+    selectedTier=TIERS.find(t=>t.id===tierId);
+    document.querySelectorAll(".tier-card").forEach(c=>c.classList.remove("selected"));
+    el.classList.add("selected");
+    const isOverride=aiRecommendedTier&&tierId!==aiRecommendedTier.id&&TIERS.findIndex(t=>t.id===tierId)>TIERS.findIndex(t=>t.id===aiRecommendedTier.id);
+    document.getElementById("aiOverrideWarn").style.display=isOverride?"block":"none";
+    showBillingAndPackages();
+  }
+
+  function showBillingAndPackages(){
+    if(!selectedTier)return;
+    document.getElementById("billingSection").style.display="block";
+    document.getElementById("serviceSection").style.display="block";
+    renderBilling();
+    renderPackages();
+    updateSummary();
+    document.getElementById("summarySection").style.display="block";
+    document.getElementById("submitBtn").style.display="block";
+  }
+
+  // ── BILLING ──
+  function renderBilling(){
+    const t=selectedTier;
+    const container=document.getElementById("billingToggle");
+    container.innerHTML=`
+      <div class="billing-opt selected" id="billingMonthly" onclick="setBilling('monthly')">
+        <div class="billing-opt-name">Monthly</div>
+        <div class="billing-opt-price">$${t.foundation}/month</div>
+        <div class="billing-opt-foundation">Foundation pricing</div>
+      </div>
+      ${t.fortnightly?`<div class="billing-opt" id="billingFN" onclick="setBilling('fortnightly')">
+        <div class="billing-opt-name">Fortnightly</div>
+        <div class="billing-opt-price">$${t.foundationFN}/fortnight</div>
+        <div class="billing-opt-foundation">Foundation pricing</div>
+      </div>`:""}
+    `;
+  }
+
+  function setBilling(type){
+    selectedBilling=type;
+    document.getElementById("billingMonthly")?.classList.toggle("selected",type==="monthly");
+    document.getElementById("billingFN")?.classList.toggle("selected",type==="fortnightly");
+    updateSummary();
+  }
+
+  // ── PACKAGES ──
+  function renderPackages(){
+    const tierIdx=TIERS.findIndex(t=>t.id===selectedTier.id);
+    const container=document.getElementById("pkgToggleList");
+    container.innerHTML=PACKAGES.map(pkg=>{
+      const locked=tierIdx<pkg.minTier;
+      const isActive=!locked&&selectedPackages.includes(pkg.id);
+      return`<div class="pkg-toggle-item ${isActive?"active":""} ${locked?"locked":""}" id="pkg-${pkg.id}" ${!locked?`onclick="togglePackage('${pkg.id}')"`:""}> 
+        <div class="pkg-toggle-header">
+          <div class="pkg-toggle-switch"><div class="pkg-toggle-knob"></div></div>
+          <div class="pkg-toggle-info">
+            <div class="pkg-toggle-name">${pkg.name}</div>
+            <div class="pkg-toggle-tagline">${pkg.tagline}</div>
+            ${locked?`<div class="pkg-lock-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Requires ${TIERS[pkg.minTier].label}</div>`:""}
+          </div>
+          <div class="pkg-toggle-pricing">
+            <div class="pkg-toggle-price">$${pkg.price}</div>
+            <div class="pkg-toggle-earn">You earn $${pkg.earn}</div>
+          </div>
+        </div>
+        <div class="pkg-toggle-body">
+          <div class="pkg-toggle-body-inner">
+            ${pkg.inclusions.map(inc=>`<div class="pkg-inclusion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>${inc}</div>`).join("")}
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  function togglePackage(id){
+    const el=document.getElementById("pkg-"+id);
+    if(selectedPackages.includes(id)){
+      selectedPackages=selectedPackages.filter(p=>p!==id);
+      el.classList.remove("active");
+    } else {
+      selectedPackages.push(id);
+      el.classList.add("active");
+    }
+    updateSummary();
+  }
+
+  // ── SUMMARY ──
+  function updateSummary(){
+    if(!selectedTier)return;
+    const t=selectedTier;
+    const fee=selectedBilling==="fortnightly"?t.foundationFN:t.foundation;
+    const period=selectedBilling==="fortnightly"?"fortnight":"month";
+    const activePkgs=PACKAGES.filter(p=>selectedPackages.includes(p.id));
+    const avgEarn=activePkgs.length>0?activePkgs.reduce((s,p)=>s+p.earn,0)/activePkgs.length:0;
+    const monthlyEst=Math.round(avgEarn*10);
+
+    document.getElementById("summaryList").innerHTML=`
+      <div class="summary-row"><span class="summary-label">Platform tier</span><span class="summary-value">${t.label}</span></div>
+      <div class="summary-row"><span class="summary-label">Monthly platform fee</span><span class="summary-value">$${fee}/${period} (Foundation)</span></div>
+      <div class="summary-row"><span class="summary-label">Packages offered</span><span class="summary-value">${activePkgs.length} package${activePkgs.length!==1?"s":""}</span></div>
+      <div class="summary-row"><span class="summary-label">Platform commission</span><span class="summary-value">20% per sale</span></div>
+    `;
+
+    document.getElementById("earningsHighlight").innerHTML=`
+      <div class="earnings-highlight-label">Example monthly earnings</div>
+      <div class="earnings-highlight-text">If you coach <strong>10 athletes/month</strong> across your selected packages, you could earn approximately <strong>$${monthlyEst}/month</strong> after platform commission — before your subscription fee of $${fee}/${period}.</div>
+    `;
+  }
+
+  // ── SUBMIT ──
+  async function submitProfile(){
+    const firstName=document.getElementById("firstName").value.trim();
+    const lastName=document.getElementById("lastName").value.trim();
+    const sport=document.getElementById("sport").value;
+    const location=document.getElementById("location").value.trim();
+    const bio=document.getElementById("bio").value.trim();
+    const qual=document.getElementById("qualifications").value.trim();
+    if(!firstName||!lastName||!sport||!bio){alert("Please fill in all required fields.");return;}
+    if(!selectedTier){alert("Please complete the AI tier recommendation first.");return;}
+    const btn=document.getElementById("submitBtn");
+    btn.disabled=true;btn.textContent="Saving...";
+    const photoUrl=await uploadPhotoIfAny();
+    const updateData={
+      first_name:firstName,last_name:lastName,sport,location,
+      bio,qualifications:qual,
+      coaching_style:selectedStyles.join(", "),
+      selected_tier:selectedTier.id,
+      billing_cycle:selectedBilling,
+      service_packages:selectedPackages.join(", "),
+      ai_recommended_tier:aiRecommendedTier?.id,
+      coach_agreed_with_ai:agreedWithAI,
+      profile_status:"Live",
+      role:"coach"
+    };
+    if(photoUrl)updateData.avatar_url=photoUrl;
+    const {error}=await sb.from("profiles").update(updateData).eq("id",currentUser.id);
+    btn.disabled=false;btn.textContent="Go live now →";
+    if(error){alert("Something went wrong. Please try again.");return;}
+    document.getElementById("successModal").classList.add("open");
+  }
+
+  // ── SAVE & COMPLETE LATER ──
+  // Saves whatever the coach has filled in but deliberately omits
+  // selected_tier / profile_status, so coach-dashboard.html will keep
+  // sending them back here next time they log in.
+  async function saveAndCompleteLater(){
+    const btn = document.getElementById("saveLaterBtn");
+    btn.disabled = true; btn.textContent = "Saving…";
+
+    // Try to grab a photo upload too (non-blocking — ignore failure).
+    let photoUrl = null;
+    try { photoUrl = await uploadPhotoIfAny(); } catch(e) {}
+
+    const partial = {
+      first_name: document.getElementById("firstName").value.trim() || null,
+      last_name:  document.getElementById("lastName").value.trim()  || null,
+      sport:      document.getElementById("sport").value || null,
+      location:   document.getElementById("location").value.trim() || null,
+      bio:        document.getElementById("bio").value.trim() || null,
+      qualifications: document.getElementById("qualifications").value.trim() || null,
+      coaching_style: selectedStyles.length ? selectedStyles.join(", ") : null,
+      role: "coach"
+    };
+    if(photoUrl) partial.avatar_url = photoUrl;
+    // Strip empty values so we don't blow away anything that's already in
+    // the DB (e.g. if the user only filled in their name).
+    Object.keys(partial).forEach(k => { if(partial[k] === null || partial[k] === "") delete partial[k]; });
+
+    const { error } = await sb.from("profiles").update(partial).eq("id", currentUser.id);
+    if(error){
+      btn.disabled = false; btn.textContent = "Save & complete later";
+      alert("Couldn't save your progress: " + error.message);
+      return;
+    }
+
+    // Sign out so they have to log in again — at which point the
+    // missing selected_tier will route them back here to finish.
+    try { await sb.auth.signOut(); } catch(e) {}
+    window.location.href = "login.html";
+  }
+
+  init();
+</script>
+</body>
+</html>

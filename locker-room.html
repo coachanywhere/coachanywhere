@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>The Locker Room – CoachAnywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="The Locker Room — where elite knowledge gets shared. Live sessions and recordings from elite coaches and athletes. Inside access. Real talk. No filter."/>
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{--amber:#fbbf24;--red:#ef4444;--text:#e5e7eb;--muted:#94a3b8;--border:rgba(148,163,184,.15);--transition:160ms ease-out;--card:rgba(11,18,44,.85);}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:#060f26;color:var(--text);min-height:100vh;}
+    a{text-decoration:none;color:inherit;}
+
+    /* NAV */
+    header{position:sticky;top:0;z-index:20;backdrop-filter:blur(18px);background:rgba(3,7,18,.97);border-bottom:1px solid rgba(239,68,68,.2);}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:12px 32px;max-width:1400px;margin:0 auto;}
+    .nav-wordmark{font-size:18px;font-weight:800;letter-spacing:.04em;color:#fff;text-transform:uppercase;}
+    .nav-wordmark span{color:#60a5fa;}
+    .nav-right{display:flex;align-items:center;gap:14px;}
+    .nav-back{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:5px;transition:color var(--transition);}
+    .nav-back:hover{color:#fff;}
+    .nav-back svg{width:14px;height:14px;}
+    .pass-btn{padding:8px 18px;border-radius:999px;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(220,38,38,.35);transition:all var(--transition);}
+    .pass-btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(220,38,38,.5);}
+
+    /* HERO */
+    .hero{position:relative;overflow:hidden;padding:60px 32px 48px;max-width:1400px;margin:0 auto;}
+    .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(220,38,38,.12),transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(251,191,36,.06),transparent 50%);pointer-events:none;}
+    .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:999px;background:rgba(220,38,38,.12);border:1px solid rgba(239,68,68,.3);font-size:11px;font-weight:700;color:#fca5a5;text-transform:uppercase;letter-spacing:.16em;margin-bottom:20px;}
+    .live-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;animation:live-pulse 1.5s ease-in-out infinite;}
+    @keyframes live-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
+    .hero-title{font-size:clamp(40px,6vw,72px);font-weight:800;color:#f9fafb;letter-spacing:-.03em;line-height:1;margin-bottom:12px;}
+    .hero-title .gold{color:#fbbf24;}
+    .hero-tagline{font-size:clamp(16px,2vw,22px);color:rgba(226,232,240,.6);font-weight:400;margin-bottom:28px;letter-spacing:.01em;}
+    .hero-desc{font-size:15px;color:rgba(226,232,240,.65);max-width:580px;line-height:1.7;margin-bottom:36px;}
+    .hero-actions{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+    .btn-red{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:999px;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;font-weight:700;font-size:15px;border:none;cursor:pointer;font-family:inherit;box-shadow:0 12px 32px rgba(220,38,38,.4);transition:all var(--transition);}
+    .btn-red:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(220,38,38,.55);}
+    .btn-red svg{width:16px;height:16px;}
+    .btn-outline{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:999px;background:transparent;border:1px solid rgba(226,232,240,.2);color:rgba(226,232,240,.8);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all var(--transition);}
+    .btn-outline:hover{border-color:rgba(226,232,240,.5);color:#fff;}
+    .hero-pass-note{font-size:13px;color:rgba(148,163,184,.6);margin-top:10px;}
+    .hero-pass-note strong{color:#fbbf24;}
+
+    /* STREAM TABS */
+    .tabs-wrap{max-width:1400px;margin:0 auto;padding:0 32px 28px;}
+    .tabs{display:flex;gap:0;background:rgba(11,18,44,.7);border:1px solid var(--border);border-radius:14px;padding:6px;width:fit-content;}
+    .tab-btn{padding:10px 24px;border-radius:10px;border:none;background:transparent;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;transition:all var(--transition);display:flex;align-items:center;gap:8px;}
+    .tab-btn svg{width:15px;height:15px;}
+    .tab-btn.active{background:rgba(220,38,38,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.25);}
+    .tab-btn.active.athlete{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.25);}
+
+    /* UPCOMING FEATURED */
+    .featured-wrap{max-width:1400px;margin:0 auto;padding:0 32px 32px;}
+    .section-eyebrow{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+    .section-eyebrow::after{content:'';flex:1;height:1px;background:var(--border);}
+
+    /* FEATURED CARD */
+    .featured-card{border-radius:22px;overflow:hidden;position:relative;background:linear-gradient(135deg,rgba(220,38,38,.12),rgba(180,83,9,.08),rgba(11,18,44,.9));border:1px solid rgba(239,68,68,.2);display:grid;grid-template-columns:1fr 380px;min-height:320px;}
+    .featured-card.athlete-stream{background:linear-gradient(135deg,rgba(234,179,8,.1),rgba(180,83,9,.07),rgba(11,18,44,.9));border-color:rgba(251,191,36,.2);}
+    .featured-content{padding:36px 40px;display:flex;flex-direction:column;justify-content:space-between;}
+    .featured-stream-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;margin-bottom:16px;width:fit-content;}
+    .stream-coach{background:rgba(220,38,38,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5;}
+    .stream-athlete{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#fbbf24;}
+    .featured-title{font-size:clamp(22px,3vw,32px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;line-height:1.15;margin-bottom:10px;}
+    .featured-speaker{font-size:15px;color:rgba(226,232,240,.7);margin-bottom:16px;}
+    .featured-speaker strong{color:#f1f5f9;}
+    .featured-meta{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:24px;}
+    .featured-meta-item{display:flex;align-items:center;gap:7px;font-size:13px;color:rgba(226,232,240,.75);}
+    .featured-meta-item svg{width:14px;height:14px;color:var(--muted);flex-shrink:0;}
+    .featured-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+    .btn-register{padding:12px 26px;border-radius:999px;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;font-weight:700;font-size:14px;border:none;cursor:pointer;font-family:inherit;box-shadow:0 10px 28px rgba(220,38,38,.4);transition:all var(--transition);}
+    .btn-register:hover{transform:translateY(-1px);box-shadow:0 14px 36px rgba(220,38,38,.55);}
+    .btn-register.athlete-btn{background:linear-gradient(135deg,#d97706,#92400e);box-shadow:0 10px 28px rgba(180,83,9,.35);}
+    .featured-price{font-size:14px;color:var(--muted);}
+    .featured-price strong{font-size:18px;font-weight:800;color:#f9fafb;}
+    .featured-price .pass-note{font-size:11px;color:#34d399;display:block;margin-top:2px;}
+    .featured-image{position:relative;overflow:hidden;}
+    .featured-image-placeholder{width:100%;height:100%;background:linear-gradient(135deg,#1a0505,#2d0a0a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;}
+    .featured-image-placeholder.athlete-bg{background:linear-gradient(135deg,#1c0a00,#2d1500);}
+    .speaker-avatar{width:100px;height:100px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:800;color:#fca5a5;border:3px solid rgba(239,68,68,.3);}
+    .speaker-avatar.athlete-av{color:#fbbf24;border-color:rgba(251,191,36,.3);}
+    .speaker-name-big{font-size:18px;font-weight:800;color:#f9fafb;text-align:center;}
+    .speaker-title-big{font-size:13px;color:var(--muted);text-align:center;line-height:1.5;}
+    .countdown-wrap{margin-top:16px;text-align:center;}
+    .countdown-label{font-size:10px;font-weight:700;color:rgba(148,163,184,.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+    .countdown{display:flex;gap:10px;justify-content:center;}
+    .countdown-unit{background:rgba(0,0,0,.4);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:8px 12px;text-align:center;min-width:52px;}
+    .countdown-unit.athlete-unit{border-color:rgba(251,191,36,.2);}
+    .countdown-num{font-size:22px;font-weight:800;color:#f9fafb;line-height:1;}
+    .countdown-unit-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+
+    /* UPCOMING GRID */
+    .upcoming-wrap{max-width:1400px;margin:0 auto;padding:0 32px 32px;}
+    .events-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+    .event-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:all var(--transition);cursor:pointer;}
+    .event-card:hover{transform:translateY(-3px);border-color:rgba(239,68,68,.3);box-shadow:0 16px 40px rgba(0,0,0,.4);}
+    .event-card.athlete-card:hover{border-color:rgba(251,191,36,.3);}
+    .event-card-header{padding:20px 20px 14px;border-bottom:1px solid var(--border);}
+    .event-stream-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;}
+    .event-title{font-size:16px;font-weight:700;color:#f1f5f9;line-height:1.35;margin-bottom:8px;}
+    .event-speaker{font-size:13px;color:var(--muted);}
+    .event-speaker strong{color:rgba(226,232,240,.85);}
+    .event-card-body{padding:14px 20px;}
+    .event-meta{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+    .event-meta-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);}
+    .event-meta-row svg{width:13px;height:13px;flex-shrink:0;}
+    .event-footer{display:flex;align-items:center;justify-content:space-between;}
+    .event-price{font-size:13px;color:var(--muted);}
+    .event-price strong{font-size:16px;font-weight:800;color:#f9fafb;}
+    .event-register-btn{padding:7px 16px;border-radius:999px;font-size:12px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all var(--transition);}
+    .event-register-btn.coach-btn{background:rgba(220,38,38,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.25);}
+    .event-register-btn.athlete-btn{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.25);}
+    .event-register-btn:hover{transform:translateY(-1px);}
+    .spots-chip{font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(22,163,74,.1);color:#34d399;border:1px solid rgba(34,197,94,.2);}
+    .spots-chip.low{background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.2);}
+
+    /* PASS CARD */
+    .pass-wrap{max-width:1400px;margin:0 auto;padding:0 32px 40px;}
+    .pass-card{border-radius:22px;padding:40px;background:linear-gradient(135deg,rgba(17,24,39,.9),rgba(9,14,35,.95));border:1px solid rgba(251,191,36,.2);position:relative;overflow:hidden;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center;}
+    .pass-card::before{content:'';position:absolute;top:-60px;right:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(251,191,36,.08),transparent 70%);}
+    .pass-eyebrow{font-size:11px;font-weight:700;color:#fbbf24;text-transform:uppercase;letter-spacing:.16em;margin-bottom:10px;}
+    .pass-title{font-size:32px;font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:8px;}
+    .pass-desc{font-size:15px;color:rgba(226,232,240,.65);line-height:1.65;margin-bottom:24px;max-width:520px;}
+    .pass-features{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:28px;}
+    .pass-feature{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(226,232,240,.85);}
+    .pass-feature svg{width:14px;height:14px;color:#fbbf24;flex-shrink:0;}
+    .pass-pricing{text-align:center;flex-shrink:0;}
+    .pass-price-main{font-size:52px;font-weight:800;color:#fbbf24;letter-spacing:-.03em;line-height:1;}
+    .pass-price-period{font-size:14px;color:var(--muted);margin-bottom:6px;}
+    .pass-price-note{font-size:12px;color:rgba(148,163,184,.6);margin-bottom:20px;}
+    .btn-pass{padding:14px 32px;border-radius:999px;background:linear-gradient(135deg,#d97706,#92400e);color:#fff;font-weight:700;font-size:15px;border:none;cursor:pointer;font-family:inherit;box-shadow:0 12px 32px rgba(180,83,9,.4);transition:all var(--transition);white-space:nowrap;}
+    .btn-pass:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(180,83,9,.6);}
+
+    /* RECORDINGS */
+    .recordings-wrap{max-width:1400px;margin:0 auto;padding:0 32px 60px;}
+    .recordings-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+    .recording-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:all var(--transition);}
+    .recording-card:hover{border-color:rgba(148,163,184,.3);transform:translateY(-2px);}
+    .recording-thumb{height:140px;background:linear-gradient(135deg,#0d1428,#060f26);display:flex;align-items:center;justify-content:center;position:relative;}
+    .recording-thumb.coach-thumb{background:linear-gradient(135deg,#1a0505,#0d0202);}
+    .recording-thumb.athlete-thumb{background:linear-gradient(135deg,#1c0a00,#0d0500);}
+    .play-icon{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;}
+    .play-icon svg{width:18px;height:18px;color:#fff;margin-left:3px;}
+    .recording-lock{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 8px;font-size:10px;font-weight:700;color:rgba(226,232,240,.7);display:flex;align-items:center;gap:4px;}
+    .recording-lock svg{width:10px;height:10px;}
+    .recording-body{padding:12px 14px;}
+    .recording-stream{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;}
+    .recording-title{font-size:13px;font-weight:700;color:#f1f5f9;line-height:1.35;margin-bottom:4px;}
+    .recording-speaker{font-size:11px;color:var(--muted);}
+    .recording-duration{font-size:10px;color:rgba(148,163,184,.5);margin-top:6px;}
+
+    /* INTEREST MODAL */
+    .modal-overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(2,6,23,.88);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:20px;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:linear-gradient(145deg,#0d1b3e,#060f26);border:1px solid rgba(239,68,68,.2);border-radius:22px;width:100%;max-width:480px;padding:32px;}
+    .modal-title{font-size:22px;font-weight:800;color:#f9fafb;margin-bottom:6px;}
+    .modal-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.55;}
+    .modal-input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#f1f5f9;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px;transition:border-color var(--transition);}
+    .modal-input:focus{border-color:rgba(239,68,68,.4);}
+    .modal-input::placeholder{color:rgba(148,163,184,.4);}
+    .modal-actions{display:flex;gap:10px;}
+    .btn-modal-submit{flex:1;padding:12px;border-radius:999px;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;font-weight:700;font-size:14px;border:none;cursor:pointer;font-family:inherit;}
+    .btn-modal-cancel{padding:12px 20px;border-radius:999px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;font-family:inherit;}
+    .modal-success{display:none;text-align:center;padding:20px 0;}
+    .modal-success-icon{font-size:48px;margin-bottom:14px;}
+    .modal-success-title{font-size:20px;font-weight:800;color:#f9fafb;margin-bottom:6px;}
+    .modal-success-sub{font-size:14px;color:var(--muted);}
+
+    footer{border-top:1px solid rgba(239,68,68,.15);background:rgba(3,7,18,.8);padding:16px 32px;text-align:center;font-size:11px;color:rgba(148,163,184,.5);}
+
+    @media(max-width:1000px){.featured-card{grid-template-columns:1fr;}.featured-image{display:none;}.events-grid{grid-template-columns:repeat(2,1fr);}.recordings-grid{grid-template-columns:repeat(2,1fr);}.pass-card{grid-template-columns:1fr;}.pass-pricing{text-align:left;}}
+    @media(max-width:600px){.events-grid{grid-template-columns:1fr;}.recordings-grid{grid-template-columns:1fr;}.nav{padding:10px 16px;}.hero,.tabs-wrap,.featured-wrap,.upcoming-wrap,.pass-wrap,.recordings-wrap{padding-left:16px;padding-right:16px;}}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a href="index.html" class="nav-wordmark">COACH<span>ANYWHERE</span></a>
+    <div class="nav-right">
+      <a href="index.html" class="nav-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Home
+      </a>
+      <button class="pass-btn" onclick="openPassModal()">Get All Access Pass — $49/mo</button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-eyebrow">
+    <div class="live-dot"></div>
+    Live & On Demand
+  </div>
+  <h1 class="hero-title">The<br/><span class="gold">Locker Room</span></h1>
+  <p class="hero-tagline">Where elite knowledge gets shared.</p>
+  <p class="hero-desc">Inside access to elite coaches and athletes. Live sessions, real talk, no filter. Learn what you can't get from a certificate — straight from the people who've been there.</p>
+  <div class="hero-actions">
+    <button class="btn-red" onclick="scrollToUpcoming()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Browse sessions
+    </button>
+    <button class="btn-outline" onclick="openPassModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      All Access Pass
+    </button>
+  </div>
+  <p class="hero-pass-note">All Access Pass: <strong>$49/month</strong> — unlimited sessions, all recordings, both streams.</p>
+</div>
+
+<!-- STREAM TABS -->
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" id="tabCoach" onclick="switchStream('coach')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Coach Stream
+    </button>
+    <button class="tab-btn" id="tabAthlete" onclick="switchStream('athlete')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Athlete Stream
+    </button>
+  </div>
+</div>
+
+<!-- FEATURED SESSION -->
+<div class="featured-wrap">
+  <div class="section-eyebrow">Next live session</div>
+  <div id="featuredCard"></div>
+</div>
+
+<!-- UPCOMING SESSIONS -->
+<div class="upcoming-wrap" id="upcomingSection">
+  <div class="section-eyebrow">Upcoming sessions</div>
+  <div class="events-grid" id="eventsGrid"></div>
+</div>
+
+<!-- ALL ACCESS PASS -->
+<div class="pass-wrap">
+  <div class="pass-card">
+    <div>
+      <div class="pass-eyebrow">The Locker Room</div>
+      <div class="pass-title">All Access Pass</div>
+      <div class="pass-desc">One subscription. Every session. Both streams. Watch live or on demand — coach masterclasses, athlete stories, game tape breakdowns and coaching philosophy from the people who've actually done it.</div>
+      <div class="pass-features">
+        <div class="pass-feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>All live sessions — Coach + Athlete streams</div>
+        <div class="pass-feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Full recordings library on demand</div>
+        <div class="pass-feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Ask questions live during sessions</div>
+        <div class="pass-feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>New sessions added every week</div>
+        <div class="pass-feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>First 15 mins of every session free</div>
+        <div class="pass-feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Cancel anytime</div>
+      </div>
+    </div>
+    <div class="pass-pricing">
+      <div class="pass-price-main">$49</div>
+      <div class="pass-price-period">per month</div>
+      <div class="pass-price-note">Or pay per session from $29</div>
+      <button class="btn-pass" onclick="openPassModal()">Get All Access →</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECORDINGS -->
+<div class="recordings-wrap">
+  <div class="section-eyebrow">On demand recordings</div>
+  <div class="recordings-grid" id="recordingsGrid"></div>
+</div>
+
+<!-- INTEREST / REGISTER MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div id="modalRegisterContent">
+      <div class="modal-title" id="modalTitle">Register for this session</div>
+      <div class="modal-sub" id="modalSub">Enter your details and we'll send you the Zoom link and a reminder before the session starts.</div>
+      <input class="modal-input" type="text" id="modalName" placeholder="Your name"/>
+      <input class="modal-input" type="email" id="modalEmail" placeholder="Your email"/>
+      <div class="modal-actions">
+        <button class="btn-modal-submit" id="modalSubmitBtn" onclick="submitInterest()">Register interest →</button>
+        <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+    <div class="modal-success" id="modalSuccess">
+      <div class="modal-success-icon">🎉</div>
+      <div class="modal-success-title">You're registered!</div>
+      <div class="modal-success-sub">We'll send you the Zoom link and a reminder 24 hours before the session. See you in The Locker Room.</div>
+    </div>
+  </div>
+</div>
+
+<footer>© CoachAnywhere · The Locker Room · Inside access. Real talk. No filter.</footer>
+
+<script>
+  const SUPABASE_URL="https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+  let currentStream="coach";
+  let currentModalSession=null;
+
+  // ── DEMO DATA ──
+  const SESSIONS={
+    coach:[
+      {id:"c1",title:"Coaching Contested Ball at the Elite Level",speaker:"Aiden Brooks",speakerTitle:"VFL Assistant Coach · AFL Level 2",sport:"AFL",date:"2026-06-03",time:"7:00pm AEST",price:39,spots:47,maxSpots:50,stream:"coach",description:"Breaking down how to design drills that transfer to game day contested situations. Frame-by-frame analysis of elite players and what separates them from development athletes.",featured:true},
+      {id:"c2",title:"Building Your Online Coaching Business from Scratch",speaker:"Daniel Walsh",speakerTitle:"NBL1 Coach · CoachAnywhere Elite",sport:"Basketball",date:"2026-06-10",time:"6:30pm AEST",price:29,spots:38,maxSpots:50,stream:"coach",featured:false},
+      {id:"c3",title:"Session Design That Actually Transfers to Game Day",speaker:"Marcus Reid",speakerTitle:"A-League Academy · AFC B Licence",sport:"Soccer",date:"2026-06-17",time:"7:30pm AEST",price:39,spots:44,maxSpots:50,stream:"coach",featured:false},
+      {id:"c4",title:"How to Give Feedback Athletes Actually Act On",speaker:"Sarah Nguyen",speakerTitle:"Tennis Australia Level 2 · QLD State Program",sport:"Tennis",date:"2026-06-24",time:"7:00pm AEST",price:29,spots:22,maxSpots:50,stream:"coach",featured:false}
+    ],
+    athlete:[
+      {id:"a1",title:"What It Actually Takes to Get to the NBL",speaker:"Jordan Parke",speakerTitle:"NBL Academy Graduate · Current NBL1 Player",sport:"Basketball",date:"2026-06-05",time:"7:00pm AEST",price:29,spots:41,maxSpots:100,stream:"athlete",description:"Jordan breaks down his journey from grassroots to NBL — what he wishes he'd known at 16, how he trained, what scouts actually look for and how video analysis transformed his game.",featured:true},
+      {id:"a2",title:"Mental Performance — What the Best Athletes Do Differently",speaker:"Elite Athlete Guest",speakerTitle:"State Representative Athlete",sport:"Multi-sport",date:"2026-06-12",time:"6:00pm AEST",price:29,spots:67,maxSpots:100,stream:"athlete",featured:false},
+      {id:"a3",title:"Nutrition and Recovery at the Elite Level",speaker:"Performance Specialist",speakerTitle:"High Performance Nutritionist",sport:"Multi-sport",date:"2026-06-19",time:"7:00pm AEST",price:29,spots:55,maxSpots:100,stream:"athlete",featured:false},
+      {id:"a4",title:"My AFL Journey — From Club to State Selection",speaker:"AFL State Representative",speakerTitle:"State Representative · SANFL",sport:"AFL",date:"2026-06-26",time:"7:30pm AEST",price:29,spots:31,maxSpots:100,stream:"athlete",featured:false}
+    ]
+  };
+
+  const RECORDINGS={
+    coach:[
+      {id:"rc1",title:"Defensive Rotations — What Elite Teams Do That Juniors Don't",speaker:"Daniel Walsh",duration:"58 mins",thumb:"coach-thumb",stream:"coach"},
+      {id:"rc2",title:"How to Use Video Analysis in Every Coaching Session",speaker:"Aiden Brooks",duration:"44 mins",thumb:"coach-thumb",stream:"coach"},
+      {id:"rc3",title:"Coaching Communication — Getting Through to Difficult Athletes",speaker:"Emily Collins",duration:"51 mins",thumb:"coach-thumb",stream:"coach"},
+      {id:"rc4",title:"Building a Training Week That Develops and Wins",speaker:"Marcus Reid",duration:"63 mins",thumb:"coach-thumb",stream:"coach"}
+    ],
+    athlete:[
+      {id:"ra1",title:"My Journey from School Sport to State Representative",speaker:"Guest Athlete",duration:"47 mins",thumb:"athlete-thumb",stream:"athlete"},
+      {id:"ra2",title:"What Scouts Actually Look For — A Coach's Perspective",speaker:"Tom Henderson",duration:"38 mins",thumb:"athlete-thumb",stream:"athlete"},
+      {id:"ra3",title:"Sleep, Recovery and Training Load at the Elite Level",speaker:"Performance Expert",duration:"42 mins",thumb:"athlete-thumb",stream:"athlete"},
+      {id:"ra4",title:"Building Confidence Under Pressure",speaker:"Mental Performance Coach",duration:"55 mins",thumb:"athlete-thumb",stream:"athlete"}
+    ]
+  };
+
+  function switchStream(stream){
+    currentStream=stream;
+    document.getElementById("tabCoach").classList.toggle("active",stream==="coach");
+    document.getElementById("tabAthlete").classList.toggle("active",stream==="athlete");
+    document.getElementById("tabAthlete").classList.toggle("athlete",stream==="athlete");
+    renderFeatured();
+    renderEvents();
+    renderRecordings();
+  }
+
+  function formatDate(dateStr){
+    const d=new Date(dateStr);
+    return d.toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long"});
+  }
+
+  function getDaysUntil(dateStr){
+    const d=new Date(dateStr);
+    const now=new Date();
+    return Math.max(0,Math.floor((d-now)/86400000));
+  }
+
+  function startCountdown(targetDate,prefix){
+    function update(){
+      const now=new Date();
+      const target=new Date(targetDate+" 09:00:00");
+      const diff=Math.max(0,target-now);
+      const d=Math.floor(diff/86400000);
+      const h=Math.floor((diff%86400000)/3600000);
+      const m=Math.floor((diff%3600000)/60000);
+      const s=Math.floor((diff%60000)/1000);
+      const el=document.getElementById(prefix+"countdown");
+      if(el)el.innerHTML=`
+        <div class="countdown-unit ${prefix==="a"?"athlete-unit":""}"><div class="countdown-num">${String(d).padStart(2,"0")}</div><div class="countdown-unit-label">days</div></div>
+        <div class="countdown-unit ${prefix==="a"?"athlete-unit":""}"><div class="countdown-num">${String(h).padStart(2,"0")}</div><div class="countdown-unit-label">hrs</div></div>
+        <div class="countdown-unit ${prefix==="a"?"athlete-unit":""}"><div class="countdown-num">${String(m).padStart(2,"0")}</div><div class="countdown-unit-label">min</div></div>
+        <div class="countdown-unit ${prefix==="a"?"athlete-unit":""}"><div class="countdown-num">${String(s).padStart(2,"0")}</div><div class="countdown-unit-label">sec</div></div>
+      `;
+    }
+    update();
+    setInterval(update,1000);
+  }
+
+  function renderFeatured(){
+    const sessions=SESSIONS[currentStream];
+    const featured=sessions.find(s=>s.featured)||sessions[0];
+    const isAthlete=currentStream==="athlete";
+    const spotsLeft=featured.maxSpots-featured.spots;
+    const prefix=isAthlete?"a":"c";
+    document.getElementById("featuredCard").innerHTML=`
+      <div class="featured-card ${isAthlete?"athlete-stream":""}">
+        <div class="featured-content">
+          <div>
+            <div class="featured-stream-badge ${isAthlete?"stream-athlete":"stream-coach"}">
+              ${isAthlete?"Athlete Stream":"Coach Stream"}
+            </div>
+            <div class="featured-title">${featured.title}</div>
+            <div class="featured-speaker">with <strong>${featured.speaker}</strong> · ${featured.speakerTitle}</div>
+            <div class="featured-meta">
+              <div class="featured-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${formatDate(featured.date)}</div>
+              <div class="featured-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${featured.time}</div>
+              <div class="featured-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>${featured.spots} registered · ${spotsLeft} spots left</div>
+            </div>
+          </div>
+          <div class="featured-actions">
+            <button class="btn-register ${isAthlete?"athlete-btn":""}" onclick="openRegisterModal('${featured.id}','${featured.title}','${featured.price}')">Register — $${featured.price}</button>
+            <div class="featured-price">
+              <strong>$${featured.price}</strong> per session
+              <span class="pass-note">✓ Free with All Access Pass</span>
+            </div>
+          </div>
+        </div>
+        <div class="featured-image">
+          <div class="featured-image-placeholder ${isAthlete?"athlete-bg":""}">
+            <div class="speaker-avatar ${isAthlete?"athlete-av":""}" style="background:${isAthlete?"rgba(234,179,8,.15)":"rgba(220,38,38,.15)"};">${featured.speaker.split(" ").map(n=>n[0]).join("")}</div>
+            <div class="speaker-name-big">${featured.speaker}</div>
+            <div class="speaker-title-big">${featured.speakerTitle}</div>
+            <div class="countdown-wrap">
+              <div class="countdown-label">Session starts in</div>
+              <div class="countdown" id="${prefix}countdown"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    setTimeout(()=>startCountdown(featured.date,prefix),100);
+  }
+
+  function renderEvents(){
+    const sessions=SESSIONS[currentStream].filter(s=>!s.featured);
+    const isAthlete=currentStream==="athlete";
+    document.getElementById("eventsGrid").innerHTML=sessions.map(s=>{
+      const spotsLeft=s.maxSpots-s.spots;
+      const lowSpots=spotsLeft<15;
+      return`<div class="event-card ${isAthlete?"athlete-card":""}" onclick="openRegisterModal('${s.id}','${s.title}','${s.price}')">
+        <div class="event-card-header">
+          <div class="event-stream-badge ${isAthlete?"stream-athlete":"stream-coach"}">${isAthlete?"Athlete":"Coach"} Stream</div>
+          <div class="event-title">${s.title}</div>
+          <div class="event-speaker">with <strong>${s.speaker}</strong></div>
+        </div>
+        <div class="event-card-body">
+          <div class="event-meta">
+            <div class="event-meta-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${formatDate(s.date)}</div>
+            <div class="event-meta-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${s.time}</div>
+            <div class="event-meta-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${spotsLeft} spots remaining <span class="spots-chip ${lowSpots?"low":""}">${lowSpots?"Almost full":"Available"}</span></div>
+          </div>
+          <div class="event-footer">
+            <div class="event-price"><strong>$${s.price}</strong></div>
+            <button class="event-register-btn ${isAthlete?"athlete-btn":"coach-btn"}">Register →</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  function renderRecordings(){
+    const recs=RECORDINGS[currentStream];
+    const isAthlete=currentStream==="athlete";
+    document.getElementById("recordingsGrid").innerHTML=recs.map(r=>`
+      <div class="recording-card" onclick="openPassModal()">
+        <div class="recording-thumb ${r.thumb}">
+          <div class="play-icon"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+          <div class="recording-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Pass only</div>
+        </div>
+        <div class="recording-body">
+          <div class="recording-stream" style="color:${isAthlete?"#fbbf24":"#fca5a5"};">${isAthlete?"Athlete":"Coach"} Stream</div>
+          <div class="recording-title">${r.title}</div>
+          <div class="recording-speaker">${r.speaker}</div>
+          <div class="recording-duration">${r.duration}</div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  // ── MODALS ──
+  function openRegisterModal(sessionId,title,price){
+    currentModalSession={id:sessionId,title,price};
+    document.getElementById("modalTitle").textContent="Register for this session";
+    document.getElementById("modalSub").textContent=`"${title}" — $${price} per person. We'll send you the Zoom link and a reminder before it starts.`;
+    document.getElementById("modalSubmitBtn").textContent=`Register — $${price} →`;
+    document.getElementById("modalRegisterContent").style.display="block";
+    document.getElementById("modalSuccess").style.display="none";
+    document.getElementById("modalOverlay").classList.add("open");
+  }
+
+  function openPassModal(){
+    document.getElementById("modalTitle").textContent="Get The Locker Room All Access Pass";
+    document.getElementById("modalSub").textContent="$49/month — every session, both streams, full recordings library. We'll be in touch to complete your subscription.";
+    document.getElementById("modalSubmitBtn").textContent="Get All Access — $49/mo →";
+    document.getElementById("modalRegisterContent").style.display="block";
+    document.getElementById("modalSuccess").style.display="none";
+    document.getElementById("modalOverlay").classList.add("open");
+  }
+
+  function closeModal(){document.getElementById("modalOverlay").classList.remove("open");}
+
+  async function submitInterest(){
+    const name=document.getElementById("modalName").value.trim();
+    const email=document.getElementById("modalEmail").value.trim();
+    if(!name||!email){alert("Please enter your name and email.");return;}
+    const btn=document.getElementById("modalSubmitBtn");
+    btn.textContent="Submitting...";btn.disabled=true;
+
+    const {error}=await supabase.from("locker_room_interest").insert({
+      name,email,
+      session_id:currentModalSession?.id||"pass",
+      session_title:currentModalSession?.title||"All Access Pass",
+      type:currentModalSession?"session":"pass"
+    });
+
+    document.getElementById("modalRegisterContent").style.display="none";
+    document.getElementById("modalSuccess").style.display="block";
+    btn.textContent="Register interest →";btn.disabled=false;
+  }
+
+  function scrollToUpcoming(){document.getElementById("upcomingSection").scrollIntoView({behavior:"smooth"});}
+
+  // ── INIT ──
+  renderFeatured();
+  renderEvents();
+  renderRecordings();
+</script>
+</body>
+</html>

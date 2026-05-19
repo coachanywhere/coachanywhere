@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.0",
+    "stripe": "^22.1.1"
+  },
+  "scripts": {
+    "seed-demo": "node seed-demo-data.js",
+    "seed-demo-dry": "node seed-demo-data.js --dry-run",
+    "delete-demo": "node delete-demo-data.js",
+    "delete-demo-go": "node delete-demo-data.js --confirm",
+    "reset-demo": "node reset-demo.js",
+    "reset-demo-go": "node reset-demo.js --confirm"
+  }
+}

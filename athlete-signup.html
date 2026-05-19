@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Athlete Sign Up – CoachAnywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Sign up as an athlete on CoachAnywhere — upload videos, get elite coach feedback remotely across any sport." />
+  <meta name="theme-color" content="#0A1C4A" />
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --blue:#2563eb;--blue2:#3b82f6;--navy:#020617;--navy2:#0a1535;--navy3:#0d1b3e;
+      --text:#e5e7eb;--muted:#94a3b8;--border:rgba(148,163,184,.2);
+      --transition:160ms ease-out;--max-width:1160px;
+    }
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+      background:radial-gradient(circle at 20% 0%,#0A1C4A 0%,#020B24 65%,#020617 100%);
+      color:var(--text);line-height:1.6;min-height:100vh;
+    }
+    a{text-decoration:none;color:inherit;}
+    .container{width:100%;max-width:var(--max-width);margin:0 auto;padding:0 20px;}
+
+    /* NAV */
+    header{
+      position:sticky;top:0;z-index:20;
+      backdrop-filter:blur(18px);
+      background:linear-gradient(to bottom,rgba(3,7,18,.96),rgba(3,7,18,.88),transparent);
+      border-bottom:1px solid rgba(30,64,175,.7);
+    }
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:10px 0;}
+    .nav-wordmark{
+      font-size:18px;font-weight:800;letter-spacing:.04em;color:#fff;
+      text-transform:uppercase;display:flex;align-items:center;
+    }
+    .nav-wordmark span.accent{color:#60a5fa;}
+    .nav-back{
+      display:flex;align-items:center;gap:6px;
+      font-size:14px;color:var(--muted);cursor:pointer;
+      transition:color var(--transition);
+    }
+    .nav-back:hover{color:#fff;}
+    .nav-back svg{width:16px;height:16px;}
+
+    /* PAGE LAYOUT */
+    .page-wrap{
+      min-height:calc(100vh - 64px);
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:48px 20px 64px;
+    }
+    .form-card{
+      width:100%;max-width:580px;
+    }
+
+    /* LEFT PANEL */
+    .left-panel{
+      background:linear-gradient(160deg,#0d2a6e 0%,#061230 100%);
+      padding:60px 56px;
+      display:flex;flex-direction:column;justify-content:space-between;
+      border-right:1px solid rgba(37,99,235,.2);
+      position:relative;overflow:hidden;min-height:100%;
+    }
+    .left-panel::before{
+      content:'';position:absolute;
+      width:500px;height:500px;border-radius:50%;
+      background:radial-gradient(circle,rgba(37,99,235,.15) 0%,transparent 70%);
+      top:-150px;right:-150px;pointer-events:none;
+    }
+    .left-eyebrow{
+      font-size:11px;text-transform:uppercase;letter-spacing:.2em;
+      color:#60a5fa;margin-bottom:16px;font-weight:600;
+    }
+    .left-headline{
+      font-size:clamp(32px,4vw,52px);font-weight:800;
+      line-height:1.05;letter-spacing:-.02em;color:#f9fafb;
+      margin-bottom:20px;
+    }
+    .left-sub{
+      font-size:17px;color:rgba(226,232,240,.75);
+      line-height:1.65;max-width:400px;margin-bottom:40px;
+      border-left:3px solid #3b82f6;padding-left:14px;
+    }
+    .left-steps{display:flex;flex-direction:column;gap:16px;}
+    .left-step{
+      display:flex;align-items:flex-start;gap:14px;
+      padding:14px 16px;border-radius:14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(148,163,184,.12);
+    }
+    .left-step-num{
+      width:32px;height:32px;border-radius:10px;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:800;font-size:13px;
+    }
+    .left-step-num.blue{background:rgba(37,99,235,.2);border:1px solid rgba(59,130,246,.3);color:#93c5fd;}
+    .left-step-num.purple{background:rgba(139,92,246,.2);border:1px solid rgba(167,139,250,.3);color:#c4b5fd;}
+    .left-step-num.amber{background:rgba(234,179,8,.15);border:1px solid rgba(251,191,36,.25);color:#fcd34d;}
+    .left-step-text{flex:1;}
+    .left-step-title{font-size:14px;font-weight:700;color:#f1f5f9;line-height:1.2;margin-bottom:3px;}
+    .left-step-sub{font-size:12px;color:rgba(148,163,184,.85);}
+
+    /* RIGHT PANEL — FORM */
+    .right-panel{
+      padding:60px 56px;
+      display:flex;flex-direction:column;justify-content:center;
+    }
+    .form-header{margin-bottom:32px;}
+    .form-title{font-size:28px;font-weight:800;color:#f9fafb;margin-bottom:6px;letter-spacing:-.02em;}
+    .form-sub{font-size:14px;color:var(--muted);}
+
+    /* FORM STYLES */
+    .signup-form{display:flex;flex-direction:column;gap:0;}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+    .form-row.single{grid-template-columns:1fr;}
+    .form-group{display:flex;flex-direction:column;gap:6px;}
+    .form-label{
+      font-size:11px;font-weight:700;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.1em;
+    }
+    .form-label .required{color:#f87171;margin-left:2px;}
+    .form-input, .form-select, .form-textarea{
+      padding:12px 14px;border-radius:10px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      color:#f1f5f9;font-size:14px;font-family:inherit;
+      outline:none;width:100%;
+      transition:border-color var(--transition),background var(--transition);
+    }
+    .form-input::placeholder,.form-textarea::placeholder{color:rgba(148,163,184,.5);}
+    .form-input:focus,.form-select:focus,.form-textarea:focus{
+      border-color:rgba(59,130,246,.5);
+      background:rgba(255,255,255,.07);
+    }
+    .form-select{background:rgba(15,23,42,.95);cursor:pointer;}
+    .form-select option{background:#0d1b3e;color:#f1f5f9;}
+    .form-textarea{resize:vertical;min-height:80px;}
+
+    /* Guardian section */
+    .guardian-section{
+      display:none;flex-direction:column;gap:14px;
+      padding:16px;border-radius:12px;
+      background:rgba(251,191,36,.05);
+      border:1px solid rgba(251,191,36,.2);
+      margin-bottom:14px;
+    }
+    .guardian-section.visible{display:flex;}
+    .guardian-label{
+      font-size:12px;font-weight:700;color:#fcd34d;
+      text-transform:uppercase;letter-spacing:.1em;
+      display:flex;align-items:center;gap:6px;margin-bottom:4px;
+    }
+
+    /* Password strength */
+    .password-wrap{position:relative;}
+    .password-toggle{
+      position:absolute;right:12px;top:50%;transform:translateY(-50%);
+      background:none;border:none;color:var(--muted);cursor:pointer;
+      font-size:12px;font-weight:600;letter-spacing:.05em;
+      text-transform:uppercase;
+    }
+    .strength-bar{display:flex;gap:4px;margin-top:6px;}
+    .strength-seg{height:3px;border-radius:2px;flex:1;background:rgba(148,163,184,.2);transition:background .3s;}
+    .strength-seg.weak{background:#ef4444;}
+    .strength-seg.fair{background:#f59e0b;}
+    .strength-seg.good{background:#3b82f6;}
+    .strength-seg.strong{background:#22c55e;}
+    .strength-text{font-size:11px;color:var(--muted);margin-top:4px;}
+
+    /* Terms */
+    .terms-row{
+      display:flex;align-items:flex-start;gap:10px;
+      margin-bottom:20px;margin-top:6px;
+    }
+    .terms-row input[type=checkbox]{
+      width:16px;height:16px;margin-top:2px;flex-shrink:0;
+      accent-color:#3b82f6;cursor:pointer;
+    }
+    .terms-text{font-size:13px;color:var(--muted);line-height:1.5;}
+    .terms-text a{color:#60a5fa;text-decoration:underline;}
+
+    /* Submit */
+    .submit-btn{
+      width:100%;padding:15px;border-radius:999px;
+      background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);
+      color:#fff;font-weight:700;font-size:16px;
+      border:none;cursor:pointer;
+      box-shadow:0 14px 35px rgba(37,99,235,.5);
+      transition:transform var(--transition),box-shadow var(--transition);
+      font-family:inherit;
+    }
+    .submit-btn:hover{transform:translateY(-2px);box-shadow:0 18px 42px rgba(37,99,235,.65);}
+    .submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+
+
+    /* Divider */
+    .form-divider{
+      height:1px;background:rgba(148,163,184,.1);
+      margin:18px 0;
+    }
+    .divider-label{
+      text-align:center;font-size:11px;color:rgba(148,163,184,.5);
+      text-transform:uppercase;letter-spacing:.1em;margin:-26px 0 18px;
+      display:flex;align-items:center;gap:10px;
+    }
+    .divider-label::before,.divider-label::after{
+      content:'';flex:1;height:1px;background:rgba(148,163,184,.1);
+    }
+
+    /* Already have account */
+    .already-account{
+      text-align:center;margin-top:20px;
+      font-size:14px;color:var(--muted);
+    }
+    .already-account a{color:#60a5fa;font-weight:600;}
+
+    /* Footer */
+    footer{
+      border-top:1px solid rgba(30,64,175,.4);
+      background:rgba(3,7,18,.8);
+      padding:14px 0;
+      text-align:center;
+      font-size:11px;color:rgba(148,163,184,.6);
+    }
+
+    /* Responsive */
+    @media(max-width:900px){
+      .page-wrap{grid-template-columns:1fr;}
+      .left-panel{display:none;}
+      .right-panel{padding:40px 24px;}
+    }
+    @media(max-width:480px){
+      .form-row{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container">
+      <div class="nav">
+        <a href="index.html" class="nav-wordmark">COACH<span class="accent">ANYWHERE</span></a>
+        <a href="index.html" class="nav-back">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M10 12L6 8l4-4"/>
+          </svg>
+          Back to home
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-wrap">
+    <div class="form-card">
+
+      <!-- Page header -->
+      <div style="text-align:center;margin-bottom:36px;">
+        <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:rgba(37,99,235,.15);border:1px solid rgba(59,130,246,.35);margin-bottom:16px;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#60a5fa;display:inline-block;"></span>
+          <span style="font-size:11px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.16em;">Athlete Sign Up</span>
+        </div>
+        <h1 style="font-size:clamp(28px,4vw,40px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:10px;">Create your athlete profile</h1>
+        <p style="font-size:15px;color:var(--muted);">Takes less than 2 minutes. No credit card required.</p>
+      </div>
+
+      <!-- FORM -->
+      <div id="formWrap">
+        <form class="signup-form" id="athleteForm">
+
+
+          <!-- Name -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">First name <span class="required">*</span></label>
+              <input class="form-input" type="text" name="first_name" placeholder="First name" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last name <span class="required">*</span></label>
+              <input class="form-input" type="text" name="last_name" placeholder="Last name" required/>
+            </div>
+          </div>
+
+          <!-- Age + Sport -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Age <span class="required">*</span></label>
+              <input class="form-input" type="number" name="age" placeholder="e.g. 16" min="8" max="80" required id="ageInput"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sport <span class="required">*</span></label>
+              <select class="form-select" name="sport" required>
+                <option value="" disabled selected>Select your sport</option>
+                <option>Basketball</option>
+                <option>AFL</option>
+                <option>Soccer</option>
+                <option>Tennis</option>
+                <option>Gymnastics</option>
+                <option>Rowing</option>
+                <option>Lacrosse</option>
+                <option>Pickleball</option>
+                <option>Cricket</option>
+                <option>Swimming</option>
+                <option>Athletics</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Guardian section -->
+          <div class="guardian-section" id="guardianSection">
+            <div class="guardian-label">
+              <span>⚠</span> Parent / Guardian details required
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Guardian first name <span class="required">*</span></label>
+                <input class="form-input" type="text" name="guardian_first_name" placeholder="First name" id="guardianFirstName"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Guardian last name <span class="required">*</span></label>
+                <input class="form-input" type="text" name="guardian_last_name" placeholder="Last name" id="guardianLastName"/>
+              </div>
+            </div>
+            <div class="form-row single">
+              <div class="form-group">
+                <label class="form-label">Guardian mobile <span class="required">*</span></label>
+                <input class="form-input" type="tel" name="guardian_mobile" placeholder="e.g. 0412 345 678" id="guardianMobile"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- Email + Mobile -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Email <span class="required">*</span></label>
+              <input class="form-input" type="email" name="email" placeholder="your@email.com" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mobile</label>
+              <input class="form-input" type="tel" name="mobile" placeholder="e.g. 0412 345 678"/>
+            </div>
+          </div>
+
+          <!-- Location + Skill -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Location <span class="required">*</span></label>
+              <input class="form-input" type="text" name="location" placeholder="e.g. Melbourne, VIC" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Skill level <span class="required">*</span></label>
+              <select class="form-select" name="skill_level" required>
+                <option value="" disabled selected>Select level</option>
+                <option>Beginner</option>
+                <option>Intermediate</option>
+                <option>Advanced</option>
+                <option>Elite / Semi-pro</option>
+                <option>Pro</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Main goal -->
+          <div class="form-row single" style="margin-bottom:14px;">
+            <div class="form-group">
+              <label class="form-label">Main goal <span class="required">*</span></label>
+              <input class="form-input" type="text" name="main_goal" placeholder="e.g. Improve my shooting technique and make the rep team" required/>
+            </div>
+          </div>
+
+          <div class="form-divider"></div>
+
+          <!-- Password -->
+          <div class="form-row single" style="margin-bottom:6px;">
+            <div class="form-group">
+              <label class="form-label">Create password <span class="required">*</span></label>
+              <div class="password-wrap">
+                <input class="form-input" type="password" name="password" placeholder="Min. 8 characters" required id="passwordInput" style="padding-right:60px;"/>
+                <button type="button" class="password-toggle" id="pwToggle">Show</button>
+              </div>
+              <div class="strength-bar" id="strengthBar">
+                <div class="strength-seg" id="s1"></div>
+                <div class="strength-seg" id="s2"></div>
+                <div class="strength-seg" id="s3"></div>
+                <div class="strength-seg" id="s4"></div>
+              </div>
+              <div class="strength-text" id="strengthText"></div>
+            </div>
+          </div>
+
+          <!-- Terms -->
+          <div class="terms-row">
+            <input type="checkbox" id="terms" name="terms" required/>
+            <label for="terms" class="terms-text">
+              I agree to CoachAnywhere's <a href="terms-of-service.html" target="_blank">Terms of Service</a> and <a href="privacy-policy.html" target="_blank">Privacy Policy</a>. I confirm I am at least 13 years old, or have parental consent to use this platform.
+            </label>
+          </div>
+
+          <button type="submit" class="submit-btn" id="submitBtn">
+            Create my athlete profile →
+          </button>
+
+          <div class="already-account">
+            Already have an account? <a href="login.html">Log in</a>
+          </div>
+
+        </form>
+      </div>
+
+
+
+    </div>
+  </div>
+
+  <footer>
+    <div>© CoachAnywhere. Built for every athlete, Australia wide.</div>
+  </footer>
+
+  <script>
+    // Age — show/hide guardian section
+    var ageInput = document.getElementById("ageInput");
+    var guardianSection = document.getElementById("guardianSection");
+    var guardianFields = ["guardianFirstName","guardianLastName","guardianMobile"];
+
+    function checkAge(){
+      var age = parseInt(ageInput.value);
+      if(age && age < 18){
+        guardianSection.classList.add("visible");
+        guardianFields.forEach(function(id){
+          document.getElementById(id).required = true;
+        });
+      } else {
+        guardianSection.classList.remove("visible");
+        guardianFields.forEach(function(id){
+          document.getElementById(id).required = false;
+        });
+      }
+    }
+    ageInput.addEventListener("input", checkAge);
+    ageInput.addEventListener("change", checkAge);
+    ageInput.addEventListener("keyup", checkAge);
+
+    // Password show/hide
+    var pwInput = document.getElementById("passwordInput");
+    var pwToggle = document.getElementById("pwToggle");
+    pwToggle.addEventListener("click", function(){
+      if(pwInput.type === "password"){
+        pwInput.type = "text";
+        pwToggle.textContent = "Hide";
+      } else {
+        pwInput.type = "password";
+        pwToggle.textContent = "Show";
+      }
+    });
+
+    // Password strength
+    pwInput.addEventListener("input", function(){
+      var val = this.value;
+      var score = 0;
+      if(val.length >= 8) score++;
+      if(/[A-Z]/.test(val)) score++;
+      if(/[0-9]/.test(val)) score++;
+      if(/[^A-Za-z0-9]/.test(val)) score++;
+      var segs = ["s1","s2","s3","s4"];
+      var labels = ["","Weak","Fair","Good","Strong"];
+      var classes = ["","weak","fair","good","strong"];
+      segs.forEach(function(id, i){
+        var el = document.getElementById(id);
+        el.className = "strength-seg";
+        if(i < score) el.classList.add(classes[score]);
+      });
+      document.getElementById("strengthText").textContent = val.length > 0 ? labels[score] : "";
+    });
+
+    // Supabase client
+    const SUPABASE_URL = "https://rtaxjewvshhpdnkpojjn.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ca-auth",storage:window.localStorage,detectSessionInUrl:true}});
+
+    // Note: no auto-redirect when a session already exists. We sign the
+    // user out on submit instead, so submitting the form always creates a
+    // fresh account rather than silently bouncing into a previous one.
+
+    // Form submit — Supabase auth + profile + Airtable
+    document.getElementById("athleteForm").addEventListener("submit", async function(e){
+      e.preventDefault();
+      var btn = document.getElementById("submitBtn");
+      btn.textContent = "Creating your profile...";
+      btn.disabled = true;
+
+      var formData = new FormData(this);
+      var email    = formData.get("email").trim();
+      var password = formData.get("password");
+      var firstName = formData.get("first_name").trim();
+      var lastName  = formData.get("last_name").trim();
+
+      // Clear any stale session so signUp creates a new account cleanly
+      // rather than colliding with whoever is currently signed in.
+      try { await sb.auth.signOut(); } catch (e) {}
+
+      // 1. Create Supabase auth account
+      var { data: authData, error: authError } = await sb.auth.signUp({ email, password });
+      if (authError) {
+        alert("Sign up error: " + authError.message);
+        btn.textContent = "Create my athlete profile →";
+        btn.disabled = false;
+        return;
+      }
+
+      // 2. Insert profile row — schema-aware so a missing column in the
+      //    deployed DB doesn't tank the whole INSERT (which would silently
+      //    leave the new athlete with no profile row at all).
+      var rawProfile = {
+        id:               authData.user.id,
+        role:             "athlete",
+        first_name:       firstName,
+        last_name:        lastName,
+        age:              parseInt(formData.get("age")) || null,
+        sport:            formData.get("sport") || null,
+        mobile:           formData.get("mobile") || null,
+        location:         formData.get("location") || null,
+        skill_level:      formData.get("skill_level") || null,
+        main_goal:        formData.get("main_goal") || null,
+        guardian_first_name: formData.get("guardian_first_name") || null,
+        guardian_last_name:  formData.get("guardian_last_name") || null,
+        guardian_mobile:     formData.get("guardian_mobile") || null
+      };
+      var profileCols = null;
+      try {
+        var schemaRes = await fetch(SUPABASE_URL + "/rest/v1/", { headers: { apikey: SUPABASE_KEY }});
+        if (schemaRes.ok) {
+          var schema = await schemaRes.json();
+          var defObj = (schema.definitions || (schema.components && schema.components.schemas) || {}).profiles;
+          if (defObj && defObj.properties) profileCols = Object.keys(defObj.properties);
+        }
+      } catch (e) { /* silently fall through — we'll send the raw payload */ }
+      var insertPayload = rawProfile;
+      if (profileCols) {
+        insertPayload = {};
+        for (var k in rawProfile) {
+          if (profileCols.indexOf(k) !== -1 && rawProfile[k] !== undefined) insertPayload[k] = rawProfile[k];
+        }
+        var droppedCols = Object.keys(rawProfile).filter(function (k) { return profileCols.indexOf(k) === -1; });
+        if (droppedCols.length) console.warn("[athlete-signup] dropping unknown columns:", droppedCols);
+      }
+      var { error: profileError } = await sb.from("profiles").insert(insertPayload);
+      if (profileError) console.warn("Profile insert warning:", profileError.message);
+
+      // 3. Ensure the user is signed in (signUp may not create a session if email confirmation is on)
+      var { data: sessionData } = await sb.auth.getSession();
+      if (!sessionData.session) {
+        var { error: signInError } = await sb.auth.signInWithPassword({ email, password });
+        if (signInError) {
+          // Email confirmation is required — tell the user
+          document.getElementById("formWrap").innerHTML =
+            '<div style="text-align:center;padding:40px 20px;">' +
+            '<div style="font-size:22px;font-weight:800;color:#f9fafb;margin-bottom:10px;">Check your email</div>' +
+            '<div style="font-size:14px;color:#94a3b8;line-height:1.6;">We\'ve sent a confirmation link to <strong style="color:#60a5fa;">' + email + '</strong>. ' +
+            'Click it to activate your account, then log in.</div>' +
+            '<a href="login.html" style="display:inline-block;margin-top:20px;padding:12px 28px;border-radius:999px;background:#2563eb;color:#fff;font-weight:700;font-size:14px;text-decoration:none;">Go to login</a></div>';
+          return false;
+        }
+      }
+
+      // Redirect to dashboard
+      window.location.href = "athlete-dashboard.html";
+      return false;
+    });
+  </script>
+
+</body>
+</html>

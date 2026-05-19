@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Coach Dashboard – CoachAnywhere</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<!-- Prevent aggressive client/edge caching — the dashboard reads live data
+     from Supabase on every load, so a stale HTML shell is never desirable. -->
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --amber:#d97706;--amber2:#92400e;--amber3:#f59e0b;--amber-lt:#fbbf24;
+  --amberglow:rgba(217,119,6,.2);
+  --bg:#0d1117;--bg2:#131920;--bg3:#1a2230;
+  --card:#161d2a;--card2:#1e2a3a;
+  --text:#e8edf5;--muted:#6b7a99;--muted2:#8a96b0;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --sidebar:218px;--tr:150ms ease-out;
+  --green:#22c55e;--blue:#3b82f6;--red:#ef4444;--purple:#a78bfa;
+}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:20;}
+.sidebar-logo{padding:14px 18px;border-bottom:1px solid var(--border);}
+.sidebar-wordmark{font-size:17px;font-weight:800;letter-spacing:.03em;color:#fff;text-transform:uppercase;line-height:1;}
+.sidebar-wordmark span{color:var(--amber3);}
+.coach-profile{padding:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;}
+.coach-profile-av{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--amber),var(--amber2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;}
+.coach-profile-av img{width:100%;height:100%;object-fit:cover;}
+.coach-profile-name{font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:4px;}
+.coach-profile-name svg{width:11px;height:11px;color:var(--amber3);}
+.coach-profile-role{font-size:10px;color:var(--muted);}
+.sidebar-nav{flex:1;padding:8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;min-height:0;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted2);border:none;background:transparent;width:100%;text-align:left;transition:all var(--tr);position:relative;}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--text);}
+.nav-item.active{background:linear-gradient(135deg,var(--amber),var(--amber2));color:#fff;font-weight:600;}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.7;}
+.nav-item.active svg{opacity:1;}
+.nav-badge{margin-left:auto;background:var(--amber3);color:#fff;font-size:9px;font-weight:700;padding:1px 7px;border-radius:999px;}
+.nav-item.active .nav-badge{background:rgba(255,255,255,.25);}
+.sidebar-upgrade{margin:8px;padding:12px;border-radius:10px;background:linear-gradient(135deg,rgba(217,119,6,.16),rgba(146,64,14,.1));border:1px solid rgba(217,119,6,.28);}
+.sidebar-upgrade-title{font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:5px;margin-bottom:5px;}
+.sidebar-upgrade-text{font-size:10px;color:var(--muted);line-height:1.5;margin-bottom:9px;}
+.sidebar-upgrade-btn{width:100%;padding:7px;border-radius:7px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:#fff;font-size:11px;font-weight:700;border:none;}
+.sidebar-help{margin:0 8px 8px;padding:10px;border-radius:9px;border:1px solid var(--border);display:flex;align-items:center;gap:8px;cursor:pointer;transition:all var(--tr);}
+.sidebar-help:hover{border-color:var(--border2);}
+.sidebar-help svg{width:15px;height:15px;color:var(--muted);flex-shrink:0;}
+.sidebar-help-title{font-size:11px;font-weight:700;color:var(--text);}
+.sidebar-help-sub{font-size:9px;color:var(--muted);}
+.sidebar-help-chev{margin-left:auto;width:13px;height:13px;color:var(--muted);}
+.sidebar-logout{margin:0 8px 10px;width:calc(100% - 16px);padding:9px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted2);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-family:inherit;transition:all var(--tr);}
+.sidebar-logout:hover{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08);color:var(--red);}
+.sidebar-logout svg{width:14px;height:14px;}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar);flex:1;min-height:100vh;}
+.content{padding:14px 18px 30px;}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;}
+.topbar-greeting{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.02em;}
+.topbar-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:8px 13px;width:300px;}
+.search-box svg{width:14px;height:14px;color:var(--muted);flex-shrink:0;}
+.search-box input{background:none;border:none;outline:none;color:var(--text);font-size:12px;font-family:inherit;width:100%;}
+.search-box input::placeholder{color:var(--muted);}
+.icon-btn{width:36px;height:36px;border-radius:9px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative;transition:all var(--tr);}
+.icon-btn:hover{border-color:var(--border2);}
+.icon-btn svg{width:15px;height:15px;color:var(--muted2);}
+.icon-badge{position:absolute;top:-5px;right:-5px;background:var(--amber3);color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);}
+.status-pill{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:8px 13px;cursor:pointer;transition:all var(--tr);}
+.status-pill:hover{border-color:var(--border2);}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);}
+.status-dot.busy{background:var(--amber3);}
+.status-dot.offline{background:var(--muted);}
+.status-text{font-size:12px;font-weight:600;color:var(--text);}
+.status-pill svg{width:12px;height:12px;color:var(--muted);}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.filter-chip{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 13px;font-size:12px;color:var(--muted2);transition:all var(--tr);}
+.filter-chip:hover{border-color:var(--border2);color:var(--text);}
+.filter-chip svg{width:13px;height:13px;opacity:.7;}
+.filter-chip .chev{margin-left:2px;width:12px;height:12px;}
+.clear-filters{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);background:none;border:none;transition:color var(--tr);}
+.clear-filters:hover{color:var(--amber3);}
+.clear-filters svg{width:13px;height:13px;}
+
+/* ── KPI CARDS ── */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:14px;}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:15px;display:flex;flex-direction:column;gap:10px;transition:all var(--tr);}
+.kpi-card:hover{border-color:var(--border2);}
+.kpi-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.kpi-icon svg{width:19px;height:19px;}
+.kpi-icon.amber{background:linear-gradient(135deg,var(--amber),var(--amber2));color:#fff;}
+.kpi-icon.blue{background:rgba(59,130,246,.15);color:var(--blue);}
+.kpi-icon.green{background:rgba(34,197,94,.13);color:var(--green);}
+.kpi-icon.purple{background:rgba(139,92,246,.14);color:var(--purple);}
+.kpi-val{font-size:27px;font-weight:800;color:var(--text);line-height:1;letter-spacing:-.02em;}
+.kpi-label{font-size:12px;font-weight:700;color:var(--text);margin-top:4px;}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.kpi-trend{font-size:10px;font-weight:600;display:flex;align-items:center;gap:3px;margin-top:2px;}
+.kpi-trend.up{color:var(--green);}
+.kpi-trend.down{color:var(--green);}
+
+/* ── MAIN GRID ── */
+.main-grid{display:grid;grid-template-columns:1fr 340px;gap:14px;align-items:start;}
+.col-left{display:flex;flex-direction:column;gap:14px;}
+.col-right{display:flex;flex-direction:column;gap:14px;}
+
+/* ── PANEL ── */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);}
+.panel-title{font-size:14px;font-weight:800;color:var(--text);}
+.panel-link{font-size:11px;font-weight:600;color:var(--amber3);background:none;border:none;display:flex;align-items:center;gap:3px;}
+.panel-link svg{width:11px;height:11px;}
+.panel-sort{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
+.panel-sort strong{color:var(--text);font-weight:600;}
+.panel-sort svg{width:11px;height:11px;}
+
+/* ── REVIEW QUEUE TABLE ── */
+.queue-table{width:100%;border-collapse:collapse;}
+.queue-table thead th{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;text-align:left;padding:9px 16px;border-bottom:1px solid var(--border);}
+.queue-table tbody tr{border-bottom:1px solid var(--border);transition:background var(--tr);}
+.queue-table tbody tr:last-child{border-bottom:none;}
+.queue-table tbody tr:hover{background:rgba(255,255,255,.02);}
+.queue-table td{padding:10px 16px;vertical-align:middle;}
+.q-check{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--border2);background:var(--bg3);cursor:pointer;}
+.q-athlete{display:flex;align-items:center;gap:10px;}
+.q-thumb{width:62px;height:40px;border-radius:6px;background:#0a0f1a;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.q-thumb-play{width:20px;height:20px;border-radius:50%;background:rgba(217,119,6,.85);display:flex;align-items:center;justify-content:center;}
+.q-thumb-play svg{width:8px;height:8px;color:#fff;margin-left:1px;}
+.q-thumb-dur{position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,.75);font-size:8px;font-weight:700;color:#fff;padding:1px 3px;border-radius:2px;}
+.q-name{font-size:12px;font-weight:700;color:var(--text);}
+.q-age{font-size:10px;color:var(--muted);margin-top:1px;}
+.q-sport{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text);}
+.q-sport-ic{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.q-uploaded{font-size:11px;color:var(--muted2);}
+.q-status{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;}
+.q-status.pending{background:rgba(217,119,6,.13);color:var(--amber3);border:1px solid rgba(217,119,6,.3);}
+.q-status.in_review{background:rgba(59,130,246,.13);color:var(--blue);border:1px solid rgba(59,130,246,.3);}
+.q-status.completed{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.25);}
+.q-due{font-size:11px;font-weight:600;color:var(--text);}
+.q-due-rel{font-size:10px;color:var(--muted);}
+.q-due-rel.today{color:var(--red);}
+.q-due-rel.soon{color:var(--amber3);}
+.review-now-btn{padding:7px 13px;border-radius:7px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:#fff;font-size:11px;font-weight:700;border:none;white-space:nowrap;transition:transform var(--tr);}
+.review-now-btn:hover{transform:translateY(-1px);}
+.q-more{width:26px;height:26px;border-radius:6px;background:none;border:none;display:flex;align-items:center;justify-content:center;color:var(--muted);}
+.q-more:hover{background:var(--bg3);}
+.q-more svg{width:14px;height:14px;}
+.queue-foot{padding:11px 16px;text-align:center;}
+.queue-foot button{font-size:12px;font-weight:600;color:var(--muted2);background:none;border:none;display:inline-flex;align-items:center;gap:4px;}
+.queue-foot button:hover{color:var(--amber3);}
+.queue-foot svg{width:12px;height:12px;}
+
+/* ── RECENT REVIEWS / QUICK ACTIONS ── */
+.lower-grid{display:grid;grid-template-columns:1fr 280px;gap:14px;align-items:start;}
+.recent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px;}
+.recent-card{background:var(--bg3);border:1px solid var(--border);border-radius:9px;overflow:hidden;transition:all var(--tr);}
+.recent-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.recent-thumb{aspect-ratio:16/10;position:relative;display:flex;align-items:center;justify-content:center;}
+.recent-thumb-play{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;}
+.recent-thumb-play svg{width:11px;height:11px;color:#0d1117;margin-left:1px;}
+.recent-thumb-dur{position:absolute;bottom:5px;right:5px;background:rgba(0,0,0,.8);font-size:9px;font-weight:700;color:#fff;padding:1px 5px;border-radius:3px;}
+.recent-body{padding:9px 10px;}
+.recent-name{font-size:12px;font-weight:700;color:var(--text);}
+.recent-meta{font-size:10px;color:var(--muted);margin-top:1px;}
+.recent-tag{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;margin-top:6px;}
+.recent-tag.completed{background:rgba(34,197,94,.1);color:var(--green);}
+.recent-tag.in_progress{background:rgba(59,130,246,.13);color:var(--blue);}
+.recent-tag.pending{background:rgba(217,119,6,.13);color:var(--amber3);}
+
+/* QUICK ACTIONS */
+.qa-list{padding:8px;}
+.qa-item{display:flex;align-items:center;gap:11px;padding:10px;border-radius:9px;transition:background var(--tr);cursor:pointer;}
+.qa-item:hover{background:var(--bg3);}
+.qa-ic{width:34px;height:34px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.qa-ic svg{width:15px;height:15px;color:var(--amber3);}
+.qa-title{font-size:12px;font-weight:700;color:var(--text);}
+.qa-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+
+/* ── TODAY'S SCHEDULE ── */
+.sched-list{padding:6px 8px;}
+.sched-item{display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:8px;transition:background var(--tr);}
+.sched-item:hover{background:var(--bg3);}
+.sched-time{font-size:11px;font-weight:700;color:var(--muted2);width:54px;flex-shrink:0;}
+.sched-ic{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sched-ic svg{width:15px;height:15px;}
+.sched-ic.live{background:rgba(34,197,94,.13);color:var(--green);}
+.sched-ic.review{background:rgba(59,130,246,.13);color:var(--blue);}
+.sched-name{font-size:12px;font-weight:700;color:var(--text);}
+.sched-with{font-size:10px;color:var(--muted);margin-top:1px;}
+.sched-dur{margin-left:auto;font-size:10px;color:var(--muted);white-space:nowrap;}
+.sched-foot{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-top:1px solid var(--border);cursor:pointer;}
+.sched-foot:hover{background:rgba(255,255,255,.02);}
+.sched-foot span{font-size:12px;font-weight:600;color:var(--text);}
+.sched-foot svg{width:14px;height:14px;color:var(--muted);}
+
+/* ── PERFORMANCE ── */
+.perf-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:14px 16px;}
+.perf-card{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:13px;}
+.perf-label{font-size:11px;font-weight:600;color:var(--muted2);margin-bottom:5px;}
+.perf-val{font-size:26px;font-weight:800;color:var(--text);line-height:1;letter-spacing:-.02em;}
+.perf-trend{font-size:10px;font-weight:600;color:var(--green);margin-top:4px;}
+.perf-chart{margin-top:8px;height:34px;}
+.perf-chart svg{width:100%;height:100%;}
+.perf-donut{display:flex;align-items:center;justify-content:center;margin-top:4px;}
+.perf-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+.perf-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 14px;}
+.perf-stat-lbl{font-size:10px;color:var(--muted);}
+.perf-stat-val{font-size:15px;font-weight:800;color:var(--text);margin-top:2px;display:flex;align-items:baseline;gap:4px;}
+.perf-stat-trend{font-size:9px;font-weight:600;color:var(--green);}
+.select-sm{background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--muted2);font-size:11px;padding:5px 9px;font-family:inherit;outline:none;cursor:pointer;}
+.select-sm option{background:#1a2230;}
+
+/* ── EARNINGS ── */
+.earn-top{padding:14px 16px;}
+.earn-val{font-size:30px;font-weight:800;color:var(--text);letter-spacing:-.02em;display:inline-block;}
+.earn-label{font-size:12px;color:var(--muted);margin-left:8px;}
+.earn-trend{font-size:11px;font-weight:600;color:var(--green);margin-top:4px;}
+.earn-chart{height:50px;margin-top:8px;}
+.earn-chart svg{width:100%;height:100%;}
+.earn-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 12px;}
+.earn-stat-lbl{font-size:10px;color:var(--muted);}
+.earn-stat-val{font-size:15px;font-weight:800;color:var(--text);margin-top:2px;}
+.earn-foot{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-top:1px solid var(--border);cursor:pointer;}
+.earn-foot:hover{background:rgba(255,255,255,.02);}
+.earn-foot span{font-size:12px;font-weight:600;color:var(--amber3);}
+.earn-foot svg{width:13px;height:13px;color:var(--amber3);}
+
+/* ── GENERIC SECTIONS ── */
+.section{display:none;}
+.section.active{display:block;}
+.sec-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:14px;}
+.empty{text-align:center;padding:48px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.empty-ic{width:48px;height:48px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;}
+.empty-ic svg{width:21px;height:21px;color:var(--muted);}
+.empty-title{font-size:14px;font-weight:700;color:var(--text);}
+.empty-sub{font-size:12px;color:var(--muted);max-width:280px;line-height:1.5;}
+
+/* athlete cards */
+.athlete-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+.athlete-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;transition:all var(--tr);}
+.athlete-card:hover{border-color:var(--border2);}
+.athlete-card-top{display:flex;align-items:center;gap:11px;margin-bottom:12px;}
+.athlete-card-av{width:46px;height:46px;border-radius:11px;background:linear-gradient(135deg,#1e3a5f,#0d2a6e);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#93c5fd;flex-shrink:0;}
+.athlete-card-name{font-size:14px;font-weight:800;color:var(--text);}
+.athlete-card-meta{font-size:11px;color:var(--muted);margin-top:1px;}
+.athlete-card-stats{display:flex;gap:14px;padding-top:11px;border-top:1px solid var(--border);}
+.acs-val{font-size:15px;font-weight:800;color:var(--text);}
+.acs-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.athlete-card-btn{width:100%;margin-top:11px;padding:8px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:12px;font-weight:600;transition:all var(--tr);}
+.athlete-card-btn:hover{border-color:var(--amber3);color:var(--amber3);}
+
+/* MESSAGES */
+.msg-layout{display:grid;grid-template-columns:240px 1fr;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;height:calc(100vh - 150px);min-height:420px;}
+.msg-sb{border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.msg-sb-hdr{padding:13px 15px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--text);}
+.msg-threads{flex:1;overflow-y:auto;}
+.msg-thread{padding:11px 15px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--tr);}
+.msg-thread:hover{background:rgba(255,255,255,.03);}
+.msg-thread.active{background:rgba(217,119,6,.1);border-left:3px solid var(--amber3);}
+.msg-thread-top{display:flex;justify-content:space-between;align-items:center;}
+.msg-thread-name{font-size:12px;font-weight:700;color:var(--text);}
+.msg-thread-time{font-size:9px;color:var(--muted);}
+.msg-thread-prev{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.msg-unread-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--amber3);margin-left:5px;}
+.msg-main{display:flex;flex-direction:column;}
+.msg-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;}
+.msg-main-hdr{padding:13px 16px;border-bottom:1px solid var(--border);}
+.msg-main-name{font-size:13px;font-weight:700;color:var(--text);}
+.msg-main-sub{font-size:10px;color:var(--muted);}
+.msg-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+.bubble{max-width:62%;padding:9px 13px;border-radius:13px;font-size:13px;line-height:1.5;}
+.bubble.mine{background:linear-gradient(135deg,var(--amber),var(--amber2));color:#fff;align-self:flex-end;border-bottom-right-radius:3px;}
+.bubble.theirs{background:var(--bg3);color:var(--text);align-self:flex-start;border-bottom-left-radius:3px;}
+.bubble-time{font-size:9px;color:var(--muted);margin-top:2px;}
+.msg-input-row{padding:11px 14px;border-top:1px solid var(--border);display:flex;gap:9px;align-items:flex-end;}
+.msg-input{flex:1;padding:9px 13px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none;resize:none;min-height:38px;max-height:110px;}
+.msg-input:focus{border-color:rgba(217,119,6,.4);}
+.msg-send{padding:9px 18px;border-radius:999px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:#fff;font-size:12px;font-weight:700;border:none;}
+
+/* forms */
+.fcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;max-width:560px;}
+.fg{margin-bottom:13px;}
+.fl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;display:block;margin-bottom:5px;}
+.fi,.fsel,.fta{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;outline:none;}
+.fi:focus,.fsel:focus,.fta:focus{border-color:rgba(217,119,6,.4);}
+.fta{resize:vertical;min-height:80px;}
+.fsel option{background:#1a2230;}
+.btn-primary{padding:10px 22px;border-radius:999px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:#fff;font-weight:700;font-size:13px;border:none;}
+.btn-ghost{padding:10px 18px;border-radius:999px;background:transparent;border:1px solid var(--border2);color:var(--muted2);font-weight:600;font-size:13px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:13px;background:var(--bg3);border-radius:9px;border:1px solid var(--border);margin-bottom:12px;}
+.toggle{width:42px;height:24px;border-radius:999px;background:var(--bg);border:1px solid var(--border2);position:relative;cursor:pointer;transition:all var(--tr);flex-shrink:0;}
+.toggle.on{background:linear-gradient(135deg,var(--amber),var(--amber2));border-color:transparent;}
+.toggle-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:all var(--tr);}
+.toggle.on .toggle-knob{left:21px;}
+
+/* drills */
+.drill-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;}
+.drill-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;transition:all var(--tr);}
+.drill-card:hover{border-color:var(--border2);}
+.drill-card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.drill-card-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+.drill-card-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.drill-tag{font-size:9px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--bg3);border:1px solid var(--border);color:var(--muted2);}
+
+@media(max-width:1100px){
+  .kpi-row{grid-template-columns:repeat(3,1fr);}
+  .main-grid{grid-template-columns:1fr;}
+  .lower-grid{grid-template-columns:1fr;}
+  .recent-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:760px){
+  .sidebar{display:none;}.main{margin-left:0;}
+  .kpi-row{grid-template-columns:1fr 1fr;}
+  .search-box{display:none;}
+  .recent-grid{grid-template-columns:1fr;}
+  .perf-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-wordmark">COACH<span>ANYWHERE</span></div>
+  </div>
+  <div class="coach-profile">
+    <div class="coach-profile-av" id="coachAv">C</div>
+    <div style="min-width:0;">
+      <div class="coach-profile-name">
+        <span id="coachName">Coach</span>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      </div>
+      <div class="coach-profile-role" id="coachTier">Coach</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="showSection('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Dashboard</button>
+    <button class="nav-item" onclick="showSection('athletes')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Athletes</button>
+    <button class="nav-item" onclick="showSection('reviews')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Reviews<span class="nav-badge" id="navReviewBadge" style="display:none;">0</span></button>
+    <button class="nav-item" onclick="showSection('schedule')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
+    <button class="nav-item" onclick="showSection('analyze')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Analyze Video</button>
+    <button class="nav-item" onclick="showSection('drills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>Drills Library</button>
+    <button class="nav-item" onclick="window.location.href='find-mentor.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Find Mentor</button>
+    <button class="nav-item" onclick="showSection('messages')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages<span class="nav-badge" id="navMsgBadge" style="display:none;">0</span></button>
+    <button class="nav-item" onclick="showSection('analytics')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</button>
+    <button class="nav-item" onclick="showSection('earnings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Earnings</button>
+    <button class="nav-item" onclick="showSection('availability')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Availability</button>
+    <button class="nav-item" onclick="showSection('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings</button>
+  </nav>
+  <div class="sidebar-upgrade">
+    <div class="sidebar-upgrade-title">Upgrade to Elite <span>👑</span></div>
+    <div class="sidebar-upgrade-text">Unlock advanced tools, AI feedback, and priority athlete matching.</div>
+    <button class="sidebar-upgrade-btn" onclick="showSection('settings')">Upgrade Now</button>
+  </div>
+  <div class="sidebar-help" onclick="showSection('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div><div class="sidebar-help-title">Need Help?</div><div class="sidebar-help-sub">Visit our help center</div></div>
+    <svg class="sidebar-help-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </div>
+  <button class="sidebar-logout" onclick="handleLogout()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Log Out
+  </button>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div>
+        <div class="topbar-greeting" id="greeting">Welcome</div>
+        <div class="topbar-sub" id="greetingSub">No pending reviews</div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search athletes, sports, or videos..."/>
+        </div>
+        <div class="icon-btn" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><div class="icon-badge" id="notifBadge" style="display:none;">0</div></div>
+        <div class="icon-btn" onclick="showSection('schedule')" title="Schedule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="status-pill" id="statusPill" onclick="cycleStatus()">
+          <div class="status-dot" id="statusDot"></div>
+          <span class="status-text" id="statusText">Available</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ DASHBOARD SECTION ══ -->
+    <div class="section active" id="section-dashboard">
+
+      <!-- FILTER BAR -->
+      <div class="filter-bar">
+        <button class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>All Sports<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <button class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>All Athletes<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <button class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>Review Status<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <button class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/></svg>Video Type<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <button class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>Date Range<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <button class="clear-filters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Clear Filters</button>
+      </div>
+
+      <!-- KPI ROW -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+          <div><div class="kpi-val" id="kpiPending">0</div><div class="kpi-label">Pending Reviews</div><div class="kpi-sub">Videos waiting for feedback</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+          <div><div class="kpi-val" id="kpiAthletes">0</div><div class="kpi-label">Active Athletes</div><div class="kpi-sub">Across all sports</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div><div class="kpi-val" id="kpiCompleted">0</div><div class="kpi-label">Reviews Completed</div><div class="kpi-sub">This month</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div><div class="kpi-val" id="kpiResponse">—</div><div class="kpi-label">Avg. Response Time</div><div class="kpi-sub">No reviews yet</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+          <div><div class="kpi-val" id="kpiEarnings">$0</div><div class="kpi-label">Earnings This Month</div><div class="kpi-sub">No sessions yet</div></div>
+        </div>
+      </div>
+
+      <!-- MAIN GRID -->
+      <div class="main-grid">
+        <!-- LEFT -->
+        <div class="col-left">
+
+          <!-- REVIEW QUEUE -->
+          <div class="panel">
+            <div class="panel-hdr">
+              <div class="panel-title">Review Queue (<span id="queueCount">8</span>)</div>
+              <div class="panel-sort">Sort by: <strong>Oldest</strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+            </div>
+            <table class="queue-table">
+              <thead><tr>
+                <th style="width:30px;"><div class="q-check"></div></th>
+                <th>Athlete</th><th>Sport</th><th>Uploaded</th><th>Status</th><th>Due Date</th><th></th><th style="width:30px;"></th>
+              </tr></thead>
+              <tbody id="queueBody"><!-- filled by JS --></tbody>
+            </table>
+            <div class="queue-foot"><button onclick="showSection('reviews')">View All Reviews <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button></div>
+          </div>
+
+          <!-- RECENT REVIEWS + QUICK ACTIONS -->
+          <div class="lower-grid">
+            <div class="panel">
+              <div class="panel-hdr">
+                <div class="panel-title">Recent Reviews</div>
+                <button class="panel-link" onclick="showSection('reviews')">View All <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+              </div>
+              <div class="recent-grid" id="recentGrid"><!-- filled by JS --></div>
+            </div>
+            <div class="panel">
+              <div class="panel-hdr"><div class="panel-title">Quick Actions</div></div>
+              <div class="qa-list">
+                <div class="qa-item" onclick="showSection('analyze')">
+                  <div class="qa-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+                  <div><div class="qa-title">Upload Video for Review</div><div class="qa-sub">Add a video to start analysis</div></div>
+                </div>
+                <div class="qa-item" onclick="showSection('athletes')">
+                  <div class="qa-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                  <div><div class="qa-title">View Athletes</div><div class="qa-sub">Manage your athletes</div></div>
+                </div>
+                <div class="qa-item" onclick="showSection('drills')">
+                  <div class="qa-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
+                  <div><div class="qa-title">Drills Library</div><div class="qa-sub">Access drills and resources</div></div>
+                </div>
+                <div class="qa-item" onclick="showSection('analyze')">
+                  <div class="qa-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg></div>
+                  <div><div class="qa-title">Analyze Live</div><div class="qa-sub">Start a live analysis session</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="col-right">
+
+          <!-- TODAY'S SCHEDULE -->
+          <div class="panel">
+            <div class="panel-hdr">
+              <div class="panel-title">Today's Schedule</div>
+              <button class="panel-link" onclick="showSection('schedule')">View Calendar</button>
+            </div>
+            <div class="sched-list" id="todayScheduleList">
+              <div style="padding:32px 20px;text-align:center;color:var(--muted);font-size:12px;">
+                <div style="font-weight:700;color:var(--text);margin-bottom:4px;font-size:13px;">No sessions today</div>
+                <div>Scheduled sessions will appear here.</div>
+              </div>
+            </div>
+            <div class="sched-foot" onclick="showSection('schedule')"><span>View Full Schedule</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+
+          <!-- PERFORMANCE OVERVIEW -->
+          <div class="panel">
+            <div class="panel-hdr">
+              <div class="panel-title">Performance Overview</div>
+              <select class="select-sm"><option>This Month</option><option>Last Month</option><option>This Year</option></select>
+            </div>
+            <div style="padding:36px 24px;text-align:center;color:var(--muted);font-size:12px;">
+              <div style="font-weight:700;color:var(--text);margin-bottom:4px;font-size:13px;">Performance data unlocks after your first review</div>
+              <div>Completion rate, response times and athlete progress will appear here as you start coaching.</div>
+            </div>
+            <div class="perf-stats">
+              <div><div class="perf-stat-lbl">Reviews Sent</div><div class="perf-stat-val">0</div></div>
+              <div><div class="perf-stat-lbl">Hours Coached</div><div class="perf-stat-val">0h</div></div>
+              <div><div class="perf-stat-lbl">Athletes Improved</div><div class="perf-stat-val">0</div></div>
+            </div>
+          </div>
+
+          <!-- EARNINGS OVERVIEW -->
+          <div class="panel">
+            <div class="panel-hdr">
+              <div class="panel-title">Earnings Overview</div>
+              <select class="select-sm"><option>This Month</option><option>Last Month</option><option>This Year</option></select>
+            </div>
+            <div class="earn-top">
+              <span class="earn-val">$0</span><span class="earn-label">Total Earnings</span>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px;">No payouts yet</div>
+            </div>
+            <div class="earn-stats">
+              <div><div class="earn-stat-lbl">Sessions</div><div class="earn-stat-val">0</div></div>
+              <div><div class="earn-stat-lbl">Reviews</div><div class="earn-stat-val">0</div></div>
+              <div><div class="earn-stat-lbl">Bonus</div><div class="earn-stat-val">$0</div></div>
+            </div>
+            <div class="earn-foot" onclick="showSection('earnings')"><span>View Full Earnings</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ATHLETES SECTION ══ -->
+    <div class="section" id="section-athletes">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="sec-title" style="margin-bottom:0;">My Athletes</div>
+        <button class="btn-primary" onclick="inviteAthlete()">+ Invite Athlete</button>
+      </div>
+      <div class="athlete-grid" id="athleteGrid"><!-- filled by JS --></div>
+    </div>
+
+    <!-- ══ REVIEWS SECTION ══ -->
+    <div class="section" id="section-reviews">
+      <div class="sec-title">All Reviews</div>
+      <div class="panel">
+        <table class="queue-table">
+          <thead><tr><th>Athlete</th><th>Sport</th><th>Uploaded</th><th>Status</th><th>Due Date</th><th></th></tr></thead>
+          <tbody id="allReviewsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ SCHEDULE SECTION ══ -->
+    <div class="section" id="section-schedule">
+      <div class="sec-title">Schedule</div>
+      <div class="panel">
+        <div style="padding:48px 24px;text-align:center;color:var(--muted);font-size:13px;">
+          <div style="font-weight:700;color:var(--text);margin-bottom:6px;font-size:15px;">No sessions scheduled</div>
+          <div style="max-width:380px;margin:0 auto;">Once athletes book live sessions or you schedule reviews, they'll appear on your calendar here.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ANALYZE VIDEO SECTION ══ -->
+    <div class="section" id="section-analyze">
+      <div class="sec-title">Analyze Video</div>
+      <div class="fcard">
+        <div class="fg"><label class="fl">Select athlete</label><select class="fsel" id="analyzeAthlete"><option value="" disabled selected>Choose an athlete</option></select></div>
+        <div class="fg"><label class="fl">Upload or select video</label><input class="fi" type="file" accept="video/*"/></div>
+        <div class="fg"><label class="fl">Written feedback</label><textarea class="fta" placeholder="Type your detailed coaching feedback here..."></textarea></div>
+        <div class="fg"><label class="fl">Key takeaways</label><textarea class="fta" placeholder="Summarize the 2-3 most important points..."></textarea></div>
+        <button class="btn-primary">Send Feedback to Athlete</button>
+      </div>
+    </div>
+
+    <!-- ══ DRILLS LIBRARY SECTION ══ -->
+    <div class="section" id="section-drills">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="sec-title" style="margin-bottom:0;">Drills Library</div>
+        <button class="btn-primary">+ Add Drill</button>
+      </div>
+      <div class="drill-grid">
+        <div class="drill-card"><div class="drill-card-title">Shooting Off The Dribble</div><div class="drill-card-desc">Improve off-dribble jump shot consistency. Focus on balance and follow-through.</div><div class="drill-card-tags"><span class="drill-tag">Basketball</span><span class="drill-tag">Shooting</span><span class="drill-tag">15 min</span></div></div>
+        <div class="drill-card"><div class="drill-card-title">Footwork Ladder Series</div><div class="drill-card-desc">Three-cone and ladder drills to sharpen lateral movement and first-step quickness.</div><div class="drill-card-tags"><span class="drill-tag">Multi-sport</span><span class="drill-tag">Agility</span><span class="drill-tag">20 min</span></div></div>
+        <div class="drill-card"><div class="drill-card-title">Elite Handles Series</div><div class="drill-card-desc">Weak-hand and crossover drills to build ambidexterity under pressure.</div><div class="drill-card-tags"><span class="drill-tag">Basketball</span><span class="drill-tag">Dribbling</span><span class="drill-tag">10 min</span></div></div>
+        <div class="drill-card"><div class="drill-card-title">First Touch Control</div><div class="drill-card-desc">Receiving and controlling the ball under pressure with both feet.</div><div class="drill-card-tags"><span class="drill-tag">Soccer</span><span class="drill-tag">Control</span><span class="drill-tag">18 min</span></div></div>
+        <div class="drill-card"><div class="drill-card-title">Serve Toss Consistency</div><div class="drill-card-desc">Build a repeatable ball toss for a more reliable tennis serve.</div><div class="drill-card-tags"><span class="drill-tag">Tennis</span><span class="drill-tag">Serve</span><span class="drill-tag">12 min</span></div></div>
+        <div class="drill-card"><div class="drill-card-title">Short Game Precision</div><div class="drill-card-desc">Chipping and pitching drills to tighten up scoring around the green.</div><div class="drill-card-tags"><span class="drill-tag">Golf</span><span class="drill-tag">Short Game</span><span class="drill-tag">25 min</span></div></div>
+      </div>
+    </div>
+
+    <!-- ══ MESSAGES SECTION ══ -->
+    <div class="section" id="section-messages">
+      <div class="sec-title">Messages</div>
+      <div class="msg-layout">
+        <div class="msg-sb">
+          <div class="msg-sb-hdr">Conversations</div>
+          <div class="msg-threads" id="msgThreadList"><div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">No conversations yet.</div></div>
+        </div>
+        <div class="msg-main">
+          <div class="msg-empty" id="msgEmpty">Select a conversation</div>
+          <div id="msgConversation" style="display:none;flex-direction:column;flex:1;">
+            <div class="msg-main-hdr"><div class="msg-main-name" id="msgPartnerName">—</div><div class="msg-main-sub" id="msgPartnerSub">—</div></div>
+            <div class="msg-body" id="msgBody"></div>
+            <div class="msg-input-row">
+              <textarea class="msg-input" id="msgInput" placeholder="Type a message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+              <button class="msg-send" onclick="sendMessage()">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ANALYTICS SECTION ══ -->
+    <div class="section" id="section-analytics">
+      <div class="sec-title">Analytics</div>
+      <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
+        <div class="kpi-card"><div class="kpi-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div><div class="kpi-val">0</div><div class="kpi-label">Total Reviews</div><div class="kpi-sub">All time</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="kpi-val">—</div><div class="kpi-label">Completion Rate</div><div class="kpi-sub">No data yet</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="kpi-val">—</div><div class="kpi-label">Avg Response</div><div class="kpi-sub">No reviews yet</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9 12 2"/></svg></div><div><div class="kpi-val">—</div><div class="kpi-label">Avg Rating</div><div class="kpi-sub">No ratings yet</div></div></div>
+      </div>
+      <div class="panel" style="margin-top:14px;"><div class="panel-hdr"><div class="panel-title">Review Volume — Last 6 Months</div></div>
+        <div style="padding:48px 24px;text-align:center;color:var(--muted);font-size:13px;">
+          <div style="font-weight:700;color:var(--text);margin-bottom:4px;font-size:14px;">No review history yet</div>
+          <div>Your review volume will graph here once you complete your first reviews.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ EARNINGS SECTION ══ -->
+    <div class="section" id="section-earnings">
+      <div class="sec-title">Earnings</div>
+      <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
+        <div class="kpi-card"><div class="kpi-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div><div class="kpi-val">$0</div><div class="kpi-label">This Month</div><div class="kpi-sub">No payouts yet</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div><div class="kpi-val">$0</div><div class="kpi-label">Year to Date</div><div class="kpi-sub">No payouts yet</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div><div class="kpi-val">0</div><div class="kpi-label">Sessions Paid</div><div class="kpi-sub">This month</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9 12 2"/></svg></div><div><div class="kpi-val">$0</div><div class="kpi-label">Performance Bonus</div><div class="kpi-sub">No bonus earned</div></div></div>
+      </div>
+      <div class="fcard" style="margin-top:14px;max-width:none;">
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;">💡 Earnings data populates automatically once Stripe payouts are connected. Figures shown are estimates based on active athlete subscriptions and completed sessions.</div>
+      </div>
+    </div>
+
+    <!-- ══ AVAILABILITY SECTION ══ -->
+    <div class="section" id="section-availability">
+      <div class="sec-title">Availability</div>
+      <div class="fcard">
+        <div class="toggle-row">
+          <div><div style="font-size:13px;font-weight:700;color:var(--text);">Accepting new athletes</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Turn off to pause new athlete requests</div></div>
+          <div class="toggle on" id="acceptToggle" onclick="toggleAccepting()"><div class="toggle-knob"></div></div>
+        </div>
+        <div class="fg"><label class="fl">Weekly availability</label>
+          <select class="fsel"><option>Mon–Fri, 9AM–6PM</option><option>Weekends only</option><option>Evenings only</option><option>Custom</option></select>
+        </div>
+        <div class="fg"><label class="fl">Max active athletes</label><input class="fi" type="number" value="30"/></div>
+        <div class="fg"><label class="fl">Typical response time</label>
+          <select class="fsel"><option>Within 24 hours</option><option>Within 48 hours</option><option>Within 72 hours</option></select>
+        </div>
+        <button class="btn-primary">Save Availability</button>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS SECTION ══ -->
+    <div class="section" id="section-settings">
+      <div class="sec-title">Settings</div>
+      <div class="fcard">
+        <div class="fg"><label class="fl">First name</label><input class="fi" id="setFirst" type="text"/></div>
+        <div class="fg"><label class="fl">Last name</label><input class="fi" id="setLast" type="text"/></div>
+        <div class="fg"><label class="fl">Sport</label><input class="fi" id="setSport" type="text" placeholder="e.g. Basketball"/></div>
+        <div class="fg"><label class="fl">Location</label><input class="fi" id="setLocation" type="text" placeholder="e.g. Melbourne, VIC"/></div>
+        <div class="fg"><label class="fl">Bio</label><textarea class="fta" id="setBio" placeholder="Tell athletes about your coaching background..."></textarea></div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="btn-primary" onclick="saveSettings()">Save Profile</button>
+          <button class="btn-ghost" onclick="handleLogout()">Log Out</button>
+          <span id="settingsSaved" style="display:none;font-size:12px;color:var(--green);">✓ Saved</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SB_URL="https://rtaxjewvshhpdnkpojjn.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ca-auth",storage:window.localStorage,detectSessionInUrl:true}});
+
+let currentUser=null,currentThreadId=null,msgSub=null,acceptingAthletes=true;
+
+// Sport → [icon, accent hex] lookup used wherever a sport tag is rendered.
+const sportIcons={Basketball:["🏀","#d97706"],Soccer:["⚽","#22c55e"],Tennis:["🎾","#a3e635"],Golf:["⛳","#10b981"],Swimming:["🏊","#3b82f6"],Football:["🏈","#f59e0b"],Other:["🎯","#8a96b0"]};
+
+async function init(){
+  // Retry getting the session — storage may not be ready on first paint
+  let session=null,tries=0;
+  while(tries<15){
+    const {data}=await sb.auth.getSession();
+    if(data.session){session=data.session;break;}
+    await new Promise(r=>setTimeout(r,120));
+    tries++;
+  }
+  if(!session){
+    // DEBUG: show what's in storage before bouncing
+    let keys=[];
+    try{for(let i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));}catch(e){keys=["(localStorage blocked)"];}
+    alert("DEBUG — No session found after retries.\n\nlocalStorage keys present:\n"+(keys.join("\n")||"(none)")+"\n\nThis tells us if the session was saved at all. Screenshot this and send to support.");
+    window.location.href="login.html";return;
+  }
+  currentUser=session.user;
+  const {data:p}=await sb.from("profiles").select("*").eq("id",currentUser.id).maybeSingle();
+  if(p){
+    if(p.role==="athlete"){window.location.href="athlete-dashboard.html";return;}
+    // Coaches must finish profile-setup before landing on the dashboard.
+    // Check selected_tier — it's only written by coach-profile-setup.html's
+    // save and is the most reliable "setup complete" signal. profile_status
+    // proved unreliable (sometimes defaults to 'Live' at the column level).
+    if(!p.selected_tier || !String(p.selected_tier).trim()){
+      window.location.href = "coach-profile-setup.html";
+      return;
+    }
+    const initials=(p.first_name?.[0]||"C")+(p.last_name?.[0]||"");
+    document.getElementById("coachAv").textContent=initials;
+    const fullName=("Coach "+(p.first_name||"")).trim();
+    document.getElementById("coachName").textContent=fullName||"Coach";
+    document.getElementById("coachTier").textContent=p.selected_tier?titleCase(p.selected_tier)+" Coach":"Coach";
+    document.getElementById("greeting").textContent=timeGreeting()+", "+fullName;
+    document.getElementById("setFirst").value=p.first_name||"";
+    document.getElementById("setLast").value=p.last_name||"";
+    document.getElementById("setSport").value=p.sport||"";
+    document.getElementById("setLocation").value=p.location||"";
+    document.getElementById("setBio").value=p.bio||"";
+    if(p.accepting_athletes===false){acceptingAthletes=false;document.getElementById("acceptToggle").classList.remove("on");}
+  }
+  renderQueue();
+  renderRecent();
+  renderAthletes();
+  await loadRealData();
+  await loadMessages();
+}
+
+function titleCase(s){return s? s.charAt(0).toUpperCase()+s.slice(1):s;}
+function timeGreeting(){const h=new Date().getHours();return h<12?"Good morning":h<17?"Good afternoon":"Good evening";}
+
+function renderQueue(rows){
+  const data = rows && rows.length ? rows : [];
+  document.getElementById("queueCount").textContent = data.length;
+  document.getElementById("kpiPending").textContent = data.length;
+  const navBadge = document.getElementById("navReviewBadge");
+  navBadge.textContent = data.length;
+  navBadge.style.display = data.length ? "inline-block" : "none";
+  // Topbar subtitle: real pending count or graceful empty copy.
+  const sub = document.getElementById("greetingSub");
+  if(sub) sub.textContent = data.length
+    ? `You have ${data.length} video${data.length === 1 ? "" : "s"} to review`
+    : "No pending reviews";
+  const body = document.getElementById("queueBody");
+  if(!data.length){
+    body.innerHTML = `<tr><td colspan="8" style="padding:36px 20px;text-align:center;color:var(--muted);font-size:13px;">
+      <div style="font-size:22px;opacity:.45;margin-bottom:6px;">📭</div>
+      <div style="font-weight:700;color:var(--text);margin-bottom:3px;">No pending reviews</div>
+      <div style="font-size:11px;">When your athletes upload videos, they'll appear here.</div>
+    </td></tr>`;
+    const allBody = document.getElementById("allReviewsBody");
+    if(allBody) allBody.innerHTML = `<tr><td colspan="6" style="padding:36px 20px;text-align:center;color:var(--muted);font-size:13px;">No reviews yet.</td></tr>`;
+    return;
+  }
+  body.innerHTML=data.slice(0,5).map(r=>{
+    const ic=sportIcons[r.sport]||sportIcons.Other;
+    const reviewAction=r.id?`window.location.href='video-review.html?sub=${r.id}'`:`showSection('analyze')`;
+    return `<tr>
+      <td><div class="q-check"></div></td>
+      <td><div class="q-athlete">
+        <div class="q-thumb" style="background:${r.grad||'#0a0f1a'};"><div class="q-thumb-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><div class="q-thumb-dur">${r.dur||'0:00'}</div></div>
+        <div><div class="q-name">${r.name}</div><div class="q-age">Age ${r.age} · ${r.grade}</div></div>
+      </div></td>
+      <td><div class="q-sport"><div class="q-sport-ic" style="background:${ic[1]}22;">${ic[0]}</div>${r.sport}</div></td>
+      <td><div class="q-uploaded">${r.uploaded}</div></td>
+      <td><span class="q-status ${r.status}">${statusLabel(r.status)}</span></td>
+      <td><div class="q-due">${r.due}</div><div class="q-due-rel ${r.dueCls}">(${r.dueRel})</div></td>
+      <td><button class="review-now-btn" onclick="${reviewAction}">Review Now</button></td>
+      <td><button class="q-more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></td>
+    </tr>`;
+  }).join("");
+  // also fill all-reviews
+  const allBody=document.getElementById("allReviewsBody");
+  if(allBody){
+    allBody.innerHTML=data.map(r=>{
+      const ic=sportIcons[r.sport]||sportIcons.Other;
+      const reviewAction=r.id?`window.location.href='video-review.html?sub=${r.id}'`:`showSection('analyze')`;
+      return `<tr>
+        <td><div class="q-athlete"><div class="q-thumb" style="background:${r.grad||'#0a0f1a'};"><div class="q-thumb-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div><div><div class="q-name">${r.name}</div><div class="q-age">Age ${r.age} · ${r.grade}</div></div></div></td>
+        <td><div class="q-sport"><div class="q-sport-ic" style="background:${ic[1]}22;">${ic[0]}</div>${r.sport}</div></td>
+        <td><div class="q-uploaded">${r.uploaded}</div></td>
+        <td><span class="q-status ${r.status}">${statusLabel(r.status)}</span></td>
+        <td><div class="q-due">${r.due}</div></td>
+        <td><button class="review-now-btn" onclick="${reviewAction}">Review Now</button></td>
+      </tr>`;
+    }).join("");
+  }
+}
+
+function renderRecent(rows){
+  const data = rows && rows.length ? rows : [];
+  const grid = document.getElementById("recentGrid");
+  if(!data.length){
+    grid.innerHTML = `<div style="grid-column:1/-1;padding:28px 20px;text-align:center;color:var(--muted);font-size:12px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:3px;">No completed reviews yet</div>
+      <div style="font-size:11px;">Completed reviews will show up here after you send feedback.</div>
+    </div>`;
+    return;
+  }
+  grid.innerHTML=data.slice(0,3).map(r=>`
+    <div class="recent-card">
+      <div class="recent-thumb" style="background:${r.grad};">
+        <div class="recent-thumb-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        <div class="recent-thumb-dur">${r.dur}</div>
+      </div>
+      <div class="recent-body">
+        <div class="recent-name">${r.name}</div>
+        <div class="recent-meta">${r.meta}</div>
+        <span class="recent-tag ${r.tag}">${r.tagLbl}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderAthletes(rows){
+  const data = rows && rows.length ? rows : [];
+  document.getElementById("kpiAthletes").textContent = data.length;
+  const grid = document.getElementById("athleteGrid");
+  if(!data.length){
+    grid.innerHTML = `<div style="grid-column:1/-1;padding:48px 24px;text-align:center;color:var(--muted);font-size:13px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:6px;font-size:15px;">No athletes yet</div>
+      <div style="max-width:380px;margin:0 auto 14px;">Invite an athlete to start coaching. They'll appear here once they accept.</div>
+      <button class="btn-primary" onclick="inviteAthlete()">+ Invite Athlete</button>
+    </div>`;
+    // empty the analyze dropdown too
+    const sel = document.getElementById("analyzeAthlete");
+    if(sel) sel.innerHTML = '<option value="" disabled selected>No athletes yet</option>';
+    return;
+  }
+  grid.innerHTML = data.map(a=>`
+    <div class="athlete-card">
+      <div class="athlete-card-top">
+        <div class="athlete-card-av">${a.initials}</div>
+        <div><div class="athlete-card-name">${a.name}</div><div class="athlete-card-meta">${a.sport} · ${a.grade}</div></div>
+      </div>
+      <div class="athlete-card-stats">
+        <div><div class="acs-val">${a.videos}</div><div class="acs-lbl">Videos</div></div>
+        <div><div class="acs-val">${a.reviews}</div><div class="acs-lbl">Reviews</div></div>
+      </div>
+      <button class="athlete-card-btn" onclick="showSection('messages')">Message Athlete</button>
+    </div>
+  `).join("");
+  const sel = document.getElementById("analyzeAthlete");
+  if(sel) sel.innerHTML = '<option value="" disabled selected>Choose an athlete</option>' + data.map(a=>`<option>${a.name}</option>`).join("");
+}
+
+async function loadRealData(){
+  // Step 1 — fetch submissions for this coach, with NO embed. Removing the
+  // profiles join eliminates two failure modes: (a) PostgREST erroring on an
+  // unexpected FK constraint name, (b) profiles' own RLS hiding rows when the
+  // embed is computed.
+  const {data:subs, error: subsErr} = await sb.from("submissions")
+    .select("*")
+    .eq("coach_id", currentUser.id)
+    .order("created_at",{ascending:true});
+
+  // Visible diagnostic so misconfigurations are obvious in DevTools.
+  console.log("[Review Queue] auth uid =", currentUser.id,
+              "| rows returned =", subs ? subs.length : "(error)",
+              "| error =", subsErr?.message || "none");
+
+  if(subsErr){
+    console.warn("Couldn't read submissions:", subsErr.message,
+      /row-level security|permission denied/i.test(subsErr.message)
+        ? "→ Likely a missing RLS policy. Run migration_submissions_policy_reset.sql."
+        : /relation .* does not exist/i.test(subsErr.message)
+          ? "→ The 'submissions' table doesn't exist yet. Run migration_submissions_policies.sql."
+          : "");
+    renderQueue([]);
+    renderRecent([]);
+    return;
+  }
+
+  // Step 2 — fetch each unique athlete's profile in a separate query so we can
+  // render names/sports. If profiles RLS hides some, those rows just render
+  // with a generic "Athlete" label rather than disappearing entirely.
+  let profById = {};
+  if(subs && subs.length){
+    const athleteIds = [...new Set(subs.map(s => s.athlete_id).filter(Boolean))];
+    if(athleteIds.length){
+      const {data:profs} = await sb.from("profiles")
+        .select("id,first_name,last_name,sport,skill_level,age")
+        .in("id", athleteIds);
+      (profs || []).forEach(p => { profById[p.id] = p; });
+    }
+  }
+  // Attach the athlete profile back onto each submission under the same shape
+  // the rest of the function expected (so the existing render code is untouched).
+  if(subs){ subs.forEach(s => { s.profiles = profById[s.athlete_id] || {}; }); }
+
+  if(subs&&subs.length){
+    const pending=subs.filter(s=>s.status==="pending"||s.status==="in_review");
+    if(pending.length){
+      const rows=pending.map(s=>{
+        const p=s.profiles||{};
+        return {id:s.id,name:((p.first_name||"")+" "+(p.last_name||"")).trim()||"Athlete",
+          age:p.age||"—",grade:p.skill_level||"—",sport:p.sport||"Other",
+          uploaded:timeAgo(s.created_at),status:s.status,
+          due:"—",dueRel:"Pending",dueCls:"",dur:"0:00",grad:"#0a0f1a"};
+      });
+      renderQueue(rows);
+    }
+    const completed=subs.filter(s=>s.status==="completed");
+    document.getElementById("kpiCompleted").textContent=completed.length;
+    if(completed.length){
+      const rows=completed.slice(-3).reverse().map(s=>{
+        const p=s.profiles||{};
+        return {name:((p.first_name||"")+" "+(p.last_name||"")).trim()||"Athlete",
+          meta:(p.sport||"Sport")+" · "+(p.skill_level||""),tag:"completed",tagLbl:"Completed",
+          dur:"0:00",grad:"linear-gradient(135deg,#1a2a4a,#0a1628)"};
+      });
+      renderRecent(rows);
+    }
+  }
+  // Real athletes
+  const {data:rels}=await sb.from("athlete_coaches")
+    .select("*, profiles!athlete_coaches_athlete_id_fkey(first_name,last_name,sport,skill_level)")
+    .eq("coach_id",currentUser.id);
+  if(rels&&rels.length){
+    const rows=rels.map(r=>{
+      const p=r.profiles||{};
+      return {name:((p.first_name||"")+" "+(p.last_name||"")).trim()||"Athlete",
+        sport:p.sport||"Sport",grade:p.skill_level||"—",videos:0,reviews:0,
+        initials:(p.first_name?.[0]||"A")+(p.last_name?.[0]||"")};
+    });
+    renderAthletes(rows);
+  }
+}
+
+function statusLabel(s){return s==="pending"?"Pending":s==="in_review"?"In Review":s==="completed"?"Completed":s;}
+function timeAgo(d){
+  const diff=(Date.now()-new Date(d))/1000;
+  if(diff<3600)return Math.max(1,Math.floor(diff/60))+"m ago";
+  if(diff<86400)return Math.floor(diff/3600)+"h ago";
+  return Math.floor(diff/86400)+"d ago";
+}
+
+// ── INVITE ATHLETE ──
+function inviteAthlete(){
+  // Build the link from window.location.origin so it adapts to wherever
+  // the coach is running the app (local preview, Netlify branch, prod).
+  const link = window.location.origin + "/select-coach.html?coach=" + currentUser.id;
+  navigator.clipboard.writeText(link).then(()=>{
+    alert("Invite link copied to clipboard!\n\n"+link+"\n\nShare this with an athlete — when they sign up through it, they'll be connected to you.");
+  }).catch(()=>{
+    prompt("Copy this invite link and share it with an athlete:",link);
+  });
+}
+
+// ── ACCEPTING TOGGLE ──
+async function toggleAccepting(){
+  acceptingAthletes=!acceptingAthletes;
+  document.getElementById("acceptToggle").classList.toggle("on",acceptingAthletes);
+  await sb.from("profiles").update({accepting_athletes:acceptingAthletes}).eq("id",currentUser.id);
+}
+
+// ── STATUS PILL ──
+const statuses=[["Available","status-dot"],["Busy","status-dot busy"],["Offline","status-dot offline"]];
+let statusIdx=0;
+function cycleStatus(){
+  statusIdx=(statusIdx+1)%3;
+  document.getElementById("statusText").textContent=statuses[statusIdx][0];
+  document.getElementById("statusDot").className=statuses[statusIdx][1];
+}
+
+// ── MESSAGES ──
+async function loadMessages(){
+  if(!currentUser)return;
+  const {data:msgs}=await sb.from("messages").select("*").or(`from_id.eq.${currentUser.id},to_id.eq.${currentUser.id}`).order("created_at",{ascending:false});
+  const ids=[...new Set((msgs||[]).map(m=>m.from_id===currentUser.id?m.to_id:m.from_id))];
+  const unread=(msgs||[]).filter(m=>m.to_id===currentUser.id&&!m.read).length;
+  const badge=document.getElementById("navMsgBadge");
+  if(unread>0){badge.textContent=unread;badge.style.display="inline";}else{badge.style.display="none";}
+  if(!ids.length){document.getElementById("msgThreadList").innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">No conversations yet.</div>';return;}
+  const {data:people}=await sb.from("profiles").select("id,first_name,last_name,sport").in("id",ids);
+  const threads=ids.map(id=>{const person=(people||[]).find(p=>p.id===id);const last=(msgs||[]).find(m=>m.from_id===id||m.to_id===id);return{person,last};}).filter(t=>t.person);
+  document.getElementById("msgThreadList").innerHTML=threads.map(t=>`
+    <div class="msg-thread ${currentThreadId===t.person.id?'active':''}" onclick="openThread('${t.person.id}','${t.person.first_name} ${t.person.last_name}','${t.person.sport||''}')">
+      <div class="msg-thread-top"><div class="msg-thread-name">${t.person.first_name} ${t.person.last_name}</div>${t.last?`<span class="msg-thread-time">${timeAgo(t.last.created_at)}</span>`:""}</div>
+      <div class="msg-thread-prev">${t.last?(t.last.from_id===currentUser.id?"You: ":"")+t.last.message.substring(0,42):"No messages"}${t.last&&t.last.to_id===currentUser.id&&!t.last.read?'<span class="msg-unread-dot"></span>':""}</div>
+    </div>`).join("");
+}
+
+async function openThread(id,name,sport){
+  currentThreadId=id;
+  document.getElementById("msgEmpty").style.display="none";
+  document.getElementById("msgConversation").style.display="flex";
+  document.getElementById("msgPartnerName").textContent=name;
+  document.getElementById("msgPartnerSub").textContent=(sport?sport+" · ":"")+"Athlete";
+  await loadThread();
+  await sb.from("messages").update({read:true}).eq("to_id",currentUser.id).eq("from_id",id).is("read",null);
+  loadMessages();
+  if(msgSub)sb.removeChannel(msgSub);
+  msgSub=sb.channel("m-"+id).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},()=>loadThread()).subscribe();
+}
+
+async function loadThread(){
+  if(!currentThreadId)return;
+  const {data:msgs}=await sb.from("messages").select("*").or(`and(from_id.eq.${currentUser.id},to_id.eq.${currentThreadId}),and(from_id.eq.${currentThreadId},to_id.eq.${currentUser.id})`).order("created_at",{ascending:true});
+  const body=document.getElementById("msgBody");
+  if(!msgs||!msgs.length){body.innerHTML='<div style="margin:auto;color:var(--muted);font-size:12px;">No messages yet. Say hello!</div>';return;}
+  body.innerHTML=msgs.map(m=>`<div style="display:flex;flex-direction:column;align-items:${m.from_id===currentUser.id?'flex-end':'flex-start'};"><div class="bubble ${m.from_id===currentUser.id?'mine':'theirs'}">${m.message}</div><div class="bubble-time">${timeAgo(m.created_at)}</div></div>`).join("");
+  body.scrollTop=body.scrollHeight;
+}
+
+async function sendMessage(){
+  const input=document.getElementById("msgInput");const text=input.value.trim();
+  if(!text||!currentThreadId)return;
+  input.value="";
+  await sb.from("messages").insert({from_id:currentUser.id,to_id:currentThreadId,message:text});
+  loadThread();
+}
+
+// ── SETTINGS ──
+async function saveSettings(){
+  const upd={
+    first_name:document.getElementById("setFirst").value.trim(),
+    last_name:document.getElementById("setLast").value.trim(),
+    sport:document.getElementById("setSport").value.trim(),
+    location:document.getElementById("setLocation").value.trim(),
+    bio:document.getElementById("setBio").value.trim()
+  };
+  const {error}=await sb.from("profiles").update(upd).eq("id",currentUser.id);
+  if(!error){
+    document.getElementById("settingsSaved").style.display="inline";
+    setTimeout(()=>document.getElementById("settingsSaved").style.display="none",3000);
+    document.getElementById("coachName").textContent=("Coach "+upd.first_name).trim();
+    document.getElementById("greeting").textContent=timeGreeting()+", Coach "+upd.first_name;
+  }
+}
+
+async function handleLogout(){await sb.auth.signOut();window.location.href="index.html";}
+
+// ── INACTIVITY AUTO-LOGOUT ──
+// Sign the coach out after 60 minutes with no input. Activity events
+// reset the timer (throttled to once/sec so mousemove isn't a perf issue).
+(function setupIdleTimeout(){
+  const IDLE_MS = 60 * 60 * 1000;
+  let idleTimer = null;
+  let lastReset = 0;
+  function fire(){
+    sb.auth.signOut().finally(() => {
+      window.location.href = "index.html?timeout=1";
+    });
+  }
+  function reset(){
+    const now = Date.now();
+    if(now - lastReset < 1000) return;
+    lastReset = now;
+    if(idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(fire, IDLE_MS);
+  }
+  ["mousemove","mousedown","keydown","touchstart","scroll"].forEach(ev =>
+    window.addEventListener(ev, reset, { passive: true })
+  );
+  reset();
+})();
+
+function showSection(id){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  document.getElementById("section-"+id).classList.add("active");
+  document.querySelectorAll(".nav-item").forEach(n=>{if(n.getAttribute("onclick")?.includes("'"+id+"'"))n.classList.add("active");});
+  window.scrollTo(0,0);
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+# Secrets — env file contains live Stripe + Supabase service keys
+env
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Local Netlify CLI state
+.netlify/
+
+# Editor/OS junk
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build artifacts / archives
+*.zip
+*.log
+
+# Working-document files (not for deploy)
+*.xlsx
+*.docx

@@ -1,0 +1,1887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Athlete Dashboard – CoachAnywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --blue:#2563eb;--blue2:#1d4ed8;--blue3:#3b82f6;--blueglow:rgba(37,99,235,.18);
+      --bg:#0d1117;--bg2:#131920;--bg3:#1a2230;
+      --card:#161d2a;--card2:#1e2a3a;
+      --text:#e8edf5;--muted:#6b7a99;--muted2:#8a96b0;
+      --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+      --sidebar:220px;--tr:150ms ease-out;
+      --green:#22c55e;--amber:#f59e0b;--red:#ef4444;
+    }
+    body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+    button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
+
+    /* ── SIDEBAR ── */
+    .sidebar{width:var(--sidebar);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:20;}
+    .sidebar-logo{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;}
+    .sidebar-wordmark{font-size:16px;font-weight:800;letter-spacing:.04em;color:#fff;text-transform:uppercase;font-family:system-ui,-apple-system,sans-serif;}
+    .sidebar-wordmark span{color:#60a5fa;}
+    .sidebar-nav{flex:1;padding:6px 8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;min-height:0;}
+    .nav-label{font-size:9px;font-weight:700;color:rgba(107,122,153,.5);text-transform:uppercase;letter-spacing:.18em;padding:10px 10px 4px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 11px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted2);border:none;background:transparent;width:100%;text-align:left;transition:all var(--tr);position:relative;}
+    .nav-item:hover{background:rgba(255,255,255,.05);color:var(--text);}
+    .nav-item.active{background:var(--blueglow);color:var(--blue3);font-weight:600;}
+    .nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.65;}
+    .nav-item.active svg{opacity:1;color:var(--blue3);}
+    .nav-badge{margin-left:auto;background:var(--blue);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:999px;}
+    .sidebar-footer{padding:10px;border-top:1px solid var(--border);}
+    .footer-box{border-radius:9px;overflow:hidden;border:1px solid var(--border2);}
+    .user-row{display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--bg3);border-bottom:1px solid var(--border);}
+    .user-av{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--blue2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+    .user-name{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .user-role-lbl{font-size:10px;color:var(--muted);}
+    .sidebar-logout{margin:0 8px 10px;width:calc(100% - 16px);padding:9px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted2);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-family:inherit;transition:all var(--tr);}
+    .sidebar-logout:hover{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08);color:var(--red);}
+    .sidebar-logout svg{width:14px;height:14px;}
+
+    /* ── MAIN ── */
+    .main{margin-left:var(--sidebar);flex:1;min-height:100vh;display:flex;flex-direction:column;}
+
+    /* ── TOPBAR ── */
+    .topbar{background:rgba(13,17,23,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:10;gap:16px;}
+    .topbar-left{}
+    .topbar-greeting{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.02em;}
+    .topbar-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+    .topbar-right{display:flex;align-items:center;gap:8px;}
+    .icon-btn{width:34px;height:34px;border-radius:8px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all var(--tr);position:relative;cursor:pointer;}
+    .icon-btn:hover{border-color:var(--border2);}
+    .icon-btn svg{width:15px;height:15px;color:var(--muted2);}
+    .notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--red);border:2px solid var(--bg2);display:none;}
+    .profile-chip{display:flex;align-items:center;gap:7px;padding:5px 10px 5px 5px;border-radius:8px;background:var(--card2);border:1px solid var(--border);cursor:pointer;transition:all var(--tr);}
+    .profile-chip:hover{border-color:var(--border2);}
+    .chip-av{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--blue),var(--blue2));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;}
+    .chip-name{font-size:12px;font-weight:600;color:var(--text);}
+    .chip-role{font-size:10px;color:var(--muted);}
+
+    /* ── CONTENT ── */
+    .content{padding:14px 18px;flex:1;padding-bottom:24px;}
+    .section{display:none;}
+    .section.active{display:block;}
+
+    /* ── HOME LAYOUT ── */
+    /* TOP ROW: upload (small) + coach card */
+    .top-row{display:grid;grid-template-columns:340px 1fr;gap:14px;margin-bottom:14px;align-items:start;}
+
+    /* UPLOAD CARD — compact */
+    .upload-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
+    .upload-inner{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start;}
+    .upload-dropzone{width:110px;border:2px dashed rgba(37,99,235,.3);border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;position:relative;transition:all var(--tr);background:rgba(37,99,235,.04);flex-shrink:0;}
+    .upload-dropzone:hover{border-color:rgba(37,99,235,.6);background:rgba(37,99,235,.08);}
+    .upload-dropzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .upload-dropzone svg{width:22px;height:22px;color:var(--blue3);opacity:.7;margin-bottom:5px;}
+    .upload-dropzone-text{font-size:10px;color:var(--muted);line-height:1.4;}
+    .upload-dropzone-text strong{color:var(--blue3);display:block;}
+    .upload-dropzone-file{font-size:10px;color:var(--green);margin-top:4px;font-weight:600;}
+    .upload-mid{}
+    .upload-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+    .upload-tips{margin-bottom:10px;}
+    .upload-tip{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted2);margin-bottom:3px;}
+    .upload-tip svg{width:11px;height:11px;color:var(--blue3);flex-shrink:0;}
+    .skill-sel{width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:11px;font-family:inherit;outline:none;margin-bottom:6px;}
+    .skill-sel:focus{border-color:rgba(37,99,235,.4);}
+    .skill-sel option{background:#1a2230;}
+    .upload-notes{width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:11px;font-family:inherit;outline:none;resize:none;min-height:44px;}
+    .upload-notes:focus{border-color:rgba(37,99,235,.4);}
+    .upload-notes::placeholder{color:var(--muted);}
+    .prog-wrap{display:none;margin:6px 0;}
+    .prog-bar-bg{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+    .prog-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue3),var(--blue));border-radius:2px;transition:width .3s;}
+    .prog-lbl{font-size:9px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:3px;}
+    .upload-right{}
+    .choose-file-btn{padding:9px 14px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-weight:700;font-size:12px;border:none;display:block;width:100%;margin-bottom:6px;box-shadow:0 4px 14px var(--blueglow);transition:all var(--tr);}
+    .choose-file-btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(37,99,235,.35);}
+    .choose-file-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+    .upload-hint{font-size:9px;color:var(--muted);text-align:center;line-height:1.4;}
+
+    /* COACH CARD */
+    .coach-side-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
+    .coach-side-section{border-top:1px solid var(--border);margin-top:12px;padding-top:12px;}
+    .coach-side-section-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;}
+    .coach-info-row{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;background:var(--bg3);margin-bottom:6px;cursor:pointer;transition:all var(--tr);}
+    .coach-info-row:last-child{margin-bottom:0;}
+    .coach-info-row:hover{background:var(--card2);}
+    .coach-info-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .coach-info-icon.blue{background:rgba(37,99,235,.15);}
+    .coach-info-icon.green{background:rgba(34,197,94,.12);}
+    .coach-info-icon.purple{background:rgba(139,92,246,.14);}
+    .coach-info-icon svg{width:13px;height:13px;}
+    .coach-info-label{font-size:12px;font-weight:600;color:var(--text);}
+    .coach-info-sub{font-size:10px;color:var(--muted);}
+    .coach-info-badge{margin-left:auto;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;}
+    .badge-blue{background:rgba(37,99,235,.15);color:var(--blue3);}
+    .badge-green{background:rgba(34,197,94,.1);color:var(--green);}
+    .skel{border-radius:4px;background:rgba(255,255,255,.06);}
+    .skel-text{height:11px;margin-bottom:4px;}
+    .skel-sub{height:9px;width:70%;}
+    .coach-side-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;margin-bottom:12px;}
+    .coach-side-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+    .coach-av{width:46px;height:46px;border-radius:11px;background:linear-gradient(135deg,#1e3a5f,#0d2a6e);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#93c5fd;flex-shrink:0;border:2px solid rgba(59,130,246,.2);}
+    .coach-name{font-size:14px;font-weight:800;color:var(--text);}
+    .coach-sport{font-size:11px;color:var(--muted);margin-top:1px;}
+    .coach-stars-row{display:flex;align-items:center;gap:2px;margin-top:4px;}
+    .star{font-size:11px;color:#f59e0b;}
+    .star-count{font-size:10px;color:var(--muted);margin-left:4px;}
+    .send-msg-btn{width:100%;padding:9px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:12px;font-weight:700;border:none;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 12px var(--blueglow);transition:all var(--tr);}
+    .send-msg-btn:hover{transform:translateY(-1px);}
+    .send-msg-btn svg{width:13px;height:13px;}
+
+    /* ── ACTIVITY BAR ── */
+    .activity-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+    .act-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:11px 13px;display:flex;align-items:center;gap:12px;transition:all var(--tr);}
+    .act-card:hover{border-color:var(--border2);}
+    .act-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .act-icon svg{width:17px;height:17px;}
+    .act-icon.blue{background:rgba(37,99,235,.14);color:var(--blue3);}
+    .act-icon.amber{background:rgba(245,158,11,.12);color:var(--amber);}
+    .act-icon.green{background:rgba(34,197,94,.1);color:var(--green);}
+    .act-icon.purple{background:rgba(139,92,246,.12);color:#a78bfa;}
+    .act-val{font-size:21px;font-weight:800;color:var(--text);line-height:1;letter-spacing:-.02em;}
+    .act-lbl{font-size:11px;font-weight:600;color:var(--muted2);margin-top:1px;}
+    .act-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+
+    /* NEXT UPLOAD DUE — right side of activity */
+    .activity-row{display:grid;grid-template-columns:1fr 260px;gap:14px;margin-bottom:14px;align-items:start;}
+    .next-due-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;}
+    .next-due-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;margin-bottom:12px;}
+    .next-due-date{font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;}
+    .next-due-days{font-size:28px;font-weight:800;color:var(--blue3);line-height:1;letter-spacing:-.03em;}
+    .next-due-days-lbl{font-size:12px;color:var(--muted);font-weight:500;}
+    .due-bar-bg{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:10px 0 12px;}
+    .due-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue3),var(--blue));border-radius:3px;transition:width .5s;}
+    .view-cal-btn{width:100%;padding:9px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--muted2);font-size:12px;font-weight:600;font-family:inherit;transition:all var(--tr);}
+    .view-cal-btn:hover{border-color:var(--blue3);color:var(--blue3);}
+
+    /* ── BOTTOM GRID ── */
+    .bottom-grid{display:grid;grid-template-columns:1fr 260px;gap:14px;align-items:start;}
+    .bottom-left{display:flex;flex-direction:column;gap:14px;}
+    .bottom-right{display:flex;flex-direction:column;gap:14px;}
+
+    /* SECTION HEADER */
+    .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    .sec-title{font-size:14px;font-weight:800;color:var(--text);}
+    .view-all-btn{font-size:11px;color:var(--blue3);font-weight:600;border:none;background:none;display:flex;align-items:center;gap:2px;}
+    .view-all-btn svg{width:10px;height:10px;}
+
+    /* RECENT REVIEWS */
+    .review-list{display:flex;flex-direction:column;gap:8px;}
+    .review-item{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:9px 12px;display:grid;grid-template-columns:96px 1fr auto;gap:12px;align-items:center;transition:all var(--tr);}
+    .review-item:hover{border-color:var(--border2);}
+    .review-thumb{aspect-ratio:16/10;background:#0a0f1a;border-radius:7px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+    .review-play{width:24px;height:24px;border-radius:50%;background:rgba(37,99,235,.85);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .review-play svg{width:9px;height:9px;color:#fff;margin-left:1px;}
+    .review-duration{position:absolute;bottom:3px;right:3px;font-size:9px;font-weight:700;color:#fff;background:rgba(0,0,0,.7);padding:1px 4px;border-radius:3px;}
+    .review-info{}
+    .review-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+    .review-coach{font-size:11px;color:var(--muted2);}
+    .review-returned{font-size:10px;color:var(--muted);margin-top:1px;}
+    .review-highlight{font-size:11px;font-weight:600;margin-top:4px;padding:2px 7px;border-radius:4px;display:inline-block;}
+    .hl-green{background:rgba(34,197,94,.15);color:#4ade80;}
+    .hl-blue{background:rgba(37,99,235,.15);color:var(--blue3);}
+    .hl-amber{background:rgba(245,158,11,.12);color:var(--amber);}
+    .review-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+    .watch-btn{padding:7px 14px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:11px;font-weight:700;border:none;white-space:nowrap;box-shadow:0 3px 10px var(--blueglow);transition:all var(--tr);}
+    .watch-btn:hover{transform:translateY(-1px);}
+    .dl-btn{width:28px;height:28px;border-radius:7px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all var(--tr);}
+    .dl-btn:hover{border-color:var(--border2);}
+    .dl-btn svg{width:13px;height:13px;color:var(--muted2);}
+
+    /* PROGRESS THIS MONTH */
+    .progress-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;}
+    .progress-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;}
+    .progress-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+    .prog-stat{}
+    .prog-stat-val{font-size:16px;font-weight:800;color:var(--text);}
+    .prog-stat-trend{font-size:10px;color:var(--green);font-weight:600;}
+    .prog-stat-trend.down{color:var(--red);}
+    .prog-stat-lbl{font-size:10px;color:var(--muted);margin-top:1px;}
+    .mini-chart{height:40px;width:100px;}
+    .mini-chart svg{width:100%;height:100%;}
+
+    /* GOALS */
+    .goals-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;}
+    .goal-item{margin-bottom:12px;}
+    .goal-item:last-child{margin-bottom:0;}
+    .goal-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+    .goal-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .goal-icon.amber{background:rgba(245,158,11,.15);}
+    .goal-icon.green{background:rgba(34,197,94,.12);}
+    .goal-icon.blue{background:rgba(37,99,235,.14);}
+    .goal-name{font-size:12px;font-weight:600;color:var(--text);flex:1;}
+    .goal-pct{font-size:11px;font-weight:700;color:var(--muted2);}
+    .goal-arrow{font-size:11px;color:var(--muted);}
+    .goal-bar-bg{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+    .goal-bar-fill{height:100%;border-radius:3px;transition:width .5s;}
+    .fill-amber{background:linear-gradient(90deg,#f59e0b,#d97706);}
+    .fill-green{background:linear-gradient(90deg,#22c55e,#16a34a);}
+    .fill-blue{background:linear-gradient(90deg,var(--blue3),var(--blue));}
+
+    /* RECOMMENDED DRILL */
+    .drill-rec-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;}
+    .drill-rec-inner{display:flex;gap:10px;align-items:start;margin-bottom:10px;}
+    .drill-rec-thumb{width:56px;height:40px;border-radius:7px;background:#0a0f1a;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+    .drill-rec-thumb svg{width:14px;height:14px;color:var(--blue3);}
+    .drill-rec-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;}
+    .drill-rec-desc{font-size:11px;color:var(--muted);line-height:1.4;}
+    .start-drill-btn{width:100%;padding:9px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:12px;font-weight:700;border:none;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 3px 10px var(--blueglow);transition:all var(--tr);}
+    .start-drill-btn:hover{transform:translateY(-1px);}
+    .start-drill-btn svg{width:11px;height:11px;}
+
+    /* ── OTHER SECTIONS ── */
+    .videos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+    .vid-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all var(--tr);}
+    .vid-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+    .vid-thumb{aspect-ratio:16/9;background:#0a0f1a;display:flex;align-items:center;justify-content:center;}
+    .vid-info{padding:10px 12px;}
+    .vid-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;}
+    .vid-meta{font-size:10px;color:var(--muted);}
+    .vid-footer{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
+    .badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:9px;font-weight:700;}
+    .badge-pending{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25);}
+    .badge-in_review{background:rgba(37,99,235,.12);color:var(--blue3);border:1px solid rgba(37,99,235,.25);}
+    .badge-completed{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2);}
+
+    /* FEEDBACK LIST */
+    .fb-list{display:flex;flex-direction:column;gap:8px;}
+    .fbi{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+    .fbi-hdr{padding:12px 14px;display:flex;align-items:center;gap:9px;cursor:pointer;}
+    .fbi-hdr:hover{background:rgba(255,255,255,.02);}
+    .fbi-av{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#1e3a5f,#0d2a6e);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#93c5fd;flex-shrink:0;}
+    .fbi-coach{font-size:13px;font-weight:700;color:var(--text);}
+    .fbi-date{font-size:10px;color:var(--muted);}
+    .fbi-chev{width:14px;height:14px;color:var(--muted);transition:transform var(--tr);flex-shrink:0;margin-left:auto;}
+    .fbi.open .fbi-chev{transform:rotate(90deg);}
+    .fbi-body{display:none;padding:0 14px 12px;border-top:1px solid var(--border);}
+    .fbi.open .fbi-body{display:block;}
+    .fbi-text{font-size:13px;color:rgba(232,237,245,.78);line-height:1.7;padding-top:10px;}
+    .fbi-section{margin-top:8px;background:var(--bg3);border-radius:7px;padding:9px 11px;}
+    .fbi-section-lbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;}
+    .fbi-section-txt{font-size:12px;color:rgba(232,237,245,.75);line-height:1.6;}
+
+    /* MESSAGES */
+    .msg-layout{display:grid;grid-template-columns:220px 1fr;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;height:calc(100vh - 160px);min-height:400px;}
+    .msg-sb{border-right:1px solid var(--border);display:flex;flex-direction:column;}
+    .msg-sb-hdr{padding:12px 14px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text);}
+    .msg-threads{flex:1;overflow-y:auto;}
+    .msg-thread{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--tr);}
+    .msg-thread:hover{background:rgba(255,255,255,.03);}
+    .msg-thread.active{background:var(--blueglow);border-left:3px solid var(--blue3);}
+    .msg-thread-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:1px;}
+    .msg-thread-prev{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .msg-thread-time{font-size:9px;color:var(--muted);float:right;}
+    .msg-unread{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--blue3);margin-left:4px;vertical-align:middle;}
+    .msg-main{display:flex;flex-direction:column;flex:1;}
+    .msg-main-hdr{padding:12px 16px;border-bottom:1px solid var(--border);}
+    .msg-main-name{font-size:13px;font-weight:700;color:var(--text);}
+    .msg-main-sub{font-size:10px;color:var(--muted);}
+    .msg-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:9px;}
+    .msg-empty-state{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;}
+    .bubble{max-width:68%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.5;}
+    .bubble.mine{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;align-self:flex-end;border-bottom-right-radius:3px;}
+    .bubble.theirs{background:var(--bg3);color:var(--text);align-self:flex-start;border-bottom-left-radius:3px;}
+    .bubble-time{font-size:9px;color:var(--muted);margin-top:2px;}
+    .msg-input-row{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;}
+    .msg-input{flex:1;padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none;resize:none;min-height:36px;max-height:100px;}
+    .msg-input:focus{border-color:rgba(37,99,235,.4);}
+    .msg-send-btn{padding:9px 16px;border-radius:999px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:12px;font-weight:700;border:none;font-family:inherit;}
+
+    /* PROGRESS SECTION */
+    .prog-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+    .prog-stat-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px;}
+    .psc-lbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;}
+    .psc-val{font-size:22px;font-weight:800;color:var(--text);}
+    .psc-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+    .prog-chart-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;margin-bottom:14px;}
+    .prog-chart-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;}
+    .prog-chart-area{height:120px;}
+    .prog-chart-area svg{width:100%;height:100%;}
+
+    /* DRILLS */
+    .drills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+    .drill-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px;transition:all var(--tr);}
+    .drill-card:hover{border-color:var(--border2);}
+    .drill-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;}
+    .drill-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:9px;}
+    .drill-meta{display:flex;align-items:center;gap:6px;}
+    .drill-tag{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:9px;font-weight:600;color:var(--muted2);}
+    .drill-time{font-size:10px;color:var(--muted);margin-left:auto;}
+    .drill-play-btn{display:inline-flex;align-items:center;gap:5px;margin-top:9px;padding:7px 11px;border-radius:7px;background:var(--blueglow);border:1px solid rgba(37,99,235,.25);color:var(--blue3);font-size:11px;font-weight:600;transition:all var(--tr);}
+    .drill-play-btn:hover{background:rgba(37,99,235,.2);}
+    .drill-play-btn svg{width:10px;height:10px;}
+
+    /* PAYMENTS */
+    .pay-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;max-width:460px;margin-bottom:14px;}
+    .pay-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+    .pay-row:last-child{border-bottom:none;}
+    .pay-lbl{font-size:13px;color:var(--muted2);}
+    .pay-val{font-size:13px;font-weight:700;color:var(--text);}
+    .pay-badge{padding:2px 9px;border-radius:999px;font-size:10px;font-weight:700;background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2);}
+
+    /* PROFILE */
+    .profile-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;max-width:500px;margin-bottom:14px;}
+    .pct-bar{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-bottom:16px;}
+    .pct-fill{height:100%;background:linear-gradient(90deg,var(--blue3),var(--blue));border-radius:2px;transition:width .5s;}
+    .p2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+    .fl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+    .fi,.fs,.ft{padding:9px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;outline:none;width:100%;transition:border-color var(--tr);}
+    .fi:focus,.fs:focus,.ft:focus{border-color:rgba(37,99,235,.4);}
+    .fi::placeholder,.ft::placeholder{color:var(--muted);}
+    .fs{cursor:pointer;}
+    .fs option{background:#1a2230;}
+    .ft{resize:vertical;min-height:70px;}
+    .save-btn{padding:9px 20px;border-radius:999px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-weight:700;font-size:13px;border:none;box-shadow:0 4px 14px var(--blueglow);transition:all var(--tr);font-family:inherit;}
+    .save-btn:hover{transform:translateY(-1px);}
+
+    /* EMPTY */
+    .empty{text-align:center;padding:36px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;}
+    .empty-icon{width:44px;height:44px;border-radius:11px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:3px;}
+    .empty-icon svg{width:19px;height:19px;color:var(--muted);}
+    .empty-title{font-size:13px;font-weight:700;color:var(--text);}
+    .empty-sub{font-size:11px;color:var(--muted);max-width:220px;line-height:1.5;}
+
+    /* MOBILE */
+    .mob-nav{display:none;}
+    @media(max-width:900px){
+      .sidebar{display:none;}.main{margin-left:0;}
+      .top-row,.activity-row,.bottom-grid{grid-template-columns:1fr;}
+      .next-due-card,.bottom-right,.coach-side-card{display:none;}
+      .activity-bar{grid-template-columns:1fr 1fr;}
+      .progress-stats{grid-template-columns:1fr 1fr;}
+      .reviews-grid{grid-template-columns:1fr;}
+      .mob-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:20;background:rgba(13,17,23,.97);border-top:1px solid var(--border);padding:8px 0 12px;}
+      .mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;padding:4px;}
+      .mob-nav-item svg{width:18px;height:18px;color:var(--muted);}
+      .mob-nav-item.active svg{color:var(--blue3);}
+      .mob-nav-lbl{font-size:9px;color:var(--muted);font-family:'DM Sans',sans-serif;}
+      .mob-nav-item.active .mob-nav-lbl{color:var(--blue3);}
+      .mob-fab{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue2));border:none;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px var(--blueglow);margin-top:-16px;}
+      .mob-fab svg{width:19px;height:19px;color:#fff;}
+      .content{padding-bottom:90px;}
+      .upload-inner{grid-template-columns:1fr;}
+      .upload-dropzone{width:100%;}
+    }
+    @media(max-width:480px){.p2col{grid-template-columns:1fr;}.prog-stats-grid{grid-template-columns:1fr 1fr;}.progress-stats{grid-template-columns:1fr;}}
+
+    /* ─────────────────────────────────────────────────────────────
+       PROFILE POPUP — opened from sidebar Profile + top-right chip
+       ───────────────────────────────────────────────────────────── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,.78);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px;overflow-y:auto;}
+    .modal-overlay.open{display:flex;animation:fadeIn 180ms ease-out;}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    .modal-box{width:620px;max-width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:18px;display:flex;flex-direction:column;overflow:hidden;margin:auto;box-shadow:0 30px 80px rgba(0,0,0,.55);}
+    .modal-hdr{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .modal-title{font-size:17px;font-weight:800;color:#f9fafb;}
+    .modal-close{width:32px;height:32px;border-radius:8px;background:transparent;border:none;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+    .modal-close:hover{background:rgba(255,255,255,.06);color:#fff;}
+    .modal-close svg{width:16px;height:16px;}
+    .modal-body{padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:18px;max-height:calc(100vh - 200px);}
+    .modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+
+    /* Photo */
+    .ph-row{display:flex;align-items:center;gap:16px;}
+    .ph-preview{width:78px;height:78px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue2));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden;border:2px solid var(--border2);}
+    .ph-preview img{width:100%;height:100%;object-fit:cover;}
+    .ph-actions{display:flex;flex-direction:column;gap:6px;}
+    .ph-btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--card2);color:var(--text);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all var(--tr);}
+    .ph-btn:hover{background:var(--card);border-color:rgba(96,165,250,.4);}
+    .ph-btn svg{width:13px;height:13px;}
+    .ph-hint{font-size:10px;color:var(--muted);}
+
+    /* Section header inside modal */
+    .ms-hdr{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;margin-bottom:10px;}
+
+    /* Goals/Skills editor */
+    .gs-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+    .gs-row{display:grid;grid-template-columns:1fr 90px 28px;gap:8px;align-items:center;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;}
+    .gs-row input[type="text"]{padding:7px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:12px;font-family:inherit;outline:none;}
+    .gs-row input[type="text"]:focus{border-color:rgba(96,165,250,.45);}
+    .gs-range-wrap{display:flex;align-items:center;gap:6px;}
+    .gs-range{flex:1;accent-color:var(--blue3);cursor:pointer;}
+    .gs-pct{font-size:11px;font-weight:700;color:var(--blue3);font-variant-numeric:tabular-nums;min-width:32px;text-align:right;}
+    .gs-del{width:26px;height:26px;border-radius:6px;background:transparent;border:1px solid transparent;color:rgba(148,163,184,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .gs-del:hover{background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.25);}
+    .gs-del svg{width:13px;height:13px;}
+    .gs-add{padding:8px 12px;border-radius:8px;border:1px dashed var(--border2);background:transparent;color:var(--muted);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;transition:all var(--tr);}
+    .gs-add:hover{border-color:rgba(96,165,250,.5);color:var(--blue3);background:rgba(37,99,235,.05);}
+    .gs-add svg{width:13px;height:13px;}
+    .gs-empty{padding:14px;text-align:center;font-size:12px;color:var(--muted);background:var(--bg3);border:1px dashed var(--border);border-radius:9px;}
+
+    /* Modal foot buttons */
+    .btn-logout{padding:9px 16px;border-radius:8px;background:transparent;border:1px solid rgba(239,68,68,.3);color:#f87171;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+    .btn-logout:hover{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.5);}
+    .btn-logout svg{width:13px;height:13px;}
+    .btn-ghost{padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;}
+    .btn-ghost:hover{color:#fff;border-color:var(--border2);}
+    .btn-primary-blue{padding:9px 20px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 12px var(--blueglow);}
+    .btn-primary-blue:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(37,99,235,.35);}
+    .btn-primary-blue:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+    /* Photo as avatar on chip + sidebar */
+    .chip-av img,.user-av img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
+
+    /* Goals widget — empty state CTA */
+    .goals-empty{padding:18px;text-align:center;font-size:12px;color:var(--muted);background:var(--bg3);border:1px dashed var(--border);border-radius:10px;}
+    .goals-empty a{color:var(--blue3);cursor:pointer;font-weight:600;}
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-wordmark">COACH<span>ANYWHERE</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="showSection('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Dashboard
+    </button>
+    <button class="nav-item" onclick="showSection('videos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>My Videos
+    </button>
+    <button class="nav-item" onclick="showSection('feedback')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Reviews
+      <span class="nav-badge" style="background:var(--blue);">2</span>
+    </button>
+    <button class="nav-item" onclick="showSection('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>Upload Video
+    </button>
+    <button class="nav-item" onclick="showSection('mycoach')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>My Coach
+    </button>
+    <button class="nav-item" onclick="showSection('drills')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Drills & Programs
+    </button>
+    <button class="nav-item" onclick="showSection('messages')" id="navMessages">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages
+      <span class="nav-badge" id="msgBadge" style="display:none;">0</span>
+    </button>
+    <button class="nav-item" onclick="showSection('progress')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Progress
+    </button>
+    <button class="nav-item" onclick="showSection('goals')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Goals
+    </button>
+    <button class="nav-item" onclick="showSection('payments')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Resources
+    </button>
+    <button class="nav-item" onclick="openProfileModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile
+    </button>
+  </nav>
+  <!-- CURRENT PLAN BOX -->
+  <div style="padding:8px;">
+    <div style="background:linear-gradient(135deg,rgba(37,99,235,.16),rgba(99,102,241,.1));border:1px solid rgba(37,99,235,.28);border-radius:10px;padding:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+        <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;">Current Plan</div>
+        <span style="font-size:9px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(34,197,94,.12);color:var(--green);">Active</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <span style="font-size:13px;">⭐</span>
+        <div style="font-size:13px;font-weight:800;color:var(--text);">Pro Athlete</div>
+      </div>
+      <button onclick="showSection('payments')" style="width:100%;padding:7px;border-radius:7px;background:rgba(255,255,255,.06);color:var(--text);font-size:11px;font-weight:600;border:1px solid var(--border2);cursor:pointer;font-family:inherit;">Manage Plan</button>
+    </div>
+  </div>
+  <button class="sidebar-logout" onclick="handleLogout()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Log Out
+  </button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-greeting" id="topGreeting">Welcome back</div>
+      <div class="topbar-sub">Keep pushing your limits. Your next level is built daily.</div>
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn" onclick="showSection('messages')" title="Messages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <div class="notif-dot" id="msgDot"></div>
+      </div>
+      <div class="icon-btn" title="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      </div>
+      <div class="profile-chip" onclick="openProfileModal()" title="Profile">
+        <div class="chip-av" id="chipAv">A</div>
+        <div>
+          <div class="chip-name" id="chipName">Athlete</div>
+          <div class="chip-role">Athlete</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── HOME ── -->
+    <div class="section active" id="section-home">
+
+      <!-- TWO COLUMN LAYOUT: left content | right sidebar — both aligned -->
+      <div style="display:grid;grid-template-columns:1fr 290px;gap:10px;align-items:start;">
+
+        <!-- ════ LEFT COLUMN ════ -->
+        <div style="display:flex;flex-direction:column;gap:9px;">
+
+          <!-- Upload banner -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap;">
+              <div style="font-size:14px;font-weight:800;color:var(--text);">Upload Video</div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button class="choose-file-btn" id="chooseBtn" onclick="triggerFilePicker()" style="padding:8px 16px;white-space:nowrap;">Choose File</button>
+                <input type="file" accept="video/*" id="videoFileInput" onchange="handleFileSelect(this)" style="display:none;"/>
+              </div>
+            </div>
+            <div style="display:flex;gap:14px;flex-wrap:nowrap;overflow-x:auto;">
+              <span style="font-size:11px;color:var(--muted2);display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"/></svg>Film in landscape mode</span>
+              <span style="font-size:11px;color:var(--muted2);display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"/></svg>Good lighting</span>
+              <span style="font-size:11px;color:var(--muted2);display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"/></svg>Show full body / skill</span>
+              <span style="font-size:11px;color:var(--muted2);display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"/></svg>Keep camera steady</span>
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:6px;">Up to <strong style="color:var(--blue3);" id="uploadLimitMB">100 MB</strong> per clip · MP4, MOV or WebM</div>
+            <div style="font-size:11px;color:var(--green);margin-top:6px;" id="uploadFileName"></div>
+
+            <!-- Preview (shown after a file is chosen) -->
+            <div id="videoPreviewWrap" style="display:none;margin-top:10px;background:#000;border:1px solid var(--border);border-radius:9px;overflow:hidden;">
+              <video id="videoPreview" controls playsinline preload="metadata" style="width:100%;max-height:280px;display:block;background:#000;"></video>
+            </div>
+
+            <textarea id="uploadNotes" placeholder="Notes for your coach (optional)..." rows="1" style="width:100%;margin-top:8px;padding:7px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none;resize:vertical;min-height:34px;"></textarea>
+
+            <!-- Send action (shown after a file is chosen) -->
+            <div id="sendActionRow" style="display:none;margin-top:10px;gap:8px;align-items:center;">
+              <button class="choose-file-btn" id="submitBtn" onclick="handleUpload()" style="padding:9px 18px;">Send to Coach</button>
+              <button onclick="resetUploadArea()" style="padding:9px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;">Cancel</button>
+            </div>
+          </div>
+          <div class="prog-wrap" id="uploadProgress" style="margin:0;">
+            <div class="prog-lbl"><span>Uploading...</span><span id="uploadPct">0%</span></div>
+            <div class="prog-bar-bg"><div class="prog-bar-fill" id="progressFill" style="width:0%"></div></div>
+          </div>
+
+          <!-- Activity bar -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+            <div class="act-card"><div class="act-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div><div><div class="act-val" id="actUploads">0</div><div class="act-lbl">Uploads</div><div class="act-sub">Total Videos</div></div></div>
+            <div class="act-card"><div class="act-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="act-val" id="actPending">0</div><div class="act-lbl">Pending Review</div><div class="act-sub">In Progress</div></div></div>
+            <div class="act-card"><div class="act-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="act-val" id="actReviews">0</div><div class="act-lbl">Reviews Back</div><div class="act-sub">See Feedback</div></div></div>
+            <div class="act-card"><div class="act-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div><div class="act-val" id="actDueDays">—</div><div class="act-lbl">Next Upload Due</div><div class="act-sub" id="actDueDate">—</div></div></div>
+          </div>
+
+          <!-- Recent Reviews -->
+          <div>
+            <div class="sec-hdr" style="margin-bottom:7px;">
+              <div class="sec-title">Recent Reviews</div>
+              <button class="view-all-btn" onclick="showSection('feedback')">View all <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+            </div>
+            <div class="review-list" id="recentReviewsList">
+              <div class="review-item">
+                <div class="review-thumb" style="background:linear-gradient(135deg,#0a1628,#1a2a4a);border-radius:8px;position:relative;display:flex;align-items:center;justify-content:center;"><div class="review-play"><svg viewBox="0 0 24 24" fill="currentColor" width="9" height="9"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><div style="position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,.7);border-radius:3px;padding:1px 4px;font-size:9px;font-weight:700;color:#fff;">1:24</div></div>
+                <div class="review-info"><div class="review-title">Jump Shot Analysis</div><div class="review-coach">Reviewed by Coach Sam</div><div class="review-returned">Returned 2 days ago</div><div class="review-highlight hl-green">Great work on your foot positioning!</div></div>
+                <div class="review-actions"><button class="watch-btn" onclick="showSection('feedback')">Watch Review</button><div class="dl-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div></div>
+              </div>
+              <div class="review-item">
+                <div class="review-thumb" style="background:linear-gradient(135deg,#0f1a10,#1a3020);border-radius:8px;position:relative;display:flex;align-items:center;justify-content:center;"><div class="review-play"><svg viewBox="0 0 24 24" fill="currentColor" width="9" height="9"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><div style="position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,.7);border-radius:3px;padding:1px 4px;font-size:9px;font-weight:700;color:#fff;">1:37</div></div>
+                <div class="review-info"><div class="review-title">Ball Handling Session</div><div class="review-coach">Reviewed by Coach Sam</div><div class="review-returned">Returned 5 days ago</div><div class="review-highlight hl-blue">Focus on keeping your head up</div></div>
+                <div class="review-actions"><button class="watch-btn" onclick="showSection('feedback')">Watch Review</button><div class="dl-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div></div>
+              </div>
+              <div class="review-item">
+                <div class="review-thumb" style="background:linear-gradient(135deg,#1a1000,#2a1f00);border-radius:8px;position:relative;display:flex;align-items:center;justify-content:center;"><div class="review-play"><svg viewBox="0 0 24 24" fill="currentColor" width="9" height="9"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><div style="position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,.7);border-radius:3px;padding:1px 4px;font-size:9px;font-weight:700;color:#fff;">0:58</div></div>
+                <div class="review-info"><div class="review-title">Game Footage #4</div><div class="review-coach">Reviewed by Coach Sam</div><div class="review-returned">Returned 1 week ago</div><div class="review-highlight hl-amber">Work on your shot consistency</div></div>
+                <div class="review-actions"><button class="watch-btn" onclick="showSection('feedback')">Watch Review</button><div class="dl-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div></div>
+              </div>
+              <div class="review-item">
+                <div class="review-thumb" style="background:linear-gradient(135deg,#1a0a1a,#2a1530);border-radius:8px;position:relative;display:flex;align-items:center;justify-content:center;"><div class="review-play"><svg viewBox="0 0 24 24" fill="currentColor" width="9" height="9"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><div style="position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,.7);border-radius:3px;padding:1px 4px;font-size:9px;font-weight:700;color:#fff;">2:05</div></div>
+                <div class="review-info"><div class="review-title">Defensive Footwork Drill</div><div class="review-coach">Reviewed by Coach Sam</div><div class="review-returned">Returned 2 weeks ago</div><div class="review-highlight hl-blue">Nice low stance — stay balanced</div></div>
+                <div class="review-actions"><button class="watch-btn" onclick="showSection('feedback')">Watch Review</button><div class="dl-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress This Month — compact -->
+          <div class="progress-card" style="padding:13px 16px;">
+            <div class="sec-title" style="margin-bottom:9px;">Your Progress This Month</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px;">
+              <div class="prog-stat"><div style="display:flex;align-items:baseline;gap:3px;"><div class="prog-stat-val" id="pmVideos">0</div></div><div class="prog-stat-lbl">Videos Uploaded</div></div>
+              <div class="prog-stat"><div style="display:flex;align-items:baseline;gap:3px;"><div class="prog-stat-val" id="pmReviews">0</div></div><div class="prog-stat-lbl">Reviews Completed</div></div>
+              <div class="prog-stat"><div style="display:flex;align-items:baseline;gap:3px;"><div class="prog-stat-val" id="pmDrills">0</div></div><div class="prog-stat-lbl">Drills Completed</div></div>
+              <div class="prog-stat"><div style="display:flex;align-items:baseline;gap:3px;"><div class="prog-stat-val" id="pmRate">—</div></div><div class="prog-stat-lbl">Time Trained</div></div>
+            </div>
+            <div style="height:34px;">
+              <svg viewBox="0 0 280 34" preserveAspectRatio="none" style="width:100%;height:100%;">
+                <defs><linearGradient id="mcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--blue3)" stop-opacity=".25"/><stop offset="100%" stop-color="var(--blue3)" stop-opacity="0"/></linearGradient></defs>
+                <path id="miniArea" fill="url(#mcg)" d="M0,34 L0,22 L40,18 L80,24 L120,12 L160,16 L200,9 L240,12 L280,7 L280,34 Z"/>
+                <path id="miniLine" fill="none" stroke="var(--blue3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M0,22 L40,18 L80,24 L120,12 L160,16 L200,9 L240,12 L280,7"/>
+              </svg>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ════ RIGHT COLUMN ════ -->
+        <div style="display:flex;flex-direction:column;gap:9px;">
+
+          <!-- My Coach — taller, level with upload banner -->
+          <div class="coach-side-card" style="padding:12px;">
+            <div class="coach-side-lbl">My Coach</div>
+            <div id="coachSideContent">
+              <!-- Default: empty state shown when athlete has no active coach yet.
+                   loadCoach() overwrites this innerHTML once an active subscription is found. -->
+              <div style="text-align:center;padding:6px 4px;">
+                <div style="width:48px;height:48px;border-radius:11px;background:linear-gradient(135deg,rgba(37,99,235,.18),rgba(99,102,241,.1));border:2px dashed rgba(59,130,246,.35);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">No coach yet</div>
+                <div style="font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:10px;">Pick a coach to start getting feedback on your videos.</div>
+                <button class="send-msg-btn" onclick="window.location.href='select-coach.html'" style="padding:9px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  Find your coach
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Next Upload Due -->
+          <div class="next-due-card" style="padding:12px;">
+            <div class="next-due-lbl">Next Upload Due</div>
+            <div id="nextDueDate" style="font-size:14px;font-weight:800;color:var(--text);">No upload scheduled</div>
+            <div style="display:flex;align-items:baseline;gap:5px;margin-top:4px;"><div id="nextDueDays" style="font-size:26px;font-weight:800;color:var(--blue3);">—</div><div id="nextDueLbl" style="font-size:12px;color:var(--muted);"></div></div>
+            <div class="due-bar-bg" style="margin:9px 0 10px;"><div class="due-bar-fill" id="dueFill" style="width:0%"></div></div>
+            <button class="view-cal-btn" onclick="showSection('calendar')" style="font-size:11px;padding:8px;">View Upload Calendar</button>
+          </div>
+
+          <!-- Goals — bigger -->
+          <div>
+            <div class="sec-hdr" style="margin-bottom:8px;"><div class="sec-title">Goals</div><button class="view-all-btn" onclick="showSection('goals')">View all <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button></div>
+            <div class="goals-card" style="padding:15px 15px;">
+              <div id="homeGoalsRender"></div>
+            </div>
+          </div>
+
+          <!-- Recommended Drill — smaller -->
+          <div>
+            <div class="sec-title" style="margin-bottom:7px;">Recommended Drill</div>
+            <div class="drill-rec-card" style="padding:11px;">
+              <div style="display:flex;gap:9px;align-items:center;margin-bottom:9px;"><div style="width:42px;height:32px;border-radius:7px;background:#0a0f1a;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="drill-rec-title" style="font-size:11px;">Elite Handles Series</div><div style="font-size:10px;color:var(--muted);line-height:1.35;">Improve your control and quickness</div></div></div>
+              <button class="start-drill-btn" onclick="showSection('drills')" style="padding:7px;"><svg viewBox="0 0 24 24" fill="currentColor" width="9" height="9"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start Drill</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MY VIDEOS ── -->
+    <div class="section" id="section-videos">
+      <div class="sec-hdr" style="margin-bottom:14px;">
+        <div class="sec-title">My Videos</div>
+        <button class="choose-file-btn" style="width:auto;padding:8px 16px;font-size:12px;" onclick="showSection('home')">+ Upload new</button>
+      </div>
+      <div class="videos-grid" id="videosGrid">
+        <div class="empty" style="grid-column:1/-1;">
+          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
+          <div class="empty-title">No videos yet</div>
+          <div class="empty-sub">Upload your first training clip to get started.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REVIEWS / FEEDBACK ── -->
+    <div class="section" id="section-feedback">
+      <div class="sec-title" style="margin-bottom:14px;">Reviews & Feedback</div>
+      <div class="fb-list" id="feedbackList">
+        <div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div class="empty-title">No feedback yet</div><div class="empty-sub">Upload a video to start receiving coaching feedback.</div></div>
+      </div>
+    </div>
+
+    <!-- ── MESSAGES ── -->
+    <div class="section" id="section-messages">
+      <div class="msg-layout">
+        <div class="msg-sb">
+          <div class="msg-sb-hdr">Conversations</div>
+          <div class="msg-threads" id="msgThreadList"><div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">No conversations yet.</div></div>
+        </div>
+        <div class="msg-main">
+          <div class="msg-empty-state" id="msgEmpty">Select a conversation</div>
+          <div id="msgConversation" style="display:none;flex-direction:column;flex:1;">
+            <div class="msg-main-hdr"><div class="msg-main-name" id="msgPartnerName">—</div><div class="msg-main-sub" id="msgPartnerSport">—</div></div>
+            <div class="msg-body" id="msgBody"></div>
+            <div class="msg-input-row">
+              <textarea class="msg-input" id="msgInput" placeholder="Type a message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+              <button class="msg-send-btn" onclick="sendMessage()">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DRILLS ── -->
+    <div class="section" id="section-drills">
+      <div class="sec-title" style="margin-bottom:14px;">Upcoming Drills</div>
+      <div class="drills-grid">
+        <div class="drill-card"><div class="drill-title">Shooting Off The Dribble</div><div class="drill-desc">Improve your off-dribble jump shot consistency. Focus on balance and follow-through.</div><div class="drill-meta"><span class="drill-tag">Shooting</span><span class="drill-time">15 min</span></div><div class="drill-play-btn"><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start drill</div></div>
+        <div class="drill-card"><div class="drill-title">Footwork Ladder Series</div><div class="drill-desc">Three-cone and ladder drills to sharpen your lateral movement and first-step quickness.</div><div class="drill-meta"><span class="drill-tag">Footwork</span><span class="drill-time">20 min</span></div><div class="drill-play-btn"><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start drill</div></div>
+        <div class="drill-card"><div class="drill-title">Elite Handles Series</div><div class="drill-desc">Dedicated weak-hand and crossover drills to build ambidexterity under pressure.</div><div class="drill-meta"><span class="drill-tag">Dribbling</span><span class="drill-time">10 min</span></div><div class="drill-play-btn"><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start drill</div></div>
+      </div>
+    </div>
+
+    <!-- ── PROGRESS ── -->
+    <div class="section" id="section-progress">
+      <div class="sec-title" style="margin-bottom:14px;">Your Progress</div>
+      <div class="prog-stats-grid">
+        <div class="prog-stat-card"><div class="psc-lbl">Videos Uploaded</div><div class="psc-val" id="progVideos">0</div><div class="psc-sub">Total</div></div>
+        <div class="prog-stat-card"><div class="psc-lbl">Feedback Received</div><div class="psc-val" id="progFeedback">0</div><div class="psc-sub">Coach reviews</div></div>
+        <div class="prog-stat-card"><div class="psc-lbl">Pending Reviews</div><div class="psc-val" id="progPending">0</div><div class="psc-sub">Awaiting</div></div>
+        <div class="prog-stat-card"><div class="psc-lbl">Response Rate</div><div class="psc-val" id="progRate">—</div><div class="psc-sub">Completion</div></div>
+      </div>
+      <div class="prog-chart-card">
+        <div class="prog-chart-title">Activity Over Time</div>
+        <div class="prog-chart-area">
+          <svg viewBox="0 0 400 120" preserveAspectRatio="none">
+            <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--blue3)" stop-opacity=".2"/><stop offset="100%" stop-color="var(--blue3)" stop-opacity="0"/></linearGradient></defs>
+            <path id="progArea" fill="url(#ag)" d="M0,120 L400,120 Z"/>
+            <path id="progLine" fill="none" stroke="var(--blue3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M0,120 L400,120"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── GOALS ── -->
+    <div class="section" id="section-goals">
+      <div class="sec-title" style="margin-bottom:14px;">My Goals</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-width:560px;">
+        <div id="fullGoalsRender" style="display:flex;flex-direction:column;gap:16px;"></div>
+      </div>
+    </div>
+
+    <!-- ── CALENDAR ── -->
+    <div class="section" id="section-calendar">
+      <div class="sec-title" style="margin-bottom:14px;">Upload Calendar</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-width:560px;">
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg3);border-radius:10px;border-left:3px solid var(--blue3);">
+            <div style="text-align:center;min-width:40px;"><div style="font-size:18px;font-weight:800;color:var(--blue3);">24</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;">May</div></div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--text);">Next Upload Due</div><div style="font-size:11px;color:var(--muted);">Saturday · Skill focus: Shooting</div></div>
+            <span style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;background:rgba(37,99,235,.15);color:var(--blue3);">5 days</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg3);border-radius:10px;border-left:3px solid var(--green);">
+            <div style="text-align:center;min-width:40px;"><div style="font-size:18px;font-weight:800;color:var(--green);">31</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;">May</div></div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--text);">Upload Due</div><div style="font-size:11px;color:var(--muted);">Saturday · Skill focus: Dribbling</div></div>
+            <span style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;background:rgba(34,197,94,.1);color:var(--green);">12 days</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg3);border-radius:10px;border-left:3px solid var(--muted);">
+            <div style="text-align:center;min-width:40px;"><div style="font-size:18px;font-weight:800;color:var(--muted);">7</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;">Jun</div></div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--text);">Upload Due</div><div style="font-size:11px;color:var(--muted);">Saturday · Skill focus: Game Footage</div></div>
+            <span style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;background:rgba(107,122,153,.1);color:var(--muted);">19 days</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MY COACH ── -->
+    <div class="section" id="section-mycoach">
+      <div class="sec-title" style="margin-bottom:14px;">My Coach</div>
+      <div id="mycoachContent" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-width:480px;">
+        <!-- Default: empty state. loadCoach() replaces this innerHTML when an active subscription is found. -->
+        <div style="text-align:center;padding:14px 6px;">
+          <div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,rgba(37,99,235,.18),rgba(99,102,241,.1));border:2px dashed rgba(59,130,246,.35);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;">You haven't picked a coach yet</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:16px;max-width:340px;margin-left:auto;margin-right:auto;">Browse coaches matched to your sport, then subscribe to a package that fits how often you want feedback.</div>
+          <button class="send-msg-btn" onclick="window.location.href='select-coach.html'" style="padding:11px 22px;max-width:240px;margin:0 auto;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Find your coach
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="section" id="section-payments">
+      <div class="sec-title" style="margin-bottom:14px;">Payments & Plan</div>
+      <div class="pay-card">
+        <div class="pay-row"><span class="pay-lbl">Current plan</span><span class="pay-val" id="payPlan">Loading...</span></div>
+        <div class="pay-row"><span class="pay-lbl">Status</span><span class="pay-badge">Active</span></div>
+        <div class="pay-row"><span class="pay-lbl">Coach</span><span class="pay-val" id="payCoach">—</span></div>
+        <div class="pay-row"><span class="pay-lbl">Billing</span><span class="pay-val" id="payBilling">Monthly</span></div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);max-width:380px;line-height:1.6;">Payments are managed through Stripe. To cancel or change your plan, contact <a href="mailto:kane@coachanywhere247.com" style="color:var(--blue3);">kane@coachanywhere247.com</a></div>
+    </div>
+
+    <!-- (Profile lives in a popup now — see #profileModal at end of body) -->
+
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────
+     PROFILE POPUP — opens from sidebar Profile + top-right chip.
+     Edits the same columns the dashboard reads, plus goals + skills
+     JSONB columns (see migration_goals_skills.sql).
+     ───────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title">Edit Profile</div>
+      <button class="modal-close" onclick="closeProfileModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Photo + completion -->
+      <div>
+        <div class="ms-hdr">Photo</div>
+        <div class="ph-row">
+          <div class="ph-preview" id="profilePhotoPreview">A</div>
+          <div class="ph-actions">
+            <label class="ph-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload photo
+              <input type="file" accept="image/*" id="profilePhotoInput" onchange="handleProfilePhoto(this)" style="display:none;"/>
+            </label>
+            <div class="ph-hint" id="profilePhotoHint">JPG or PNG, up to 5 MB</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile completion bar -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-size:11px;color:var(--muted);">Profile completion</div>
+          <div style="font-size:11px;font-weight:700;color:var(--blue3);" id="profilePctLbl">0%</div>
+        </div>
+        <div class="pct-bar"><div class="pct-fill" id="profilePctFill" style="width:0%"></div></div>
+      </div>
+
+      <!-- About you -->
+      <div>
+        <div class="ms-hdr">About you</div>
+        <div class="p2col">
+          <div class="fg"><label class="fl">First name</label><input class="fi" type="text" id="profileFirst" placeholder="First name"/></div>
+          <div class="fg"><label class="fl">Last name</label><input class="fi" type="text" id="profileLast" placeholder="Last name"/></div>
+        </div>
+        <div class="p2col">
+          <div class="fg"><label class="fl">Age</label><input class="fi" type="number" id="profileAge" min="8" max="80" placeholder="e.g. 16"/></div>
+          <div class="fg"><label class="fl">Mobile</label><input class="fi" type="tel" id="profileMobile" placeholder="e.g. 0412 345 678"/></div>
+        </div>
+        <div class="p2col">
+          <div class="fg"><label class="fl">Sport</label><input class="fi" type="text" id="profileSport" placeholder="e.g. Basketball"/></div>
+          <div class="fg"><label class="fl">Skill level</label><select class="fs" id="profileSkill"><option value="" disabled selected>Select level</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option><option>Elite / Semi-pro</option><option>Pro</option></select></div>
+        </div>
+        <div class="fg"><label class="fl">Location</label><input class="fi" type="text" id="profileLocation" placeholder="e.g. Melbourne, VIC"/></div>
+        <div class="fg"><label class="fl">Main goal</label><textarea class="ft" id="profileGoal" placeholder="What are you working towards?"></textarea></div>
+      </div>
+
+      <!-- Guardian (shown when age < 18) -->
+      <div id="guardianBlock" style="display:none;">
+        <div class="ms-hdr">Parent / Guardian</div>
+        <div class="p2col">
+          <div class="fg"><label class="fl">First name</label><input class="fi" type="text" id="profileGuardianFirst" placeholder="Guardian's first name"/></div>
+          <div class="fg"><label class="fl">Last name</label><input class="fi" type="text" id="profileGuardianLast" placeholder="Guardian's last name"/></div>
+        </div>
+        <div class="fg"><label class="fl">Guardian mobile</label><input class="fi" type="tel" id="profileGuardianMobile" placeholder="e.g. 0412 345 678"/></div>
+      </div>
+
+      <!-- Goals -->
+      <div>
+        <div class="ms-hdr">My Goals</div>
+        <div class="gs-list" id="editGoalsList"></div>
+        <button class="gs-add" onclick="addGoal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add a goal
+        </button>
+      </div>
+
+      <!-- Skills -->
+      <div>
+        <div class="ms-hdr">My Skills</div>
+        <div class="gs-list" id="editSkillsList"></div>
+        <button class="gs-add" onclick="addSkill()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add a skill
+        </button>
+      </div>
+
+      <div id="profileSaved" style="display:none;font-size:12px;color:var(--green);">✓ Profile saved</div>
+
+    </div>
+
+    <div class="modal-foot">
+      <div style="display:flex;gap:8px;margin-left:auto;">
+        <button class="btn-ghost" onclick="closeProfileModal()">Cancel</button>
+        <button class="btn-primary-blue" id="profileSaveBtn" onclick="saveProfile()">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE NAV -->
+<div class="mob-nav">
+  <button class="mob-nav-item active" onclick="showSection('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span class="mob-nav-lbl">Home</span></button>
+  <button class="mob-nav-item" onclick="showSection('videos')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg><span class="mob-nav-lbl">Videos</span></button>
+  <button class="mob-fab" onclick="showSection('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+  <button class="mob-nav-item" onclick="showSection('messages')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span class="mob-nav-lbl">Messages</span></button>
+  <button class="mob-nav-item" onclick="showSection('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg><span class="mob-nav-lbl">Profile</span></button>
+</div>
+
+<script>
+  const SB_URL="https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ca-auth",storage:window.localStorage,detectSessionInUrl:true}});
+
+  // ── Profile schema introspection ───────────────────────────────
+  // PostgREST exposes the table schema via its OpenAPI doc. We hit it once
+  // on first save and cache the column list so we can drop payload keys
+  // whose columns don't exist — preventing "Could not find the X column"
+  // errors when the deployed DB is behind the code.
+  let _profileColsCache = null;
+  async function getProfileCols(){
+    if(_profileColsCache) return _profileColsCache;
+    try {
+      const res = await fetch(SB_URL + "/rest/v1/", { headers: { apikey: SB_KEY }});
+      if(!res.ok) return null;
+      const schema = await res.json();
+      const def = (schema.definitions || schema.components?.schemas || {}).profiles;
+      if(def?.properties){ _profileColsCache = Object.keys(def.properties); return _profileColsCache; }
+    } catch(e){ console.warn("[profile schema] fetch failed:", e); }
+    return null;
+  }
+  function pickProfileCols(payload, cols){
+    if(!cols) return payload;            // schema fetch failed — send as-is
+    const out = {};
+    for(const k of Object.keys(payload)){
+      if(cols.includes(k) && payload[k] !== undefined) out[k] = payload[k];
+    }
+    return out;
+  }
+  // ── Upload size limit ──────────────────────────────────────────
+  // Files larger than this are rejected before upload starts and the
+  // athlete is prompted to paste a YouTube/Vimeo link instead.
+  // Reference: at 1080p H.264 a phone produces ~10–20 MB per minute,
+  // so 100 MB comfortably fits a 5–8 minute clip.
+  // Changing this number alone updates the limit everywhere — the
+  // banner hint and the error message both read from it at runtime.
+  const MAX_UPLOAD_MB = 100;
+  {
+    const el = document.getElementById("uploadLimitMB");
+    if(el) el.textContent = `${MAX_UPLOAD_MB} MB`;
+  }
+
+  // ── Coach service packages ─────────────────────────────────────
+  // Mirror of the canonical list in coach-profile-setup.html:403–409.
+  // Used here to resolve subscription.package_name → inclusions list and to
+  // render the "More packages" section from coach.service_packages.
+  // Keep the names + ids in sync if you ever edit coach-profile-setup.
+  const PACKAGES = [
+    { id:"starter",  name:"Skill Clip Review",            price:15,  inclusions:["1 skill clip per submission","Written feedback & corrections","Drill recommendation to reinforce improvement","Response within 48 hours"] },
+    { id:"standard", name:"Session Review",               price:35,  inclusions:["Up to 15 min training footage","Multi-skill written feedback report","Key technique corrections","Next session tips","Response within 48 hours"] },
+    { id:"pro",      name:"Half Game / Long Session Review", price:75,  inclusions:["Up to 30 min game or session footage","Multi-phase technique analysis","Decision-making & positioning feedback","Key moments highlighted","Written breakdown + drill plan","Response within 48 hours"] },
+    { id:"elite",    name:"Full Game Review",             price:120, inclusions:["Full game footage reviewed","Comprehensive written report","Technique, tactics & positioning","Performance trends identified","Personalised improvement action plan","Response within 72 hours"] },
+    { id:"premium",  name:"Elite Package",                price:199, inclusions:["Full game or session footage reviewed","Live Zoom debrief session (30 min)","Personalised monthly training plan","Priority response within 48 hours","Ongoing progress tracking"] }
+  ];
+  function packageById(id){ return PACKAGES.find(p => p.id === id) || null; }
+  function packageByName(name){ return PACKAGES.find(p => p.name === name) || null; }
+
+  let currentUser=null,selectedFile=null,currentCoach=null;
+  let currentThreadCoachId=null,msgSub=null;
+  const sectionTitles={home:"Dashboard",videos:"My Videos",feedback:"Reviews",messages:"Messages",drills:"Drills & Programs",progress:"Progress",goals:"Goals",calendar:"Calendar",payments:"Resources",profile:"Profile",mycoach:"My Coach"};
+
+  // ── Profile-editor module state ──
+  let cachedProfile = {};
+  let editGoals = [];
+  let editSkills = [];
+  let pendingPhotoUrl = null;
+
+  async function init(){
+    // Retry getting the session — storage may not be ready on first paint
+    let session=null,tries=0;
+    while(tries<15){
+      const {data}=await sb.auth.getSession();
+      if(data.session){session=data.session;break;}
+      await new Promise(r=>setTimeout(r,120));
+      tries++;
+    }
+    if(!session){window.location.href="login.html";return;}
+    currentUser=session.user;
+
+    // Email-derived name used both as a friendly fallback and as the first_name
+    // on auto-created profile stubs (e.g. "kane@example.com" → "Kane").
+    const emailPrefix = (currentUser.email||"").split("@")[0] || "Athlete";
+    const fallbackName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+
+    // .maybeSingle() returns {data:null} on zero rows (not an error), which lets
+    // us recover gracefully when signup didn't manage to insert a profiles row.
+    let {data:p} = await sb.from("profiles").select("*").eq("id",currentUser.id).maybeSingle();
+
+    if(!p){
+      // No profile row found — create a minimal stub so the dashboard renders
+      // each new athlete's own view (instead of leaving stale placeholder text)
+      // and so subsequent UPDATEs from the Profile popup have something to write.
+      const stub = { id: currentUser.id, role: "athlete", first_name: fallbackName };
+      const {data: created} = await sb.from("profiles").upsert(stub, {onConflict:"id"}).select().maybeSingle();
+      if(created) p = created;
+    }
+
+    if(p?.role === "coach"){ window.location.href = "coach-dashboard.html"; return; }
+
+    cachedProfile = p || { id: currentUser.id, first_name: fallbackName };
+    const displayName = (cachedProfile.first_name || "").trim() || fallbackName;
+    const initials = getInitials(cachedProfile);
+    renderAvatar(document.getElementById("chipAv"), cachedProfile.avatar_url, initials);
+    document.getElementById("chipName").textContent = displayName;
+    document.getElementById("topGreeting").textContent = "Welcome back, " + displayName;
+    renderHomeGoals(cachedProfile.goals);
+    renderFullGoals(cachedProfile.goals);
+    // Guardian-block toggle reacts to age changes in the modal
+    document.getElementById("profileAge")?.addEventListener("input", toggleGuardianBlock);
+    await Promise.all([loadData(),loadCoach(),loadMessages()]);
+  }
+
+  function calcPct(p){
+    if(!p)return 0;
+    return Math.round([p.first_name,p.last_name,p.sport,p.skill_level,p.location,p.main_goal].filter(f=>f&&f.trim()).length/6*100);
+  }
+
+  // Live update of the profile-completion bar — runs whenever any of the six
+  // tracked fields change. Reads current input values, not cachedProfile.
+  function updateProfilePct(){
+    const p = {
+      first_name: document.getElementById("profileFirst")?.value || "",
+      last_name:  document.getElementById("profileLast")?.value  || "",
+      sport:      document.getElementById("profileSport")?.value || "",
+      skill_level:document.getElementById("profileSkill")?.value || "",
+      location:   document.getElementById("profileLocation")?.value || "",
+      main_goal:  document.getElementById("profileGoal")?.value || ""
+    };
+    const pct = calcPct(p);
+    const fill = document.getElementById("profilePctFill");
+    const lbl  = document.getElementById("profilePctLbl");
+    if(fill) fill.style.width = pct + "%";
+    if(lbl)  lbl.textContent  = pct + "%";
+  }
+  // Wire input/change listeners so the bar updates as the user types.
+  ["profileFirst","profileLast","profileSport","profileLocation","profileGoal"].forEach(id => {
+    document.getElementById(id)?.addEventListener("input", updateProfilePct);
+  });
+  document.getElementById("profileSkill")?.addEventListener("change", updateProfilePct);
+
+  async function loadData(){
+    const {data:subs}=await sb.from("submissions").select("*").eq("athlete_id",currentUser.id).order("created_at",{ascending:false});
+    const submissions=subs||[];
+    const pending=submissions.filter(s=>s.status==="pending"||s.status==="in_review");
+    const completed=submissions.filter(s=>s.status==="completed");
+    const thisMonth=submissions.filter(s=>new Date(s.created_at).getMonth()===new Date().getMonth());
+
+    // Activity bar
+    document.getElementById("actUploads").textContent=submissions.length;
+    document.getElementById("actPending").textContent=pending.length;
+    document.getElementById("actReviews").textContent=completed.length;
+
+    // Progress section stats
+    document.getElementById("progVideos").textContent=submissions.length;
+    document.getElementById("progPending").textContent=pending.length;
+    document.getElementById("pmVideos").textContent=thisMonth.length;
+    document.getElementById("pmReviews").textContent=thisMonth.filter(s=>s.status==="completed").length;
+    if(completed.length&&submissions.length)document.getElementById("progRate").textContent=Math.round(completed.length/submissions.length*100)+"%";
+
+    renderVideos(submissions);
+    renderRecentReviews(submissions.slice(0,3));
+    buildMiniChart(submissions);
+    buildProgressChart(submissions);
+
+    const {data:fb}=await sb.from("feedback").select("*").eq("athlete_id",currentUser.id).order("created_at",{ascending:false});
+    const feedbackItems=fb||[];
+    document.getElementById("progFeedback").textContent=feedbackItems.length;
+    document.getElementById("pmReviews").textContent=feedbackItems.filter(f=>new Date(f.created_at).getMonth()===new Date().getMonth()).length;
+    renderFeedback(feedbackItems);
+  }
+
+  // ── My Coach render helpers ────────────────────────────────────
+  // Each returns an HTML string or "" — empty string means "skip the section".
+  // No empty boxes shown for missing data.
+
+  function attrSafe(s){ return String(s==null?"":s).replace(/'/g,"\\'").replace(/\r?\n/g," "); }
+
+  function renderSidePanelHeader(coach, initials, fullName, sport, tier){
+    const tierShort = tier ? tier.replace(/^Level\s*(\d+)\s*[—-]\s*/i,"L$1 · ") : "";
+    const subline = [sport && `${sport} Coach`, tierShort].filter(Boolean).join(" · ");
+    const av = coach.avatar_url
+      ? `<div class="coach-av" style="overflow:hidden;"><img src="${escapeHtml(coach.avatar_url)}" alt="" style="width:100%;height:100%;object-fit:cover;"/></div>`
+      : `<div class="coach-av">${escapeHtml(initials)}</div>`;
+    return `
+      <div class="coach-side-row">
+        ${av}
+        <div style="min-width:0;">
+          <div class="coach-name">Coach ${escapeHtml(fullName)}</div>
+          ${subline ? `<div class="coach-sport">${escapeHtml(subline)}</div>` : ""}
+        </div>
+      </div>`;
+  }
+
+  function renderSidePanelPlan(sub, pkg){
+    const name = sub.package_name || "Active plan";
+    const billing = sub.billing_cycle || "Monthly";
+    const inclusions = (pkg && pkg.inclusions) ? pkg.inclusions.slice(0,2) : [];
+    return `
+      <div style="margin-top:10px;padding:10px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.22);border-radius:9px;">
+        <div style="font-size:9px;font-weight:700;color:var(--blue3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px;">Your plan</div>
+        <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:2px;">${escapeHtml(name)}</div>
+        <div style="font-size:10px;color:var(--muted);">${escapeHtml(billing)}${pkg ? ` · $${pkg.price}` : ""}</div>
+        ${inclusions.length ? `<ul style="margin:7px 0 0;padding-left:15px;color:var(--muted2);font-size:11px;line-height:1.5;">
+          ${inclusions.map(i => `<li>${escapeHtml(i)}</li>`).join("")}
+        </ul>` : ""}
+      </div>`;
+  }
+
+  function renderSectionHeader(coach, initials, fullName, sport, tier){
+    const subline = [sport && `${sport} Coach`, tier].filter(Boolean).join(" · ");
+    const locText = (coach.location||"").trim();
+    const av = coach.avatar_url
+      ? `<div style="width:72px;height:72px;border-radius:16px;overflow:hidden;border:2px solid rgba(59,130,246,.2);flex-shrink:0;"><img src="${escapeHtml(coach.avatar_url)}" alt="" style="width:100%;height:100%;object-fit:cover;"/></div>`
+      : `<div style="width:72px;height:72px;border-radius:16px;background:linear-gradient(135deg,#1e3a5f,#0d2a6e);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#93c5fd;border:2px solid rgba(59,130,246,.2);flex-shrink:0;">${escapeHtml(initials)}</div>`;
+    return `
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+        ${av}
+        <div style="min-width:0;">
+          <div style="font-size:20px;font-weight:800;color:var(--text);">Coach ${escapeHtml(fullName)}</div>
+          ${subline ? `<div style="font-size:12px;color:var(--muted);margin-top:3px;">${escapeHtml(subline)}</div>` : ""}
+          ${locText ? `<div style="font-size:11px;color:var(--muted2);margin-top:2px;">📍 ${escapeHtml(locText)}</div>` : ""}
+        </div>
+      </div>`;
+  }
+
+  function renderSectionPlan(sub, pkg){
+    const name = sub.package_name || "Active plan";
+    const billing = sub.billing_cycle || "Monthly";
+    const inclusions = (pkg && pkg.inclusions) ? pkg.inclusions : [];
+    const priceSuffix = pkg ? ` · $${pkg.price}/${billing.toLowerCase().includes("month") ? "mo" : "cycle"}` : "";
+    return `
+      <div style="margin-bottom:18px;padding:16px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);border-radius:11px;">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:9px;font-weight:700;color:var(--blue3);text-transform:uppercase;letter-spacing:.14em;margin-bottom:2px;">Your active plan</div>
+            <div style="font-size:18px;font-weight:800;color:var(--text);">${escapeHtml(name)}</div>
+          </div>
+          <div style="font-size:13px;color:var(--muted);">${escapeHtml(billing)}${priceSuffix}</div>
+        </div>
+        ${inclusions.length ? `
+          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Includes</div>
+          <ul style="padding-left:18px;color:var(--text);font-size:13px;line-height:1.7;margin:0;">
+            ${inclusions.map(i => `<li>${escapeHtml(i)}</li>`).join("")}
+          </ul>` : `<div style="font-size:12px;color:var(--muted);font-style:italic;">Plan details will appear here once your coach finalises their package inclusions.</div>`}
+      </div>`;
+  }
+
+  function renderSectionMorePackages(coach){
+    const raw = (coach.service_packages||"").trim();
+    if(!raw) return "";
+    const ids = raw.split(",").map(s => s.trim()).filter(Boolean);
+    const pkgs = ids.map(id => packageById(id)).filter(Boolean);
+    if(!pkgs.length) return "";
+    return `
+      <div style="margin-bottom:18px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;margin-bottom:10px;">More packages from this coach</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
+          ${pkgs.map(p => `
+            <div style="padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;">
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">${escapeHtml(p.name)}</div>
+              <div style="font-size:11px;color:var(--blue3);font-weight:700;margin-bottom:6px;">$${p.price}</div>
+              <ul style="padding-left:15px;color:var(--muted2);font-size:11px;line-height:1.5;margin:0;">
+                ${p.inclusions.slice(0,3).map(i => `<li>${escapeHtml(i)}</li>`).join("")}
+              </ul>
+            </div>`).join("")}
+        </div>
+      </div>`;
+  }
+
+  function renderSectionAbout(coach){
+    const bio = (coach.bio||"").trim();
+    const style = (coach.coaching_style||"").trim();
+    const quals = (coach.qualifications||"").trim();
+    if(!bio && !style && !quals) return "";
+    return `
+      <div style="margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;margin-bottom:10px;">About this coach</div>
+        ${bio ? `<div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:10px;">${escapeHtml(bio)}</div>` : ""}
+        ${style ? `<div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Specialty</div><div style="font-size:12px;color:var(--text);">${escapeHtml(style)}</div></div>` : ""}
+        ${quals ? `<div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Qualifications</div><div style="font-size:12px;color:var(--text);">${escapeHtml(quals)}</div></div>` : ""}
+      </div>`;
+  }
+
+  async function loadCoach(){
+    const {data:sub} = await sb.from("subscriptions")
+      .select("coach_id,package_name,billing_cycle,next_upload_due")
+      .eq("athlete_id",currentUser.id)
+      .eq("status","active")
+      .maybeSingle();
+    if(!sub?.coach_id) return;
+    const {data:coach} = await sb.from("profiles").select("*").eq("id",sub.coach_id).single();
+    if(!coach) return;
+    currentCoach = coach;
+
+    const initials = (coach.first_name?.[0]||"C") + (coach.last_name?.[0]||"");
+    const fullName = `${coach.first_name||""} ${coach.last_name||""}`.trim();
+    const tier  = (coach.selected_tier||"").trim();
+    const sport = (coach.sport||"").trim();
+    const activePkg = packageByName(sub.package_name||"");
+
+    // ── Side panel (compact, lives in the home right-column) ──
+    const onclickMsg = `messageMyCoach('${coach.id}','${attrSafe(fullName)}','${attrSafe(sport)}')`;
+    document.getElementById("coachSideContent").innerHTML = `
+      ${renderSidePanelHeader(coach, initials, fullName, sport, tier)}
+      ${renderSidePanelPlan(sub, activePkg)}
+      <button class="send-msg-btn" onclick="${onclickMsg}" style="margin-top:8px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Send Message
+      </button>
+      <button class="view-cal-btn" onclick="showSection('mycoach')" style="font-size:11px;padding:8px;margin-top:6px;">View full profile</button>
+    `;
+
+    // ── Full section (large, sidebar nav → My Coach) ──
+    const mc = document.getElementById("mycoachContent");
+    if(mc){
+      mc.innerHTML = `
+        ${renderSectionHeader(coach, initials, fullName, sport, tier)}
+        ${renderSectionPlan(sub, activePkg)}
+        ${renderSectionMorePackages(coach)}
+        ${renderSectionAbout(coach)}
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+          <button class="send-msg-btn" onclick="${onclickMsg}" style="flex:1;min-width:160px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Send Message
+          </button>
+          <button class="view-cal-btn" onclick="window.location.href='select-coach.html'" style="flex:1;min-width:160px;">Change Coach</button>
+        </div>
+      `;
+    }
+
+    // ── Payments / Next Upload Due ──
+    document.getElementById("payPlan").textContent = sub.package_name || "Active plan";
+    document.getElementById("payCoach").textContent = `Coach ${fullName}`;
+    document.getElementById("payBilling").textContent = sub.billing_cycle || "Monthly";
+
+    if(sub.next_upload_due){
+      const due = new Date(sub.next_upload_due);
+      const days = Math.max(0, Math.ceil((due - Date.now())/86400000));
+      const dateStr = due.toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+      document.getElementById("actDueDays").textContent = days + " Days";
+      document.getElementById("actDueDate").textContent = due.toLocaleDateString("en-AU",{day:"numeric",month:"short"});
+      document.getElementById("nextDueDate").textContent = dateStr;
+      document.getElementById("nextDueDays").textContent = days;
+      document.getElementById("nextDueLbl").textContent = "Days Left";
+      document.getElementById("dueFill").style.width = Math.min(100, Math.max(0, ((30-days)/30)*100)) + "%";
+    } else {
+      // No scheduled next upload — soft state instead of stale placeholder date.
+      document.getElementById("nextDueDate").textContent = "No upload scheduled";
+      document.getElementById("nextDueDays").textContent = "—";
+      document.getElementById("nextDueLbl").textContent = "";
+      document.getElementById("dueFill").style.width = "0%";
+      document.getElementById("actDueDays").textContent = "—";
+      document.getElementById("actDueDate").textContent = "—";
+    }
+  }
+
+  function renderVideos(subs){
+    const g=document.getElementById("videosGrid");
+    if(!subs.length){g.innerHTML=`<div class="empty" style="grid-column:1/-1;"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div><div class="empty-title">No videos yet</div><div class="empty-sub">Upload your first clip to get started.</div></div>`;return;}
+    g.innerHTML=subs.map(s=>`<div class="vid-card"><div class="vid-thumb"><div class="review-play"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div><div class="vid-info"><div class="vid-title">${s.skill_category||"Video"}</div><div class="vid-meta">${timeAgo(s.created_at)}</div><div class="vid-footer"><span class="badge badge-${s.status}">${statusLabel(s.status)}</span></div></div></div>`).join("");
+  }
+
+  function renderRecentReviews(subs){
+    const el=document.getElementById("recentReviewsList");
+    const highlights=["Great work on your foot positioning!","Focus on keeping your head up","Work on your shot consistency"];
+    const hlCls=["hl-green","hl-blue","hl-amber"];
+    const placeholder=`
+      <div class="review-item">
+        <div class="review-thumb" style="background:rgba(255,255,255,.04);border-radius:8px;position:relative;">
+          <div style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.55);border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700;color:#fff;">0:00</div>
+        </div>
+        <div class="review-info">
+          <div style="height:13px;width:140px;background:rgba(255,255,255,.07);border-radius:4px;margin-bottom:6px;"></div>
+          <div style="height:10px;width:110px;background:rgba(255,255,255,.05);border-radius:4px;margin-bottom:4px;"></div>
+          <div style="height:10px;width:90px;background:rgba(255,255,255,.04);border-radius:4px;"></div>
+        </div>
+        <div class="review-actions">
+          <div style="height:28px;width:90px;background:rgba(255,255,255,.05);border-radius:7px;"></div>
+        </div>
+      </div>`;
+    const realRows=subs.map((s,i)=>`
+      <div class="review-item">
+        <div class="review-thumb">
+          <div class="review-play"><svg viewBox="0 0 24 24" fill="currentColor" width="9" height="9"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        </div>
+        <div class="review-info">
+          <div class="review-title">${s.skill_category||"Video submission"}</div>
+          <div class="review-coach">Reviewed by Coach ${currentCoach?.first_name||"Your Coach"}</div>
+          <div class="review-returned">Returned ${timeAgo(s.created_at)}</div>
+          ${s.status==="completed"?`<div class="review-highlight ${hlCls[i%3]}">${highlights[i%3]}</div>`:""}
+        </div>
+        <div class="review-actions">
+          ${s.status==="completed"?`<button class="watch-btn" onclick="showSection('feedback')">Watch Review</button>`:`<span class="badge badge-${s.status}">${statusLabel(s.status)}</span>`}
+          <div class="dl-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+        </div>
+      </div>
+    `).join("");
+    // Always show 3 rows — real data first, placeholders for remainder
+    const placeholders=Array(Math.max(0,3-subs.length)).fill(placeholder).join("");
+    el.innerHTML=realRows+placeholders;
+  }
+
+  function renderFeedback(items){
+    const c=document.getElementById("feedbackList");
+    if(!items.length){c.innerHTML=`<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div class="empty-title">No feedback yet</div><div class="empty-sub">Upload a video to start receiving feedback.</div></div>`;return;}
+    const ci=currentCoach?(currentCoach.first_name?.[0]||"C")+(currentCoach.last_name?.[0]||""):"C";
+    c.innerHTML=items.map((f,i)=>`
+      <div class="fbi" id="fbi${i}">
+        <div class="fbi-hdr" onclick="this.closest('.fbi').classList.toggle('open')">
+          <div class="fbi-av">${ci}</div>
+          <div style="flex:1;"><div class="fbi-coach">Coach ${currentCoach?.first_name||"Coach"} feedback</div><div class="fbi-date">${new Date(f.created_at).toLocaleDateString("en-AU",{day:"numeric",month:"long",year:"numeric"})}</div></div>
+          <svg class="fbi-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="fbi-body"><div class="fbi-text">${f.written_feedback||""}</div>${f.key_takeaways?`<div class="fbi-section"><div class="fbi-section-lbl">Key takeaways</div><div class="fbi-section-txt">${f.key_takeaways}</div></div>`:""}</div>
+      </div>
+    `).join("");
+  }
+
+  function buildMiniChart(subs){
+    if(subs.length<2)return;
+    const months={};subs.forEach(s=>{const m=new Date(s.created_at).toLocaleDateString("en-AU",{month:"short"});months[m]=(months[m]||0)+1;});
+    const vals=Object.values(months);const max=Math.max(...vals,1);
+    const w=280,h=40;
+    const pts=vals.map((v,i)=>`${(i/(vals.length-1||1))*w},${h-(v/max)*(h*0.85)}`);
+    if(pts.length>1){document.getElementById("miniLine").setAttribute("d","M"+pts.join(" L"));document.getElementById("miniArea").setAttribute("d","M0,"+h+" L"+pts.join(" L")+" L"+w+","+h+" Z");}
+  }
+
+  function buildProgressChart(subs){
+    if(subs.length<2)return;
+    const months={};subs.forEach(s=>{const m=new Date(s.created_at).toLocaleDateString("en-AU",{month:"short"});months[m]=(months[m]||0)+1;});
+    const vals=Object.values(months);const max=Math.max(...vals,1);
+    const w=400,h=120;
+    const pts=vals.map((v,i)=>`${(i/(vals.length-1||1))*w},${h-(v/max)*(h*0.85)}`);
+    if(pts.length>1){document.getElementById("progLine").setAttribute("d","M"+pts.join(" L"));document.getElementById("progArea").setAttribute("d","M0,"+h+" L"+pts.join(" L")+" L"+w+","+h+" Z");}
+  }
+
+  // "Choose File" → opens the hidden file input.
+  function triggerFilePicker(){
+    document.getElementById("videoFileInput").click();
+  }
+
+  function handleFileSelect(input){
+    const nameEl      = document.getElementById("uploadFileName");
+    const previewWrap = document.getElementById("videoPreviewWrap");
+    const previewEl   = document.getElementById("videoPreview");
+    const sendRow     = document.getElementById("sendActionRow");
+
+    if(!(input.files && input.files[0])){
+      selectedFile = null;
+      nameEl.textContent = "";
+      previewWrap.style.display = "none";
+      sendRow.style.display = "none";
+      if(previewEl.src){ URL.revokeObjectURL(previewEl.src); previewEl.removeAttribute("src"); previewEl.load(); }
+      return;
+    }
+    const f = input.files[0];
+    const sizeMB = f.size / (1024 * 1024);
+    if(sizeMB > MAX_UPLOAD_MB){
+      selectedFile = null;
+      input.value = "";
+      nameEl.style.color = "#ef4444";
+      nameEl.textContent = `⚠ ${f.name} is ${sizeMB.toFixed(0)} MB — over the ${MAX_UPLOAD_MB} MB limit. Trim it in your phone's editor or re-record a shorter version.`;
+      previewWrap.style.display = "none";
+      sendRow.style.display = "none";
+      return;
+    }
+    selectedFile = f;
+    nameEl.style.color = "var(--green)";
+    nameEl.textContent = `✓ ${f.name} · ${sizeMB.toFixed(1)} MB`;
+    // Local preview (blob URL — no upload yet).
+    if(previewEl.src) URL.revokeObjectURL(previewEl.src);
+    previewEl.src = URL.createObjectURL(f);
+    previewWrap.style.display = "block";
+    sendRow.style.display = "flex";
+  }
+
+  // Resets the upload area to its empty state. Called from the Cancel button
+  // and after a successful submission.
+  function resetUploadArea(){
+    selectedFile = null;
+    const input = document.getElementById("videoFileInput");
+    if(input) input.value = "";
+    document.getElementById("uploadFileName").textContent = "";
+    document.getElementById("uploadNotes").value = "";
+    const previewEl = document.getElementById("videoPreview");
+    if(previewEl && previewEl.src){ URL.revokeObjectURL(previewEl.src); previewEl.removeAttribute("src"); previewEl.load(); }
+    const wrap = document.getElementById("videoPreviewWrap");
+    if(wrap) wrap.style.display = "none";
+    const sendRow = document.getElementById("sendActionRow");
+    if(sendRow) sendRow.style.display = "none";
+    const prog = document.getElementById("uploadProgress");
+    if(prog) prog.style.display = "none";
+  }
+
+  async function handleUpload(){
+    // ── Coach-required gate ──
+    // Submissions need a coach to actually go anywhere — block here and
+    // offer to take a coachless athlete to the coach picker.
+    if(!currentCoach){
+      if(confirm("You don't have a coach yet — they're the one who reviews your videos.\n\nPick a coach now?")){
+        window.location.href = "select-coach.html";
+      }
+      return;
+    }
+
+    const notes = document.getElementById("uploadNotes").value.trim();
+    const btn   = document.getElementById("submitBtn");
+    if(!selectedFile){ alert("Choose a video file first."); return; }
+
+    btn.textContent = "Sending..."; btn.disabled = true;
+
+    // Upload to Supabase Storage with real-byte progress via XHR.
+    // Sanitize the filename: replace anything that isn't a letter/digit/dot/underscore/hyphen
+    // with an underscore. Stops parens/spaces/special chars from causing URL-encoding
+    // weirdness later when the row is read back. Keeps the extension intact.
+    const safeName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const fn = `${currentUser.id}/${Date.now()}_${safeName}`;
+    const progEl = document.getElementById("uploadProgress");
+    const pctEl  = document.getElementById("uploadPct");
+    const fillEl = document.getElementById("progressFill");
+    progEl.style.display = "block";
+    pctEl.textContent = "0%";
+    fillEl.style.width = "0%";
+
+    const {data:{session}} = await sb.auth.getSession();
+    const uploadUrl = `${SB_URL}/storage/v1/object/videos/${encodeURI(fn)}`;
+
+    const upErr = await new Promise(resolve => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", uploadUrl, true);
+      xhr.setRequestHeader("apikey", SB_KEY);
+      xhr.setRequestHeader("Authorization", `Bearer ${session?.access_token || SB_KEY}`);
+      xhr.setRequestHeader("Content-Type", selectedFile.type || "application/octet-stream");
+      xhr.setRequestHeader("x-upsert", "false");
+      xhr.upload.onprogress = e => {
+        if(!e.lengthComputable) return;
+        const pct = Math.round((e.loaded / e.total) * 100);
+        pctEl.textContent = pct + "%";
+        fillEl.style.width = pct + "%";
+      };
+      xhr.onload = () => {
+        if(xhr.status >= 200 && xhr.status < 300){
+          pctEl.textContent = "100%"; fillEl.style.width = "100%";
+          resolve(null);
+        } else {
+          let msg = `Upload failed (HTTP ${xhr.status})`;
+          try { const j = JSON.parse(xhr.responseText); if(j.message) msg = j.message; } catch(_){}
+          resolve({message: msg});
+        }
+      };
+      xhr.onerror = () => resolve({message:"Network error during upload."});
+      xhr.send(selectedFile);
+    });
+
+    if(upErr){
+      progEl.style.display = "none";
+      btn.textContent = "Send to Coach"; btn.disabled = false;
+      alert("Upload failed: " + upErr.message + "\n\nCheck your connection and try again. If the file is over " + MAX_UPLOAD_MB + " MB, trim it first.");
+      return;
+    }
+    const {data:urlData} = sb.storage.from("videos").getPublicUrl(fn);
+    const videoUrl = urlData?.publicUrl;
+
+    // coach_id is required — the coach-required gate above guarantees currentCoach is set
+    // by loadCoach() from the athlete's active subscription. Without coach_id the row never
+    // appears in the coach's Review Queue.
+    const {error} = await sb.from("submissions").insert({athlete_id:currentUser.id, coach_id:currentCoach.id, notes, video_url:videoUrl, status:"pending"});
+    btn.textContent = "Send to Coach"; btn.disabled = false;
+    if(error){ alert("Something went wrong saving the submission.\n\n" + error.message); return; }
+
+    // Clear the upload area + refresh My Videos so the new clip shows up.
+    resetUploadArea();
+    await loadData();
+    showSection("videos");
+  }
+
+  // ── Profile-editor helpers ──
+  function getInitials(p){
+    return (((p?.first_name||"")[0]||"A")+((p?.last_name||"")[0]||"")).toUpperCase();
+  }
+  function escapeHtml(s){
+    return String(s==null?"":s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  }
+  function renderAvatar(el, url, initials){
+    if(!el) return;
+    if(url){ el.innerHTML = '<img src="'+url+'" alt=""/>'; }
+    else   { el.textContent = initials || "A"; }
+  }
+  function randomId(prefix){
+    return prefix + "_" + Math.random().toString(36).slice(2,8);
+  }
+
+  // ── Render home/full Goals widgets from profiles.goals ──
+  function renderHomeGoals(goals){
+    const c = document.getElementById("homeGoalsRender");
+    if(!c) return;
+    const list = Array.isArray(goals) ? goals : [];
+    if(!list.length){
+      c.innerHTML = '<div class="goals-empty">No goals yet. <a onclick="openProfileModal()">Add your first one</a></div>';
+      return;
+    }
+    const colors = [["amber","#f59e0b"],["green","#22c55e"],["blue","var(--blue3)"]];
+    c.innerHTML = list.slice(0,3).map((g,i)=>{
+      const col = colors[i%3];
+      const pct = Math.max(0, Math.min(100, parseInt(g.progress)||0));
+      return '<div class="goal-item" style="margin-bottom:15px;">'
+        + '<div class="goal-row" style="margin-bottom:7px;">'
+        +   '<div class="goal-icon '+col[0]+'" style="width:24px;height:24px;"><svg viewBox="0 0 24 24" fill="none" stroke="'+col[1]+'" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="10"/></svg></div>'
+        +   '<div class="goal-name" style="font-size:13px;">'+escapeHtml(g.name||"Untitled goal")+'</div>'
+        +   '<div class="goal-pct" style="font-size:12px;">'+pct+'%</div>'
+        +   '<div class="goal-arrow">›</div>'
+        + '</div>'
+        + '<div class="goal-bar-bg" style="height:6px;"><div class="goal-bar-fill fill-'+col[0]+'" style="width:'+pct+'%"></div></div>'
+        + '</div>';
+    }).join("");
+  }
+  function renderFullGoals(goals){
+    const c = document.getElementById("fullGoalsRender");
+    if(!c) return;
+    const list = Array.isArray(goals) ? goals : [];
+    if(!list.length){
+      c.innerHTML = '<div class="goals-empty">No goals yet. <a onclick="openProfileModal()">Add your first one</a></div>';
+      return;
+    }
+    const gradients = [
+      ["#f59e0b","#d97706","var(--amber)"],
+      ["#22c55e","#16a34a","var(--green)"],
+      ["var(--blue3)","var(--blue)","var(--blue3)"],
+      ["#a78bfa","#7c3aed","#a78bfa"]
+    ];
+    c.innerHTML = list.map((g,i)=>{
+      const grad = gradients[i%gradients.length];
+      const pct = Math.max(0, Math.min(100, parseInt(g.progress)||0));
+      return '<div>'
+        + '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">'
+        +   '<span style="font-size:13px;font-weight:600;color:var(--text);">'+escapeHtml(g.name||"Untitled goal")+'</span>'
+        +   '<span style="font-size:12px;color:'+grad[2]+';font-weight:700;">'+pct+'%</span>'
+        + '</div>'
+        + '<div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;"><div style="width:'+pct+'%;height:100%;background:linear-gradient(90deg,'+grad[0]+','+grad[1]+');border-radius:3px;"></div></div>'
+        + '</div>';
+    }).join("");
+  }
+
+  // ── Profile popup: open / close / pre-fill ──
+  function openProfileModal(){
+    const p = cachedProfile || {};
+    console.log("[openProfileModal] cachedProfile =", p);
+    document.getElementById("profileFirst").value = p.first_name || "";
+    document.getElementById("profileLast").value  = p.last_name  || "";
+    document.getElementById("profileAge").value   = p.age || "";
+    document.getElementById("profileMobile").value = p.mobile || "";
+    document.getElementById("profileSport").value = p.sport || "";
+    document.getElementById("profileSkill").value = p.skill_level || "";
+    document.getElementById("profileLocation").value = p.location || "";
+    document.getElementById("profileGoal").value = p.main_goal || "";
+    document.getElementById("profileGuardianFirst").value  = p.guardian_first_name  || "";
+    document.getElementById("profileGuardianLast").value   = p.guardian_last_name   || "";
+    document.getElementById("profileGuardianMobile").value = p.guardian_mobile || "";
+    renderAvatar(document.getElementById("profilePhotoPreview"), p.avatar_url, getInitials(p));
+    document.getElementById("profilePhotoHint").textContent = "JPG or PNG, up to 5 MB";
+    toggleGuardianBlock();
+    const pct = calcPct(p);
+    document.getElementById("profilePctFill").style.width = pct + "%";
+    document.getElementById("profilePctLbl").textContent  = pct + "%";
+    editGoals  = (Array.isArray(p.goals)  ? p.goals  : []).map(g=>({...g}));
+    editSkills = (Array.isArray(p.skills) ? p.skills : []).map(s=>({...s}));
+    renderEditorGoals();
+    renderEditorSkills();
+    pendingPhotoUrl = null;
+    document.getElementById("profileSaved").style.display = "none";
+    document.getElementById("profileModal").classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeProfileModal(){
+    document.getElementById("profileModal").classList.remove("open");
+    document.body.style.overflow = "";
+  }
+  function toggleGuardianBlock(){
+    const age = parseInt(document.getElementById("profileAge")?.value);
+    const show = !age || age < 18;
+    const block = document.getElementById("guardianBlock");
+    if(block) block.style.display = show ? "block" : "none";
+  }
+
+  // ── Goals/Skills editor ──
+  function addGoal(){
+    editGoals.push({id: randomId("g"), name: "", progress: 0});
+    renderEditorGoals();
+    const rows = document.querySelectorAll('#editGoalsList input[type="text"]');
+    if(rows.length) rows[rows.length-1].focus();
+  }
+  function removeGoal(id){ editGoals = editGoals.filter(g=>g.id!==id); renderEditorGoals(); }
+  function addSkill(){
+    editSkills.push({id: randomId("s"), name: "", level: 0});
+    renderEditorSkills();
+    const rows = document.querySelectorAll('#editSkillsList input[type="text"]');
+    if(rows.length) rows[rows.length-1].focus();
+  }
+  function removeSkill(id){ editSkills = editSkills.filter(s=>s.id!==id); renderEditorSkills(); }
+
+  function renderEditorGoals(){
+    const c = document.getElementById("editGoalsList");
+    if(!editGoals.length){ c.innerHTML = '<div class="gs-empty">No goals yet. Click "Add a goal" below.</div>'; return; }
+    c.innerHTML = editGoals.map(g=>{
+      const pct = Math.max(0, Math.min(100, parseInt(g.progress)||0));
+      return '<div class="gs-row" data-id="'+g.id+'">'
+        + '<input type="text" placeholder="e.g. Improve Jump Shot" value="'+escapeHtml(g.name||"")+'" oninput="onGoalName(\''+g.id+'\', this.value)"/>'
+        + '<div class="gs-range-wrap">'
+        +   '<input type="range" class="gs-range" min="0" max="100" value="'+pct+'" oninput="onGoalProgress(\''+g.id+'\', this.value)"/>'
+        +   '<span class="gs-pct" data-pct="'+g.id+'">'+pct+'%</span>'
+        + '</div>'
+        + '<button class="gs-del" onclick="removeGoal(\''+g.id+'\')" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>'
+        + '</div>';
+    }).join("");
+  }
+  function renderEditorSkills(){
+    const c = document.getElementById("editSkillsList");
+    if(!editSkills.length){ c.innerHTML = '<div class="gs-empty">No skills yet. Click "Add a skill" below.</div>'; return; }
+    c.innerHTML = editSkills.map(s=>{
+      const lvl = Math.max(0, Math.min(100, parseInt(s.level)||0));
+      return '<div class="gs-row" data-id="'+s.id+'">'
+        + '<input type="text" placeholder="e.g. Shooting" value="'+escapeHtml(s.name||"")+'" oninput="onSkillName(\''+s.id+'\', this.value)"/>'
+        + '<div class="gs-range-wrap">'
+        +   '<input type="range" class="gs-range" min="0" max="100" value="'+lvl+'" oninput="onSkillLevel(\''+s.id+'\', this.value)"/>'
+        +   '<span class="gs-pct" data-pct="'+s.id+'">'+lvl+'%</span>'
+        + '</div>'
+        + '<button class="gs-del" onclick="removeSkill(\''+s.id+'\')" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>'
+        + '</div>';
+    }).join("");
+  }
+  function onGoalName(id, v){ const g = editGoals.find(x=>x.id===id); if(g) g.name = v; }
+  function onGoalProgress(id, v){
+    const g = editGoals.find(x=>x.id===id); if(!g) return;
+    g.progress = Math.max(0, Math.min(100, parseInt(v)||0));
+    const el = document.querySelector('#editGoalsList .gs-pct[data-pct="'+id+'"]');
+    if(el) el.textContent = g.progress + "%";
+  }
+  function onSkillName(id, v){ const s = editSkills.find(x=>x.id===id); if(s) s.name = v; }
+  function onSkillLevel(id, v){
+    const s = editSkills.find(x=>x.id===id); if(!s) return;
+    s.level = Math.max(0, Math.min(100, parseInt(v)||0));
+    const el = document.querySelector('#editSkillsList .gs-pct[data-pct="'+id+'"]');
+    if(el) el.textContent = s.level + "%";
+  }
+
+  // ── Photo upload ──
+  async function handleProfilePhoto(input){
+    const f = input.files && input.files[0];
+    if(!f) return;
+    if(f.size > 5*1024*1024){
+      alert("Photo too large (max 5 MB).");
+      input.value = "";
+      return;
+    }
+    const hint = document.getElementById("profilePhotoHint");
+    hint.textContent = "Uploading...";
+    const extRaw = (f.name.split(".").pop() || "jpg").toLowerCase();
+    const ext = /^[a-z0-9]+$/.test(extRaw) ? extRaw : "jpg";
+    // Unique filename per upload so the public URL changes every time —
+    // avoids the browser/CDN serving the cached previous image after refresh.
+    const path = currentUser.id + "/avatar_" + Date.now() + "." + ext;
+    const {error} = await sb.storage.from("avatars").upload(path, f, {upsert: true, cacheControl: "0", contentType: f.type || undefined});
+    if(error){
+      hint.textContent = "JPG or PNG, up to 5 MB";
+      alert("Photo upload failed: " + error.message + "\n\nDoes the 'avatars' Storage bucket exist with an INSERT policy that lets athletes write to their own folder?");
+      input.value = "";
+      return;
+    }
+    const {data} = sb.storage.from("avatars").getPublicUrl(path);
+    pendingPhotoUrl = data.publicUrl;
+    console.log("[handleProfilePhoto] uploaded:", path, "→ public URL:", pendingPhotoUrl);
+    renderAvatar(document.getElementById("profilePhotoPreview"), pendingPhotoUrl + "?t=" + Date.now(), getInitials(cachedProfile));
+    hint.textContent = "Photo uploaded — click Save changes to apply.";
+  }
+
+  async function saveProfile(){
+    const btn = document.getElementById("profileSaveBtn");
+    const origLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Saving...";
+    const v = id => (document.getElementById(id)?.value || "").trim();
+
+    const payload = {
+      first_name: v("profileFirst"),
+      last_name:  v("profileLast"),
+      age:        parseInt(v("profileAge")) || null,
+      mobile:     v("profileMobile") || null,
+      sport:      v("profileSport") || null,
+      skill_level: v("profileSkill") || null,
+      location:   v("profileLocation") || null,
+      main_goal:  v("profileGoal") || null,
+      guardian_first_name:  v("profileGuardianFirst")  || null,
+      guardian_last_name:   v("profileGuardianLast")   || null,
+      guardian_mobile:      v("profileGuardianMobile") || null,
+      goals:  editGoals.map(g=>({id:g.id||randomId("g"), name:(g.name||"").trim(), progress:Math.max(0,Math.min(100,parseInt(g.progress)||0))})).filter(g=>g.name),
+      skills: editSkills.map(s=>({id:s.id||randomId("s"), name:(s.name||"").trim(), level:Math.max(0,Math.min(100,parseInt(s.level)||0))})).filter(s=>s.name)
+    };
+    if(pendingPhotoUrl) payload.avatar_url = pendingPhotoUrl;
+    console.log("[saveProfile] payload.avatar_url =", payload.avatar_url || "(unchanged)");
+
+    const profileCols = await getProfileCols();
+    const filteredPayload = pickProfileCols(payload, profileCols);
+    if(profileCols){
+      const dropped = Object.keys(payload).filter(k => !profileCols.includes(k));
+      if(dropped.length) console.warn("[saveProfile] dropping unknown columns:", dropped);
+    }
+    const {error} = await sb.from("profiles").update(filteredPayload).eq("id", currentUser.id);
+
+    if(error){
+      btn.disabled = false;
+      btn.textContent = origLabel;
+      const hint = /column .* does not exist/i.test(error.message)
+        ? "\n\nLooks like a column is missing. Run migration_goals_skills.sql in the Supabase SQL editor."
+        : "";
+      alert("Save failed: " + error.message + hint);
+      return;
+    }
+
+    cachedProfile = {...cachedProfile, ...payload};
+    document.getElementById("chipName").textContent = payload.first_name || "Athlete";
+    document.getElementById("topGreeting").textContent = "Welcome back, " + (payload.first_name || "Athlete");
+    if(pendingPhotoUrl){
+      renderAvatar(document.getElementById("chipAv"), pendingPhotoUrl + "?t=" + Date.now(), getInitials(payload));
+      pendingPhotoUrl = null;
+    } else {
+      renderAvatar(document.getElementById("chipAv"), cachedProfile.avatar_url, getInitials(payload));
+    }
+    renderHomeGoals(payload.goals);
+    renderFullGoals(payload.goals);
+    const pct = calcPct(payload);
+    document.getElementById("profilePctFill").style.width = pct + "%";
+    document.getElementById("profilePctLbl").textContent  = pct + "%";
+    document.getElementById("profileSaved").style.display = "block";
+    btn.disabled = false;
+    btn.textContent = origLabel;
+
+    // Brief delay so the athlete sees the confirmation, then close the popup
+    // and clear the saved badge for next time.
+    setTimeout(() => {
+      const saved = document.getElementById("profileSaved");
+      if(saved) saved.style.display = "none";
+      closeProfileModal();
+    }, 900);
+  }
+
+  async function loadMessages(){
+    if(!currentUser)return;
+    const {data:msgs}=await sb.from("messages").select("*").or(`from_id.eq.${currentUser.id},to_id.eq.${currentUser.id}`).order("created_at",{ascending:false});
+    const coachIds=[...new Set((msgs||[]).map(m=>m.from_id===currentUser.id?m.to_id:m.from_id))];
+    const unread=(msgs||[]).filter(m=>m.to_id===currentUser.id&&!m.read).length;
+    const badge=document.getElementById("msgBadge");const dot=document.getElementById("msgDot");
+    if(unread>0){badge.textContent=unread;badge.style.display="inline";dot.style.display="block";}
+    else{badge.style.display="none";dot.style.display="none";}
+    if(!coachIds.length)return;
+    const {data:coaches}=await sb.from("profiles").select("id,first_name,last_name,sport").in("id",coachIds);
+    const threads=coachIds.map(cid=>{const coach=(coaches||[]).find(c=>c.id===cid);const lastMsg=(msgs||[]).find(m=>m.from_id===cid||m.to_id===cid);return{coach,lastMsg};}).filter(t=>t.coach);
+    document.getElementById("msgThreadList").innerHTML=threads.map(t=>`<div class="msg-thread ${currentThreadCoachId===t.coach.id?'active':''}" onclick="openThread('${t.coach.id}','${t.coach.first_name} ${t.coach.last_name}','${t.coach.sport||''}')"><div style="display:flex;justify-content:space-between;"><div class="msg-thread-name">${t.coach.first_name} ${t.coach.last_name}</div>${t.lastMsg?`<span class="msg-thread-time">${timeAgo(t.lastMsg.created_at)}</span>`:""}</div><div class="msg-thread-prev">${t.lastMsg?(t.lastMsg.from_id===currentUser.id?"You: ":"")+t.lastMsg.message.substring(0,46):"No messages yet"}${t.lastMsg&&t.lastMsg.to_id===currentUser.id&&!t.lastMsg.read?'<span class="msg-unread"></span>':""}</div></div>`).join("");
+  }
+
+  async function openThread(coachId,coachName,coachSport){
+    currentThreadCoachId=coachId;
+    document.getElementById("msgEmpty").style.display="none";
+    const conv=document.getElementById("msgConversation");conv.style.display="flex";
+    document.getElementById("msgPartnerName").textContent=coachName;
+    document.getElementById("msgPartnerSport").textContent=(coachSport?coachSport+" · ":"")+"Coach";
+    await loadThreadMessages();
+    await sb.from("messages").update({read:true}).eq("to_id",currentUser.id).eq("from_id",coachId).is("read",null);
+    loadMessages();
+    if(msgSub)sb.removeChannel(msgSub);
+    msgSub=sb.channel("m-"+coachId).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},()=>loadThreadMessages()).subscribe();
+  }
+
+  async function loadThreadMessages(){
+    if(!currentThreadCoachId)return;
+    const {data:msgs}=await sb.from("messages").select("*").or(`and(from_id.eq.${currentUser.id},to_id.eq.${currentThreadCoachId}),and(from_id.eq.${currentThreadCoachId},to_id.eq.${currentUser.id})`).order("created_at",{ascending:true});
+    const body=document.getElementById("msgBody");
+    if(!msgs||!msgs.length){body.innerHTML=`<div style="text-align:center;color:var(--muted);font-size:12px;margin:auto;">No messages yet. Say hello!</div>`;return;}
+    body.innerHTML=msgs.map(m=>`<div style="display:flex;flex-direction:column;align-items:${m.from_id===currentUser.id?'flex-end':'flex-start'};"><div class="bubble ${m.from_id===currentUser.id?'mine':'theirs'}">${m.message}</div><div class="bubble-time" style="align-self:${m.from_id===currentUser.id?'flex-end':'flex-start'};">${timeAgo(m.created_at)}</div></div>`).join("");
+    body.scrollTop=body.scrollHeight;
+  }
+
+  async function sendMessage(){
+    const input=document.getElementById("msgInput");const body=input.value.trim();
+    if(!body||!currentThreadCoachId)return;
+    input.value="";
+    await sb.from("messages").insert({from_id:currentUser.id,to_id:currentThreadCoachId,message:body});
+    loadThreadMessages();
+  }
+
+  async function messageMyCoach(coachId,coachName,coachSport){
+    showSection("messages");await loadMessages();await openThread(coachId,coachName,coachSport||"");
+  }
+
+  function showSection(id){
+    if(!document.getElementById("section-"+id))return;
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.querySelectorAll(".nav-item,.mob-nav-item").forEach(n=>n.classList.remove("active"));
+    document.getElementById("section-"+id).classList.add("active");
+    document.querySelectorAll(".nav-item,.mob-nav-item").forEach(n=>{if(n.getAttribute("onclick")?.includes("'"+id+"'"))n.classList.add("active");});
+    window.scrollTo(0,0);
+  }
+  if(location.hash)showSection(location.hash.slice(1));
+  window.addEventListener("hashchange",()=>showSection(location.hash.slice(1)));
+
+  function timeAgo(d){
+    const diff=(Date.now()-new Date(d))/1000;
+    if(diff<60)return"Just now";if(diff<3600)return Math.floor(diff/60)+"m ago";
+    if(diff<86400)return Math.floor(diff/3600)+"h ago";if(diff<172800)return"Yesterday";
+    return new Date(d).toLocaleDateString("en-AU",{day:"numeric",month:"short"});
+  }
+
+  function statusLabel(s){
+    return s==="pending"?"Pending Review":s==="in_review"?"In Review":s==="completed"?"Review Returned":s;
+  }
+
+  async function handleLogout(){await sb.auth.signOut();window.location.href="index.html";}
+
+  // ── INACTIVITY AUTO-LOGOUT ──
+  // Sign the athlete out after 60 minutes with no input. Activity events
+  // reset the timer (throttled to once/sec so mousemove isn't a perf issue).
+  (function setupIdleTimeout(){
+    const IDLE_MS = 60 * 60 * 1000;
+    let idleTimer = null;
+    let lastReset = 0;
+    function fire(){
+      sb.auth.signOut().finally(() => {
+        window.location.href = "index.html?timeout=1";
+      });
+    }
+    function reset(){
+      const now = Date.now();
+      if(now - lastReset < 1000) return;
+      lastReset = now;
+      if(idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(fire, IDLE_MS);
+    }
+    ["mousemove","mousedown","keydown","touchstart","scroll"].forEach(ev =>
+      window.addEventListener(ev, reset, { passive: true })
+    );
+    reset();
+  })();
+
+  init();
+</script>
+</body>
+</html>

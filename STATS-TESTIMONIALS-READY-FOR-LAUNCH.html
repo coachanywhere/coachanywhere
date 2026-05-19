@@ -1,0 +1,208 @@
+<!--
+  CoachAnywhere — Stats Banner + Testimonials Carousel
+  These components are HIDDEN until thresholds are met.
+  
+  STATS BANNER: Shows when coaches >= 10, athletes >= 50, reviews >= 20
+  TESTIMONIALS: Shows when reviews >= 5, auto-populates from Supabase
+  
+  Add these to index.html / coachanywhere.html before soft launch.
+  Place STATS BANNER after the hero section.
+  Place TESTIMONIALS before the footer.
+-->
+
+<!-- ══════════════════════════════════════
+     STATS BANNER
+     ══════════════════════════════════════ -->
+<style>
+  .stats-banner{
+    padding:32px;max-width:1200px;margin:0 auto 40px;
+    display:none; /* Hidden until thresholds met */
+  }
+  .stats-banner.visible{display:block;}
+  .stats-banner-inner{
+    background:linear-gradient(135deg,rgba(37,99,235,.12),rgba(99,102,241,.08));
+    border:1px solid rgba(59,130,246,.2);border-radius:20px;
+    padding:32px 40px;
+    display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+  }
+  .stat-item{
+    text-align:center;padding:16px;
+    border-right:1px solid rgba(148,163,184,.12);
+  }
+  .stat-item:last-child{border-right:none;}
+  .stat-num{
+    font-size:40px;font-weight:800;color:#f9fafb;
+    letter-spacing:-.03em;line-height:1;margin-bottom:6px;
+    background:linear-gradient(135deg,#fff,#93c5fd);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .stat-desc{font-size:13px;color:rgba(148,163,184,.8);}
+  .stat-icon{font-size:22px;margin-bottom:8px;}
+  @media(max-width:640px){.stats-banner-inner{grid-template-columns:1fr 1fr;}.stat-item{border-right:none;border-bottom:1px solid rgba(148,163,184,.1);}}
+</style>
+
+<div class="stats-banner" id="statsBanner">
+  <div class="stats-banner-inner">
+    <div class="stat-item">
+      <div class="stat-icon">🏆</div>
+      <div class="stat-num" id="statCoachCount">0</div>
+      <div class="stat-desc">Elite coaches</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">🏃</div>
+      <div class="stat-num" id="statAthleteCount">0</div>
+      <div class="stat-desc">Athletes training</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">🎬</div>
+      <div class="stat-num" id="statReviewCount">0</div>
+      <div class="stat-desc">Videos reviewed</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-num">4.9</div>
+      <div class="stat-desc">Average coach rating</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// STATS BANNER — thresholds before showing
+const STATS_THRESHOLDS = { coaches: 10, athletes: 50, reviews: 20 };
+
+async function loadStatsBanner() {
+  const SUPABASE_URL = "https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const [{ count: athletes }, { count: reviews }] = await Promise.all([
+    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "athlete"),
+    supabase.from("coach_reviews").select("*", { count: "exact", head: true })
+  ]);
+
+  // Fetch coach count from Airtable.
+  // TODO: This is client-side — embedding a real Airtable PAT here would
+  // expose it to every site visitor. Before launch, move this fetch into a
+  // Netlify function (e.g. /netlify/functions/airtable-coach-count.js) that
+  // reads AIRTABLE_PAT from environment vars and returns just the count.
+  const airtableRes = await fetch(
+    `https://api.airtable.com/v0/appdbfGQ020JyrWum/tbl8Rv8k2Rb95jN5G?fields[]=Profile+Status&filterByFormula={Profile Status}='Live'`,
+    { headers: { "Authorization": "Bearer AIRTABLE_PAT_PLACEHOLDER_REPLACE_VIA_SERVER_PROXY" } }
+  );
+  const airtableData = await airtableRes.json();
+  const coaches = (airtableData.records || []).length;
+
+  // Only show if thresholds met
+  if (coaches >= STATS_THRESHOLDS.coaches && 
+      (athletes || 0) >= STATS_THRESHOLDS.athletes && 
+      (reviews || 0) >= STATS_THRESHOLDS.reviews) {
+    document.getElementById("statCoachCount").textContent = coaches + "+";
+    document.getElementById("statAthleteCount").textContent = (athletes || 0) + "+";
+    document.getElementById("statReviewCount").textContent = (reviews || 0) + "+";
+    document.getElementById("statsBanner").classList.add("visible");
+  }
+}
+
+if (document.getElementById("statsBanner")) loadStatsBanner();
+</script>
+
+
+<!-- ══════════════════════════════════════
+     TESTIMONIALS CAROUSEL
+     ══════════════════════════════════════ -->
+<style>
+  .testimonials-section{
+    padding:60px 32px;max-width:1200px;margin:0 auto;
+    display:none; /* Hidden until 5+ reviews */
+  }
+  .testimonials-section.visible{display:block;}
+  .testimonials-header{text-align:center;margin-bottom:36px;}
+  .testimonials-title{font-size:clamp(24px,3vw,36px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:8px;}
+  .testimonials-sub{font-size:15px;color:rgba(148,163,184,.7);}
+
+  .carousel-track-wrap{overflow:hidden;position:relative;}
+  .carousel-track-wrap::before,.carousel-track-wrap::after{
+    content:'';position:absolute;top:0;bottom:0;width:80px;z-index:2;pointer-events:none;
+  }
+  .carousel-track-wrap::before{left:0;background:linear-gradient(to right,#060f26,transparent);}
+  .carousel-track-wrap::after{right:0;background:linear-gradient(to left,#060f26,transparent);}
+
+  .carousel-track{
+    display:flex;gap:20px;
+    animation:scroll-left 30s linear infinite;
+    width:max-content;
+  }
+  .carousel-track:hover{animation-play-state:paused;}
+  @keyframes scroll-left{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+  .testimonial-card{
+    background:linear-gradient(145deg,rgba(13,20,50,.92),rgba(9,14,35,.96));
+    border:1px solid rgba(148,163,184,.12);border-radius:16px;
+    padding:22px 24px;width:320px;flex-shrink:0;
+  }
+  .testimonial-stars{display:flex;gap:3px;margin-bottom:12px;}
+  .testimonial-star{width:14px;height:14px;color:#fbbf24;}
+  .testimonial-text{font-size:14px;color:rgba(226,232,240,.85);line-height:1.7;margin-bottom:16px;font-style:italic;}
+  .testimonial-author{display:flex;align-items:center;gap:10px;}
+  .testimonial-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#0d2a6e);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#93c5fd;flex-shrink:0;}
+  .testimonial-name{font-size:13px;font-weight:700;color:#f1f5f9;}
+  .testimonial-meta{font-size:11px;color:var(--muted);}
+</style>
+
+<div class="testimonials-section" id="testimonialsSection">
+  <div class="testimonials-header">
+    <div class="testimonials-title">What athletes are saying</div>
+    <div class="testimonials-sub">Real feedback from real athletes across Australia</div>
+  </div>
+  <div class="carousel-track-wrap">
+    <div class="carousel-track" id="carouselTrack"></div>
+  </div>
+</div>
+
+<script>
+const TESTIMONIALS_THRESHOLD = 5;
+
+async function loadTestimonials() {
+  const SUPABASE_URL = "https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const { data: reviews } = await supabase
+    .from("coach_reviews")
+    .select("*")
+    .gte("rating", 4) // Only show 4+ star reviews
+    .order("created_at", { ascending: false });
+
+  if (!reviews || reviews.length < TESTIMONIALS_THRESHOLD) return;
+
+  document.getElementById("testimonialsSection").classList.add("visible");
+  const track = document.getElementById("carouselTrack");
+
+  // Double the reviews for seamless infinite scroll
+  const allReviews = [...reviews, ...reviews];
+
+  track.innerHTML = allReviews.map(r => {
+    const stars = Array(5).fill(0).map((_, i) =>
+      `<svg class="testimonial-star" viewBox="0 0 24 24" fill="${i < r.rating ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+    ).join("");
+
+    const initials = (r.athlete_name || "A").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+
+    return `
+      <div class="testimonial-card">
+        <div class="testimonial-stars">${stars}</div>
+        <div class="testimonial-text">"${r.review_text || "Great coaching experience!"}"</div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">${initials}</div>
+          <div>
+            <div class="testimonial-name">${r.athlete_name || "Athlete"}</div>
+            <div class="testimonial-meta">Verified athlete · CoachAnywhere</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+if (document.getElementById("testimonialsSection")) loadTestimonials();
+</script>

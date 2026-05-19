@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Video Review – CoachAnywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --amber:#fbbf24;--amber2:#d97706;--amber3:#92400e;
+      --text:#e5e7eb;--muted:#94a3b8;--muted2:#64748b;
+      --bg:#060f26;--bg2:#0a1530;--bg3:#0f1c3d;
+      --panel:rgba(9,14,35,.95);--panel2:rgba(15,23,52,.9);
+      --border:rgba(148,163,184,.15);--border2:rgba(148,163,184,.28);
+      --green:#34d399;--red:#ef4444;--purple:#a78bfa;--blue:#60a5fa;
+      --tr:160ms ease-out;
+    }
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+    button{font-family:inherit;cursor:pointer;}
+
+    /* HEADER */
+    .header{background:rgba(6,15,38,.98);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:30;}
+    .header-left{display:flex;align-items:center;gap:14px;}
+    .back-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;transition:all var(--tr);}
+    .back-btn:hover{color:#fff;border-color:rgba(255,255,255,.3);}
+    .back-btn svg{width:14px;height:14px;}
+    .header-info{display:flex;flex-direction:column;}
+    .header-athlete{font-size:15px;font-weight:700;color:#f9fafb;}
+    .header-meta{font-size:12px;color:var(--muted);}
+    .header-right{display:flex;align-items:center;gap:10px;}
+    .rec-indicator{display:none;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);font-size:12px;font-weight:700;color:#f87171;}
+    .rec-indicator.active{display:flex;}
+    .rec-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;animation:blink 1s ease-in-out infinite;}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    .btn-send{padding:9px 22px;border-radius:999px;background:linear-gradient(135deg,var(--amber2),var(--amber3));color:#fff;font-size:13px;font-weight:700;border:none;transition:all var(--tr);display:flex;align-items:center;gap:6px;}
+    .btn-send:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(180,83,9,.4);}
+    .btn-send:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+    .btn-send svg{width:14px;height:14px;}
+
+    /* MODE TABS */
+    .mode-tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 8px;flex-shrink:0;gap:2px;}
+    .mode-tab{background:transparent;border:none;color:var(--muted);font-size:13px;font-weight:600;padding:11px 18px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color var(--tr),border-color var(--tr);display:flex;align-items:center;gap:6px;}
+    .mode-tab svg{width:14px;height:14px;}
+    .mode-tab:hover{color:#e2e8f0;}
+    .mode-tab.active{color:var(--amber);border-bottom-color:var(--amber);}
+    .mode-tab .pill{font-size:9px;font-weight:700;padding:1px 6px;border-radius:999px;background:rgba(167,139,250,.18);color:var(--purple);border:1px solid rgba(167,139,250,.3);margin-left:2px;}
+
+    /* TOOL ROW (per mode) */
+    .tool-row{background:var(--bg3);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;min-height:50px;overflow-x:auto;}
+    .tool-pane{display:none;align-items:center;gap:8px;flex-wrap:nowrap;width:100%;}
+    .tool-pane.active{display:flex;}
+
+    .tool-btn{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:48px;padding:5px 8px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);font-size:10px;font-weight:600;transition:all var(--tr);flex-shrink:0;}
+    .tool-btn svg{width:15px;height:15px;}
+    .tool-btn:hover{background:rgba(255,255,255,.08);color:#f1f5f9;border-color:var(--border2);}
+    .tool-btn.active{background:rgba(251,191,36,.15);color:var(--amber);border-color:rgba(251,191,36,.4);}
+
+    .divider{width:1px;height:32px;background:var(--border);flex-shrink:0;}
+
+    /* ── TECH COLOR PICKER ── */
+    .colour-strip{
+      display:flex;align-items:center;gap:5px;
+      padding:4px 7px;border-radius:6px;
+      background:linear-gradient(180deg,rgba(0,0,0,.32),rgba(0,0,0,.08));
+      border:1px solid var(--border);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+      flex-shrink:0;position:relative;
+    }
+    .strip-bracket{
+      width:2px;height:13px;
+      background:linear-gradient(180deg,rgba(251,191,36,.7),rgba(251,191,36,.15));
+      border-radius:1px;flex-shrink:0;
+      box-shadow:0 0 4px rgba(251,191,36,.4);
+    }
+    .colour-dot{
+      width:20px;height:20px;border-radius:4px;cursor:pointer;
+      border:1px solid rgba(0,0,0,.45);position:relative;
+      transition:transform 120ms ease-out,box-shadow 120ms ease-out;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.35),
+        inset 0 -2px 2px rgba(0,0,0,.3),
+        0 1px 1px rgba(0,0,0,.4);
+    }
+    .colour-dot:hover{
+      transform:translateY(-1px);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.45),
+        inset 0 -2px 2px rgba(0,0,0,.3),
+        0 2px 5px rgba(0,0,0,.5),
+        0 0 8px var(--c);
+    }
+    .colour-dot.active{
+      transform:translateY(-1px);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.5),
+        inset 0 -2px 2px rgba(0,0,0,.3),
+        0 0 0 1px #0a1530,
+        0 0 0 2.5px #fff,
+        0 0 12px var(--c);
+    }
+    .colour-dot.active::before{
+      content:"";position:absolute;top:-7px;left:50%;
+      transform:translateX(-50%);
+      width:0;height:0;
+      border-left:3px solid transparent;border-right:3px solid transparent;
+      border-top:4px solid #fff;
+      filter:drop-shadow(0 0 3px #fff);
+    }
+
+    /* ── TECH SIZE SLIDER ── */
+    .size-row{
+      display:flex;align-items:center;gap:9px;
+      padding:4px 11px;border-radius:6px;
+      background:linear-gradient(180deg,rgba(0,0,0,.32),rgba(0,0,0,.08));
+      border:1px solid var(--border);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+      flex-shrink:0;
+    }
+    .size-label{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      font-size:9px;font-weight:700;
+      color:var(--muted);text-transform:uppercase;letter-spacing:.2em;
+    }
+    .size-slider{
+      -webkit-appearance:none;appearance:none;
+      width:110px;height:18px;
+      background:transparent;cursor:pointer;outline:none;
+      --fill:14%;
+    }
+    .size-slider::-webkit-slider-runnable-track{
+      height:5px;border-radius:2px;
+      background:linear-gradient(to right,
+        var(--amber) 0%,
+        var(--amber) var(--fill),
+        rgba(255,255,255,.08) var(--fill),
+        rgba(255,255,255,.08) 100%);
+      border:1px solid rgba(0,0,0,.55);
+      box-shadow:inset 0 1px 2px rgba(0,0,0,.55),0 0 6px rgba(251,191,36,.18);
+    }
+    .size-slider::-moz-range-track{
+      height:5px;border-radius:2px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(0,0,0,.55);
+    }
+    .size-slider::-moz-range-progress{
+      height:5px;border-radius:2px;
+      background:var(--amber);
+      box-shadow:0 0 6px rgba(251,191,36,.5);
+    }
+    .size-slider::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      width:5px;height:17px;
+      background:linear-gradient(180deg,#fff 0%,#fbbf24 45%,#d97706 100%);
+      border-radius:1.5px;
+      margin-top:-7px;
+      border:1px solid #fff;
+      box-shadow:0 0 4px var(--amber),0 0 12px rgba(251,191,36,.55);
+    }
+    .size-slider::-moz-range-thumb{
+      width:5px;height:17px;
+      background:linear-gradient(180deg,#fff 0%,#fbbf24 45%,#d97706 100%);
+      border-radius:1.5px;
+      border:1px solid #fff;
+      box-shadow:0 0 4px var(--amber);
+    }
+    .size-readout{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      font-size:11px;font-weight:800;
+      color:var(--amber);
+      font-variant-numeric:tabular-nums;
+      letter-spacing:.06em;
+      text-shadow:0 0 6px rgba(251,191,36,.5);
+      padding:4px 8px;
+      background:rgba(0,0,0,.45);
+      border:1px solid rgba(251,191,36,.22);
+      border-radius:4px;
+      box-shadow:inset 0 1px 0 rgba(251,191,36,.05);
+      min-width:52px;text-align:center;
+    }
+    .size-readout .unit{font-size:8px;color:var(--muted);font-weight:700;letter-spacing:.15em;margin-left:2px;}
+
+    .coming-soon-pane{display:flex;align-items:center;gap:14px;padding:4px 0;width:100%;}
+    .coming-icon{width:32px;height:32px;border-radius:8px;background:rgba(167,139,250,.18);border:1px solid rgba(167,139,250,.3);display:flex;align-items:center;justify-content:center;color:var(--purple);flex-shrink:0;}
+    .coming-icon svg{width:16px;height:16px;}
+    .coming-title{font-size:13px;font-weight:700;color:#f1f5f9;}
+    .coming-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+    .coming-chips{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap;}
+    .coming-chip{font-size:10px;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.22);color:#c4b5fd;white-space:nowrap;}
+
+    /* VIDEO AREA */
+    .video-area{flex:1;display:flex;flex-direction:column;background:#000;position:relative;overflow:hidden;}
+    .video-wrap{flex:1;position:relative;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+    .video-stage{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%;transition:transform 200ms ease-out;transform-origin:center center;}
+    #athleteVideo{max-width:100%;max-height:100%;display:block;}
+    #annotationCanvas{position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:5;}
+
+    /* TIMER OVERLAY */
+    .timer-overlay{position:absolute;top:14px;left:14px;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);border:1px solid rgba(251,191,36,.35);border-radius:10px;padding:10px 14px;display:none;flex-direction:column;gap:4px;z-index:8;min-width:140px;}
+    .timer-overlay.active{display:flex;}
+    .timer-overlay-label{font-size:9px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.14em;}
+    .timer-overlay-time{font-size:26px;font-weight:800;color:#f9fafb;font-variant-numeric:tabular-nums;letter-spacing:.02em;}
+    .timer-overlay-splits{display:flex;flex-direction:column;gap:2px;margin-top:4px;max-height:96px;overflow-y:auto;}
+    .timer-split-row{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;justify-content:space-between;gap:12px;}
+    .timer-split-row strong{color:#e2e8f0;font-weight:600;}
+
+    /* FROZEN INDICATOR */
+    .frozen-badge{position:absolute;top:14px;right:14px;background:rgba(96,165,250,.18);border:1px solid rgba(96,165,250,.4);border-radius:6px;padding:5px 12px;font-size:10px;font-weight:700;color:#93c5fd;text-transform:uppercase;letter-spacing:.14em;display:none;z-index:8;}
+    .frozen-badge.active{display:block;}
+
+    /* NO VIDEO */
+    .no-video{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);text-align:center;padding:20px;}
+    .no-video svg{margin-bottom:12px;opacity:.4;}
+
+    /* TRANSPORT */
+    .transport{background:rgba(6,15,38,.95);border-top:1px solid var(--border);padding:9px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .ctrl-btn{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;transition:all var(--tr);flex-shrink:0;}
+    .ctrl-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
+    .ctrl-btn.active{background:rgba(96,165,250,.18);border-color:rgba(96,165,250,.4);color:#93c5fd;}
+    .ctrl-btn svg{width:15px;height:15px;}
+    .timeline{flex:1;height:5px;background:rgba(255,255,255,.1);border-radius:3px;cursor:pointer;position:relative;}
+    .timeline-fill{height:100%;background:var(--amber);border-radius:3px;pointer-events:none;}
+    .timeline-knob{position:absolute;top:50%;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 4px rgba(251,191,36,.18);pointer-events:none;}
+    .time-display{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
+    .speed-select{background:rgba(15,23,42,.9);border:1px solid var(--border);color:#e2e8f0;font-size:11px;font-weight:600;border-radius:6px;padding:5px 8px;font-family:inherit;}
+    .zoom-wrap,.vol-wrap{display:flex;align-items:center;gap:5px;}
+    .zoom-wrap svg,.vol-wrap svg{width:13px;height:13px;color:var(--muted);}
+    .mini-slider{width:60px;accent-color:var(--amber);cursor:pointer;}
+    .zoom-pct{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:30px;}
+
+    /* VOICE PANE — list of clips */
+    .voice-clips-row{display:flex;align-items:center;gap:6px;overflow-x:auto;flex:1;}
+    .voice-clip-mini{display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid var(--border);font-size:11px;color:#e2e8f0;flex-shrink:0;}
+    .voice-clip-mini button{background:transparent;border:none;color:var(--amber);display:flex;align-items:center;}
+    .voice-clip-mini svg{width:12px;height:12px;}
+    .voice-clip-mini .del{color:rgba(148,163,184,.5);}
+    .voice-clip-mini .del:hover{color:#f87171;}
+    .rec-timer{font-size:14px;font-weight:700;color:#f9fafb;font-variant-numeric:tabular-nums;min-width:46px;}
+    .rec-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:#f87171;font-size:12px;font-weight:700;flex-shrink:0;}
+    .rec-btn.recording{background:rgba(239,68,68,.22);border-color:#ef4444;}
+    .rec-btn svg{width:13px;height:13px;}
+
+    /* TIMER PANE controls */
+    .timer-controls{display:flex;align-items:center;gap:8px;flex:1;}
+    .timer-big-display{font-size:18px;font-weight:800;color:var(--amber);font-variant-numeric:tabular-nums;min-width:90px;}
+    .interval-input{width:54px;padding:5px 7px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:#e2e8f0;font-size:11px;text-align:center;font-family:inherit;}
+    .interval-input::-webkit-outer-spin-button,.interval-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+
+    /* SEND REVIEW MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,.78);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+    .modal-overlay.open{display:flex;animation:fadeIn 180ms ease-out;}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    .modal-box{width:560px;max-width:100%;max-height:92vh;background:var(--bg2);border:1px solid var(--border2);border-radius:18px;display:flex;flex-direction:column;overflow:hidden;}
+    .modal-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .modal-title{font-size:17px;font-weight:800;color:#f9fafb;}
+    .modal-close{width:30px;height:30px;border-radius:8px;background:transparent;border:none;color:var(--muted);display:flex;align-items:center;justify-content:center;}
+    .modal-close:hover{background:rgba(255,255,255,.06);color:#fff;}
+    .modal-close svg{width:16px;height:16px;}
+    .modal-body{padding:18px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+    .fb-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+    .fb-input{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:#f1f5f9;font-size:13px;font-family:inherit;outline:none;transition:border-color var(--tr);resize:vertical;}
+    .fb-input:focus{border-color:rgba(251,191,36,.4);}
+    .fb-input::placeholder{color:rgba(148,163,184,.4);}
+    .attach-summary{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:11px 14px;}
+    .attach-row{display:flex;align-items:center;gap:10px;font-size:12px;color:#e2e8f0;padding:3px 0;}
+    .attach-row .ic{width:22px;height:22px;border-radius:6px;background:rgba(251,191,36,.12);color:var(--amber);display:flex;align-items:center;justify-content:center;}
+    .attach-row .ic svg{width:12px;height:12px;}
+    .attach-row .cnt{font-weight:700;color:#fbbf24;font-variant-numeric:tabular-nums;}
+    .modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+    .btn-ghost{padding:9px 18px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:600;font-family:inherit;}
+    .btn-ghost:hover{color:#fff;border-color:var(--border2);}
+    .btn-primary{padding:9px 22px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--amber2),var(--amber3));color:#fff;font-size:12px;font-weight:700;font-family:inherit;display:flex;align-items:center;gap:6px;}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(180,83,9,.35);}
+    .btn-primary svg{width:13px;height:13px;}
+
+    /* TEXT-INPUT FLOAT (for text annotation) */
+    .text-input-float{position:absolute;background:rgba(0,0,0,.85);border:1px solid var(--amber);border-radius:6px;padding:4px 8px;color:#fff;font-size:14px;font-family:inherit;outline:none;z-index:12;min-width:120px;}
+
+    @media (max-width:760px){
+      .mode-tab{padding:10px 12px;font-size:12px;}
+      .header-meta,.size-row,.zoom-wrap,.vol-wrap{display:none;}
+      .ctrl-btn{width:30px;height:30px;}
+      .tool-row{padding:6px 10px;}
+      .modal-box{width:100%;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn" onclick="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
+    <div class="header-info">
+      <div class="header-athlete" id="headerAthlete">Loading...</div>
+      <div class="header-meta" id="headerMeta">Video Review</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="rec-indicator" id="recIndicator"><div class="rec-dot"></div> Recording</div>
+    <button class="btn-send" id="sendBtn" onclick="openSendModal()" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Send Review
+    </button>
+  </div>
+</div>
+
+<!-- MODE TABS -->
+<div class="mode-tabs">
+  <button class="mode-tab active" data-mode="annotate" onclick="setMode('annotate')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+    Annotate
+  </button>
+  <button class="mode-tab" data-mode="compare" onclick="setMode('compare')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="7" height="14" rx="1"/><rect x="14" y="5" width="7" height="14" rx="1"/></svg>
+    Compare<span class="pill">Soon</span>
+  </button>
+  <button class="mode-tab" data-mode="ai" onclick="setMode('ai')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+    AI<span class="pill">Beta</span>
+  </button>
+  <button class="mode-tab" data-mode="voice" onclick="setMode('voice')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+    Voice
+  </button>
+  <button class="mode-tab" data-mode="time" onclick="setMode('time')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Time
+  </button>
+</div>
+
+<!-- TOOL ROW (one pane per mode) -->
+<div class="tool-row">
+
+  <!-- ANNOTATE -->
+  <div class="tool-pane active" id="pane-annotate">
+    <button class="tool-btn active" data-tool="pen" onclick="setTool('pen')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>Pen
+    </button>
+    <button class="tool-btn" data-tool="arrow" onclick="setTool('arrow')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>Arrow
+    </button>
+    <button class="tool-btn" data-tool="line" onclick="setTool('line')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="19" x2="19" y2="5"/></svg>Line
+    </button>
+    <button class="tool-btn" data-tool="circle" onclick="setTool('circle')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Circle
+    </button>
+    <button class="tool-btn" data-tool="box" onclick="setTool('box')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="14" rx="1"/></svg>Box
+    </button>
+    <button class="tool-btn" data-tool="angle" onclick="setTool('angle')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M3 20L17 6"/><path d="M11 20a8 8 0 008-8" stroke-dasharray="2 2"/></svg>Angle
+    </button>
+    <button class="tool-btn" data-tool="ruler" onclick="setTool('ruler')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l4 4 4-4 4 4 4-4 4 4-1 1L4 9z"/><path d="M20 13l-1 8H4l1-8"/></svg>Ruler
+    </button>
+    <button class="tool-btn" data-tool="text" onclick="setTool('text')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>Text
+    </button>
+    <button class="tool-btn" data-tool="highlight" onclick="setTool('highlight')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-3 3v3h3l3-3"/><path d="M22 4l-7 7-4-4 7-7z"/></svg>Highlight
+    </button>
+    <div class="divider"></div>
+    <div class="colour-strip">
+      <span class="strip-bracket"></span>
+      <div class="colour-dot active" style="--c:#ef4444;background:#ef4444;" onclick="setColour('#ef4444',this)"></div>
+      <div class="colour-dot" style="--c:#fbbf24;background:#fbbf24;" onclick="setColour('#fbbf24',this)"></div>
+      <div class="colour-dot" style="--c:#34d399;background:#34d399;" onclick="setColour('#34d399',this)"></div>
+      <div class="colour-dot" style="--c:#60a5fa;background:#60a5fa;" onclick="setColour('#60a5fa',this)"></div>
+      <div class="colour-dot" style="--c:#a78bfa;background:#a78bfa;" onclick="setColour('#a78bfa',this)"></div>
+      <div class="colour-dot" style="--c:#f9fafb;background:#f9fafb;" onclick="setColour('#f9fafb',this)"></div>
+      <span class="strip-bracket"></span>
+    </div>
+    <div class="divider"></div>
+    <div class="size-row">
+      <span class="size-label">Size</span>
+      <input type="range" class="size-slider" id="strokeSize" min="1" max="14" value="3"/>
+      <div class="size-readout" id="sizeReadout">03<span class="unit">PX</span></div>
+    </div>
+    <div class="divider"></div>
+    <button class="tool-btn" onclick="undoDraw()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>Undo
+    </button>
+    <button class="tool-btn" onclick="clearCanvas()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>Clear
+    </button>
+  </div>
+
+  <!-- COMPARE (coming soon) -->
+  <div class="tool-pane" id="pane-compare">
+    <div class="coming-soon-pane">
+      <div class="coming-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="7" height="14" rx="1"/><rect x="14" y="5" width="7" height="14" rx="1"/></svg></div>
+      <div>
+        <div class="coming-title">Side-by-side compare — coming soon</div>
+        <div class="coming-sub">Sync two clips frame-by-frame to spot the difference.</div>
+      </div>
+      <div class="coming-chips">
+        <div class="coming-chip">vs. Pro reference</div>
+        <div class="coming-chip">vs. Past clip</div>
+        <div class="coming-chip">Overlay mode</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI -->
+  <div class="tool-pane" id="pane-ai">
+    <button class="tool-btn" id="aiEnableBtn" onclick="toggleAI()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v6M6 11l6 2 6-2M12 13v5M9 22l3-4 3 4"/></svg>
+      Skeleton
+    </button>
+    <button class="tool-btn active" id="aiAnglesBtn" onclick="toggleAngles()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M3 20L17 6"/><path d="M11 20a8 8 0 008-8" stroke-dasharray="2 2"/></svg>
+      Angles
+    </button>
+    <button class="tool-btn" id="aiCaptureBtn" onclick="captureAIFrame()" title="Bake skeleton into annotations">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
+      Capture
+    </button>
+    <div class="divider"></div>
+    <span style="font-size:11px;color:var(--muted);">Model:</span>
+    <select class="speed-select" id="aiModelSelect">
+      <option value="lite">Lite (~3MB)</option>
+      <option value="full">Full (~6MB)</option>
+    </select>
+    <div class="divider"></div>
+    <span id="aiStatus" style="font-size:11px;color:var(--muted);">Click Skeleton to load model</span>
+    <div style="flex:1;"></div>
+    <span id="aiFps" style="font-size:10px;color:var(--muted2);font-variant-numeric:tabular-nums;"></span>
+  </div>
+
+  <!-- VOICE -->
+  <div class="tool-pane" id="pane-voice">
+    <button class="rec-btn" id="recBtn" onclick="toggleVoiceRecord()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      <span id="recBtnLabel">Record</span>
+    </button>
+    <div class="rec-timer" id="recTimer">0:00</div>
+    <div class="divider"></div>
+    <div class="voice-clips-row" id="voiceClipsRow">
+      <span style="font-size:11px;color:var(--muted2);">No voice clips yet. Hit Record while the video plays.</span>
+    </div>
+  </div>
+
+  <!-- TIMER -->
+  <div class="tool-pane" id="pane-time">
+    <div class="timer-controls">
+      <div class="timer-big-display" id="timerBigDisplay">0:00.00</div>
+      <button class="tool-btn" onclick="timerStartStop()" id="timerStartBtn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start
+      </button>
+      <button class="tool-btn" onclick="timerLap()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 109-9"/><polyline points="3 3 3 12 12 12"/></svg>Split
+      </button>
+      <button class="tool-btn" onclick="timerReset()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>Reset
+      </button>
+      <div class="divider"></div>
+      <span style="font-size:11px;color:var(--muted);">Interval:</span>
+      <input class="interval-input" type="number" id="intervalSec" min="1" max="600" placeholder="—" value=""/>
+      <span style="font-size:11px;color:var(--muted);">sec</span>
+      <button class="tool-btn" onclick="toggleInterval()" id="intervalBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Interval
+      </button>
+      <div class="divider"></div>
+      <button class="tool-btn" onclick="toggleTimerOverlay()" id="timerOverlayBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>Show on video
+      </button>
+    </div>
+  </div>
+
+</div><!-- end tool-row -->
+
+<!-- VIDEO -->
+<div class="video-area">
+  <div class="video-wrap" id="videoWrap">
+    <div class="video-stage" id="videoStage">
+      <video id="athleteVideo" preload="metadata" crossorigin="anonymous"></video>
+      <canvas id="aiSkeletonCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:4;"></canvas>
+      <canvas id="annotationCanvas"></canvas>
+    </div>
+
+    <!-- Timer overlay (toggleable) -->
+    <div class="timer-overlay" id="timerOverlay">
+      <div class="timer-overlay-label">Stopwatch</div>
+      <div class="timer-overlay-time" id="timerOverlayTime">0:00.00</div>
+      <div class="timer-overlay-splits" id="timerOverlaySplits"></div>
+    </div>
+
+    <!-- Frozen indicator -->
+    <div class="frozen-badge" id="frozenBadge">⏸ Frozen</div>
+
+    <!-- Empty state — replaced by init() once the submission row resolves -->
+    <div class="no-video" id="noVideoMsg">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+      <div style="font-size:15px;font-weight:600;margin-bottom:4px;">Loading video…</div>
+      <div style="font-size:12px;opacity:.6;">Fetching the submission and connecting the player.</div>
+    </div>
+  </div>
+
+  <!-- TRANSPORT -->
+  <div class="transport" id="transport" style="display:none;">
+    <button class="ctrl-btn" id="playBtn" onclick="togglePlay()" title="Play / Pause (Space)">
+      <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </button>
+    <button class="ctrl-btn" onclick="seekRelative(-5)" title="Back 5s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+    </button>
+    <button class="ctrl-btn" onclick="frameStep(-1)" title="Frame back (←)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="ctrl-btn" onclick="frameStep(1)" title="Frame forward (→)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <button class="ctrl-btn" onclick="seekRelative(5)" title="Forward 5s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+    </button>
+    <button class="ctrl-btn" id="freezeBtn" onclick="toggleFreeze()" title="Freeze frame (F)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+
+    <div class="timeline" id="timeline" onclick="seekToClick(event)">
+      <div class="timeline-fill" id="timelineFill" style="width:0%"></div>
+      <div class="timeline-knob" id="timelineKnob" style="left:0%"></div>
+    </div>
+    <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+
+    <select class="speed-select" id="speedSelect" onchange="setSpeed(this.value)" title="Playback speed">
+      <option value="0.1">0.1x</option>
+      <option value="0.25">0.25x</option>
+      <option value="0.5">0.5x</option>
+      <option value="0.75">0.75x</option>
+      <option value="1" selected>1x</option>
+      <option value="1.5">1.5x</option>
+      <option value="2">2x</option>
+    </select>
+
+    <div class="zoom-wrap" title="Zoom">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+      <input type="range" class="mini-slider" id="zoomSlider" min="1" max="4" step="0.1" value="1" oninput="setZoom(this.value)"/>
+      <span class="zoom-pct" id="zoomPct">100%</span>
+    </div>
+
+    <div class="vol-wrap" title="Volume">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
+      <input type="range" class="mini-slider" min="0" max="1" step="0.1" value="1" oninput="setVolume(this.value)"/>
+    </div>
+
+    <button class="ctrl-btn" onclick="toggleFullscreen()" title="Fullscreen (F11)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- SEND REVIEW MODAL -->
+<div class="modal-overlay" id="sendModal" onclick="if(event.target===this)closeSendModal()">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title">Send Review</div>
+      <button class="modal-close" onclick="closeSendModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="attach-summary" id="attachSummary">
+        <div class="attach-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/></svg></div>Annotations on canvas <span class="cnt" id="cntAnnot">0</span></div>
+        <div class="attach-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></div>Voice clips <span class="cnt" id="cntVoice">0</span></div>
+        <div class="attach-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>Timer splits <span class="cnt" id="cntSplits">0</span></div>
+      </div>
+      <div>
+        <div class="fb-label">Written Feedback</div>
+        <textarea class="fb-input" id="fbMain" rows="4" placeholder="What you saw, what's working, what to change..."></textarea>
+      </div>
+      <div>
+        <div class="fb-label">Key Takeaways</div>
+        <textarea class="fb-input" id="fbTakeaways" rows="2" placeholder="2–3 key points for the athlete to remember..."></textarea>
+      </div>
+      <div>
+        <div class="fb-label">Drill Recommendations</div>
+        <textarea class="fb-input" id="fbDrills" rows="2" placeholder="Drills to practice before next submission..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeSendModal()">Cancel</button>
+      <button class="btn-primary" id="modalSendBtn" onclick="sendFeedback()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Send to Athlete
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── STATE ──
+  let currentUser = null;
+  let submission = null;
+  let currentMode = "annotate";
+  let currentTool = "pen";
+  let currentColour = "#ef4444";
+  let strokeSize = 3;
+  let drawHistory = [];
+  let isDrawing = false;
+  let startX = 0, startY = 0;
+  let snapshot = null;
+  let anglePts = [];
+  let voiceRecorder = null, voiceChunks = [];
+  let isRecording = false;
+  let recTimerInterval = null, recSeconds = 0;
+  let voiceBlobs = [];
+  let zoomLevel = 1;
+  let isFrozen = false;
+
+  // Timer state
+  let timerRunning = false;
+  let timerStart = 0;
+  let timerElapsed = 0;
+  let timerInterval = null;
+  let timerSplits = [];
+  let intervalRunning = false;
+  let intervalInterval = null;
+  let intervalElapsed = 0;
+
+  const video = document.getElementById("athleteVideo");
+  const canvas = document.getElementById("annotationCanvas");
+  const ctx = canvas.getContext("2d");
+
+  // ── INIT ──
+  function goBack(){
+    // Always go straight to the coach dashboard. history.back() was unreliable
+    // when the back stack didn't include the dashboard, or when the page had
+    // been reloaded.
+    window.location.href = "coach-dashboard.html";
+  }
+
+  async function init(){
+    const {data:{session}} = await supabase.auth.getSession();
+    if(!session){window.location.href="login.html";return;}
+    currentUser = session.user;
+
+    const params = new URLSearchParams(window.location.search);
+    const subId = params.get("sub") || params.get("id");
+    if(!subId){
+      console.warn("[video-review] No 'sub' or 'id' query param; redirecting back.");
+      window.location.href="coach-dashboard.html";
+      return;
+    }
+
+    // Step 1 — fetch the submission row WITHOUT an embed. Embeds can silently
+    // mangle the response if the FK constraint name differs or if profiles' RLS
+    // affects the join. maybeSingle() returns {data:null} for 0 rows rather
+    // than throwing, so we can surface a useful message instead of redirecting.
+    const {data:sub, error: subErr} = await supabase
+      .from("submissions")
+      .select("*")
+      .eq("id", subId)
+      .maybeSingle();
+
+    console.log("[video-review] subId =", subId,
+                "| row found =", !!sub,
+                "| video_url =", sub?.video_url || "(empty)",
+                "| status =", sub?.status,
+                "| error =", subErr?.message || "none");
+    // Full diagnostic dump — every column that came back, in case video_url is
+    // present under a different key, has whitespace, or another field hints at
+    // an upload that half-completed.
+    if(sub){
+      console.log("[video-review] full submission row:", sub);
+      console.log("[video-review] keys present:", Object.keys(sub));
+      console.log("[video-review] video_url type/length:",
+                  typeof sub.video_url,
+                  sub.video_url == null ? "(null)" : `len=${String(sub.video_url).length}`);
+    }
+
+    if(subErr){
+      alert("Couldn't load this submission.\n\n" + subErr.message);
+      window.location.href = "coach-dashboard.html";
+      return;
+    }
+    if(!sub){
+      alert("Submission " + subId + " not found (or RLS hides it from you).");
+      window.location.href = "coach-dashboard.html";
+      return;
+    }
+    submission = sub;
+
+    // Step 2 — fetch the athlete's profile separately. If RLS hides it we just
+    // render with a generic "Athlete" label — never blocks the video from loading.
+    let athlete = null;
+    if(sub.athlete_id){
+      const {data: prof} = await supabase
+        .from("profiles")
+        .select("first_name,last_name,sport")
+        .eq("id", sub.athlete_id)
+        .maybeSingle();
+      athlete = prof;
+    }
+    const name = athlete ? ((athlete.first_name||"") + " " + (athlete.last_name||"")).trim() : "Athlete";
+    document.getElementById("headerAthlete").textContent = name || "Athlete";
+    document.getElementById("headerMeta").textContent = (athlete?.sport || "Sport") + " · " + (sub.skill_category || "Video submission");
+
+    // Step 3 — load the video.
+    if(sub.video_url){
+      // 1) Format check — most desktop browsers can't play .MOV (QuickTime) natively.
+      //    Bail with a clear message instead of showing a broken player.
+      if(/\.mov(\?|$)/i.test(sub.video_url)){
+        document.getElementById("noVideoMsg").style.display = "flex";
+        document.getElementById("noVideoMsg").innerHTML =
+          '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>' +
+          '<div style="font-size:15px;font-weight:600;margin:12px 0 4px;">QuickTime (.MOV) isn\'t playable in browsers</div>' +
+          '<div style="font-size:12px;opacity:.75;max-width:420px;text-align:center;">Chrome, Firefox and Edge can\'t play .MOV files in a web video player. Ask the athlete to re-export as <strong style="color:var(--amber);">MP4 (H.264)</strong> and re-upload.<br><br>iPhone tip: <em>Settings → Camera → Formats → "Most Compatible"</em> records new clips in MP4 next time.</div>';
+        document.getElementById("sendBtn").disabled = false;
+        return;
+      }
+      // 2) Normalize the URL — if it's double-encoded (literal "%25xx"), decode
+      //    one layer. Otherwise leave it; the browser handles encoding on the wire.
+      const cleanUrl = /%25[0-9A-Fa-f]{2}/.test(sub.video_url)
+        ? decodeURIComponent(sub.video_url)
+        : sub.video_url;
+      console.log("[video-review] setting video.src =", cleanUrl);
+      video.src = cleanUrl;
+      document.getElementById("noVideoMsg").style.display = "none";
+      document.getElementById("transport").style.display = "flex";
+      video.addEventListener("loadedmetadata", resizeCanvas);
+      video.addEventListener("timeupdate", updateTimeline);
+      // Surface playback failures (CORS, 404, format issues) instead of leaving a black box.
+      video.addEventListener("error", () => {
+        console.warn("[video-review] <video> failed to load:", sub.video_url,
+          "| readyState=", video.readyState,
+          "| networkState=", video.networkState,
+          "| error code=", video.error?.code);
+        document.getElementById("noVideoMsg").style.display = "flex";
+        document.getElementById("noVideoMsg").innerHTML =
+          '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>' +
+          '<div style="font-size:15px;font-weight:600;margin:12px 0 4px;">Couldn\'t play this video</div>' +
+          '<div style="font-size:12px;opacity:.75;max-width:420px;text-align:center;">Error code <strong>' + (video.error?.code || "?") + '</strong>. Likely causes: the file isn\'t MP4/WebM, the file was deleted from Storage, or CORS isn\'t allowed for this origin.<br><br>URL: <code style="font-size:11px;word-break:break-all;">' + sub.video_url + '</code></div>';
+      });
+    } else {
+      // The row exists but has no video_url. Tell the coach exactly what happened
+      // instead of just "No video attached" — they need to know the data is empty,
+      // not that the page is broken.
+      document.getElementById("noVideoMsg").innerHTML =
+        '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>' +
+        '<div style="font-size:15px;font-weight:600;margin:12px 0 4px;">This submission has no video file</div>' +
+        '<div style="font-size:12px;opacity:.7;max-width:380px;text-align:center;">The row exists in <code>submissions</code> but its <code>video_url</code> field is empty. Most likely the athlete\'s upload failed mid-way — ask them to re-upload, or check the row in Supabase Table Editor.</div>';
+    }
+
+    await supabase.from("submissions").update({status:"in_review"}).eq("id",subId);
+
+    if(sub.notes){document.getElementById("fbMain").value = "Athlete notes: "+sub.notes+"\n\n";}
+
+    document.getElementById("sendBtn").disabled = false;
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+  }
+
+  // ── MODE SWITCHING ──
+  function setMode(mode){
+    currentMode = mode;
+    document.querySelectorAll(".mode-tab").forEach(t=>t.classList.toggle("active",t.dataset.mode===mode));
+    document.querySelectorAll(".tool-pane").forEach(p=>p.classList.remove("active"));
+    document.getElementById("pane-"+mode).classList.add("active");
+    // Hide annotation canvas in non-annotate modes? Keep it visible so existing drawings stay.
+    canvas.style.pointerEvents = (mode==="annotate") ? "auto" : "none";
+    canvas.style.cursor = (mode==="annotate") ? toolCursor(currentTool) : "default";
+  }
+
+  function toolCursor(t){
+    if(t==="text") return "text";
+    return "crosshair";
+  }
+
+  // ── CANVAS ──
+  function resizeCanvas(){
+    const wrap = document.getElementById("videoWrap");
+    canvas.width = wrap.clientWidth;
+    canvas.height = wrap.clientHeight;
+    const ai = document.getElementById("aiSkeletonCanvas");
+    if(ai){ai.width = wrap.clientWidth; ai.height = wrap.clientHeight;}
+    // re-paint last history if present
+    if(drawHistory.length){
+      ctx.putImageData(drawHistory[drawHistory.length-1], 0, 0);
+    }
+  }
+
+  function commitState(){
+    drawHistory.push(ctx.getImageData(0,0,canvas.width,canvas.height));
+    if(drawHistory.length>40) drawHistory.shift();
+  }
+
+  function canvasPoint(e){
+    const r = canvas.getBoundingClientRect();
+    const x = (e.touches?e.touches[0].clientX:e.clientX) - r.left;
+    const y = (e.touches?e.touches[0].clientY:e.clientY) - r.top;
+    return {x,y};
+  }
+
+  canvas.addEventListener("mousedown", onPointerDown);
+  canvas.addEventListener("mousemove", onPointerMove);
+  canvas.addEventListener("mouseup", onPointerUp);
+  canvas.addEventListener("mouseleave", onPointerUp);
+  canvas.addEventListener("touchstart", e=>{e.preventDefault();onPointerDown(e);},{passive:false});
+  canvas.addEventListener("touchmove",  e=>{e.preventDefault();onPointerMove(e);},{passive:false});
+  canvas.addEventListener("touchend",   onPointerUp);
+  canvas.addEventListener("click", onCanvasClick);
+
+  function onCanvasClick(e){
+    if(currentMode!=="annotate") return;
+    if(currentTool==="text"){
+      const {x,y} = canvasPoint(e);
+      promptText(x,y);
+    } else if(currentTool==="angle"){
+      const {x,y} = canvasPoint(e);
+      anglePts.push({x,y});
+      // dot marker for in-progress
+      ctx.save();
+      ctx.fillStyle = currentColour;
+      ctx.beginPath();
+      ctx.arc(x,y,4,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+      if(anglePts.length===3){
+        const [a,b,c] = anglePts;
+        drawAngle(a,b,c);
+        anglePts = [];
+        commitState();
+      }
+    }
+  }
+
+  function promptText(x,y){
+    const input = document.createElement("input");
+    input.className = "text-input-float";
+    input.placeholder = "Type and press Enter";
+    input.style.left = x+"px";
+    input.style.top = y+"px";
+    input.style.color = currentColour;
+    document.getElementById("videoWrap").appendChild(input);
+    input.focus();
+    const commit = ()=>{
+      const txt = input.value.trim();
+      input.remove();
+      if(!txt) return;
+      ctx.save();
+      ctx.fillStyle = currentColour;
+      ctx.font = (10+strokeSize*2)+"px system-ui, sans-serif";
+      ctx.fillText(txt, x, y);
+      ctx.restore();
+      commitState();
+    };
+    input.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();commit();}else if(e.key==="Escape"){input.remove();}});
+    input.addEventListener("blur", commit);
+  }
+
+  function onPointerDown(e){
+    if(currentMode!=="annotate") return;
+    if(currentTool==="text" || currentTool==="angle") return; // click-based
+    const {x,y} = canvasPoint(e);
+    isDrawing = true;
+    startX = x; startY = y;
+    snapshot = ctx.getImageData(0,0,canvas.width,canvas.height);
+    if(currentTool==="pen"||currentTool==="eraser"){
+      ctx.beginPath();
+      ctx.moveTo(x,y);
+    }
+  }
+
+  function onPointerMove(e){
+    if(!isDrawing) return;
+    const {x,y} = canvasPoint(e);
+    ctx.lineWidth = currentTool==="highlight" ? strokeSize*5 : strokeSize;
+    ctx.strokeStyle = currentColour;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.globalAlpha = currentTool==="highlight" ? 0.35 : 1;
+
+    if(currentTool==="pen"){
+      ctx.lineTo(x,y);
+      ctx.stroke();
+    } else if(currentTool==="eraser"){
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.lineTo(x,y);
+      ctx.stroke();
+      ctx.globalCompositeOperation = "source-over";
+    } else {
+      ctx.putImageData(snapshot,0,0);
+      ctx.globalAlpha = currentTool==="highlight" ? 0.35 : 1;
+      ctx.beginPath();
+      if(currentTool==="line"){
+        ctx.moveTo(startX,startY); ctx.lineTo(x,y); ctx.stroke();
+      } else if(currentTool==="arrow"){
+        drawArrow(startX,startY,x,y);
+      } else if(currentTool==="circle"){
+        const r = Math.hypot(x-startX, y-startY);
+        ctx.arc(startX,startY,r,0,Math.PI*2); ctx.stroke();
+      } else if(currentTool==="box"){
+        ctx.strokeRect(Math.min(startX,x), Math.min(startY,y), Math.abs(x-startX), Math.abs(y-startY));
+      } else if(currentTool==="ruler"){
+        drawRuler(startX,startY,x,y);
+      } else if(currentTool==="highlight"){
+        ctx.fillStyle = currentColour;
+        ctx.fillRect(Math.min(startX,x), Math.min(startY,y), Math.abs(x-startX), Math.abs(y-startY));
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function onPointerUp(){
+    if(!isDrawing) return;
+    isDrawing = false;
+    commitState();
+  }
+
+  function drawArrow(x1,y1,x2,y2){
+    const headLen = Math.max(10, strokeSize*4);
+    const angle = Math.atan2(y2-y1, x2-x1);
+    ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-headLen*Math.cos(angle-Math.PI/6), y2-headLen*Math.sin(angle-Math.PI/6));
+    ctx.lineTo(x2-headLen*Math.cos(angle+Math.PI/6), y2-headLen*Math.sin(angle+Math.PI/6));
+    ctx.closePath();
+    ctx.fillStyle = currentColour;
+    ctx.fill();
+  }
+
+  function drawRuler(x1,y1,x2,y2){
+    ctx.lineWidth = strokeSize;
+    ctx.strokeStyle = currentColour;
+    ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    // perpendicular end-ticks
+    const a = Math.atan2(y2-y1, x2-x1);
+    const tick = 8;
+    [[x1,y1],[x2,y2]].forEach(([px,py])=>{
+      ctx.beginPath();
+      ctx.moveTo(px+tick*Math.cos(a+Math.PI/2), py+tick*Math.sin(a+Math.PI/2));
+      ctx.lineTo(px-tick*Math.cos(a+Math.PI/2), py-tick*Math.sin(a+Math.PI/2));
+      ctx.stroke();
+    });
+    // length label (% of width)
+    const dist = Math.hypot(x2-x1, y2-y1);
+    const pct = ((dist/canvas.width)*100).toFixed(1);
+    const mx = (x1+x2)/2, my = (y1+y2)/2;
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.75)";
+    ctx.fillRect(mx-22, my-22, 44, 18);
+    ctx.fillStyle = currentColour;
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(pct+"%", mx, my-9);
+    ctx.restore();
+  }
+
+  function drawAngle(a,b,c){
+    // restore canvas (clear in-progress dots)
+    ctx.putImageData(drawHistory.length?drawHistory[drawHistory.length-1]:ctx.createImageData(canvas.width,canvas.height), 0, 0);
+    ctx.save();
+    ctx.lineWidth = strokeSize;
+    ctx.strokeStyle = currentColour;
+    ctx.lineCap = "round";
+    // two lines from vertex
+    ctx.beginPath();
+    ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.lineTo(c.x,c.y);
+    ctx.stroke();
+    // compute angle
+    const v1 = {x:a.x-b.x, y:a.y-b.y};
+    const v2 = {x:c.x-b.x, y:c.y-b.y};
+    const dot = v1.x*v2.x + v1.y*v2.y;
+    const m1 = Math.hypot(v1.x,v1.y), m2 = Math.hypot(v2.x,v2.y);
+    const deg = (Math.acos(Math.min(1,Math.max(-1,dot/(m1*m2)))) * 180/Math.PI).toFixed(0);
+    // arc near vertex
+    const ang1 = Math.atan2(a.y-b.y, a.x-b.x);
+    const ang2 = Math.atan2(c.y-b.y, c.x-b.x);
+    const r = 26;
+    ctx.beginPath();
+    ctx.arc(b.x,b.y,r, Math.min(ang1,ang2), Math.max(ang1,ang2));
+    ctx.stroke();
+    // label
+    const lx = b.x + Math.cos((ang1+ang2)/2)*40;
+    const ly = b.y + Math.sin((ang1+ang2)/2)*40;
+    ctx.fillStyle = "rgba(0,0,0,.78)";
+    ctx.fillRect(lx-20, ly-12, 40, 18);
+    ctx.fillStyle = currentColour;
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(deg+"°", lx, ly+2);
+    ctx.restore();
+  }
+
+  function setTool(t){
+    currentTool = t;
+    anglePts = []; // reset any in-progress angle measurement
+    document.querySelectorAll("#pane-annotate .tool-btn[data-tool]").forEach(b=>b.classList.toggle("active",b.dataset.tool===t));
+    canvas.style.cursor = toolCursor(t);
+  }
+  function setColour(c, el){
+    currentColour = c;
+    document.querySelectorAll(".colour-dot").forEach(d=>d.classList.remove("active"));
+    el.classList.add("active");
+  }
+  function undoDraw(){
+    if(drawHistory.length>1){
+      drawHistory.pop();
+      ctx.putImageData(drawHistory[drawHistory.length-1],0,0);
+    } else {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      drawHistory = [];
+    }
+  }
+  function clearCanvas(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawHistory = [];
+  }
+  const strokeSlider = document.getElementById("strokeSize");
+  function updateStrokeUI(){
+    const v = parseInt(strokeSlider.value);
+    strokeSize = v;
+    const min = parseFloat(strokeSlider.min), max = parseFloat(strokeSlider.max);
+    const pct = ((v - min) / (max - min)) * 100;
+    strokeSlider.style.setProperty("--fill", pct + "%");
+    const r = document.getElementById("sizeReadout");
+    if(r) r.innerHTML = String(v).padStart(2,"0") + '<span class="unit">PX</span>';
+  }
+  strokeSlider.addEventListener("input", updateStrokeUI);
+  updateStrokeUI();
+
+  // ── PLAYBACK ──
+  function togglePlay(){
+    if(isFrozen) toggleFreeze();
+    if(video.paused){video.play();setPlayIcon(true);}
+    else{video.pause();setPlayIcon(false);}
+  }
+  function setPlayIcon(playing){
+    document.getElementById("playIcon").innerHTML = playing
+      ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
+      : '<polygon points="5 3 19 12 5 21 5 3"/>';
+  }
+  function seekRelative(s){
+    if(!video.duration) return;
+    video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime+s));
+  }
+  function frameStep(dir){
+    video.pause();
+    setPlayIcon(false);
+    video.currentTime += dir/30; // assumes ~30fps source; high-fps clips still step proportionally
+  }
+  function setSpeed(v){video.playbackRate = parseFloat(v);}
+  function setVolume(v){video.volume = parseFloat(v);}
+  function setZoom(z){
+    zoomLevel = parseFloat(z);
+    document.getElementById("videoStage").style.transform = `scale(${zoomLevel})`;
+    document.getElementById("zoomPct").textContent = Math.round(zoomLevel*100)+"%";
+  }
+  function toggleFreeze(){
+    isFrozen = !isFrozen;
+    document.getElementById("frozenBadge").classList.toggle("active", isFrozen);
+    document.getElementById("freezeBtn").classList.toggle("active", isFrozen);
+    if(isFrozen){video.pause();setPlayIcon(false);}
+  }
+  function toggleFullscreen(){
+    if(!document.fullscreenElement) document.getElementById("videoWrap").requestFullscreen();
+    else document.exitFullscreen();
+  }
+  function seekToClick(e){
+    const r = e.currentTarget.getBoundingClientRect();
+    const pct = (e.clientX - r.left) / r.width;
+    if(video.duration) video.currentTime = pct * video.duration;
+  }
+  function updateTimeline(){
+    const pct = video.duration ? (video.currentTime/video.duration)*100 : 0;
+    document.getElementById("timelineFill").style.width = pct+"%";
+    document.getElementById("timelineKnob").style.left = pct+"%";
+    document.getElementById("timeDisplay").textContent = formatTime(video.currentTime)+" / "+formatTime(video.duration);
+  }
+  function formatTime(s){
+    if(isNaN(s)||s===Infinity) return "0:00";
+    const m = Math.floor(s/60);
+    const sec = Math.floor(s%60);
+    return m+":"+(sec<10?"0":"")+sec;
+  }
+  function formatStopwatch(ms){
+    const total = Math.max(0, ms);
+    const m = Math.floor(total/60000);
+    const s = Math.floor((total%60000)/1000);
+    const cs = Math.floor((total%1000)/10);
+    return m+":"+(s<10?"0":"")+s+"."+(cs<10?"0":"")+cs;
+  }
+
+  // ── KEYBOARD ──
+  document.addEventListener("keydown",e=>{
+    if(e.target.matches("input,textarea")) return;
+    if(e.key===" "){e.preventDefault();togglePlay();}
+    else if(e.key==="ArrowLeft"){e.preventDefault();frameStep(-1);}
+    else if(e.key==="ArrowRight"){e.preventDefault();frameStep(1);}
+    else if(e.key==="f" || e.key==="F"){toggleFreeze();}
+    else if((e.key==="z"||e.key==="Z") && (e.ctrlKey||e.metaKey)){e.preventDefault();undoDraw();}
+  });
+
+  // ── VOICE ──
+  async function toggleVoiceRecord(){
+    if(isRecording){voiceRecorder.stop();return;}
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      voiceRecorder = new MediaRecorder(stream);
+      voiceChunks = [];
+      voiceRecorder.ondataavailable = e=>voiceChunks.push(e.data);
+      voiceRecorder.onstop = ()=>{
+        const blob = new Blob(voiceChunks, {type:"audio/webm"});
+        voiceBlobs.push({blob, duration:recSeconds, videoTime:video.currentTime||0});
+        renderVoiceClips();
+        stream.getTracks().forEach(t=>t.stop());
+        stopRecTimer();
+        document.getElementById("recBtn").classList.remove("recording");
+        document.getElementById("recBtnLabel").textContent = "Record";
+        document.getElementById("recIndicator").classList.remove("active");
+        isRecording = false;
+      };
+      voiceRecorder.start();
+      isRecording = true;
+      document.getElementById("recBtn").classList.add("recording");
+      document.getElementById("recBtnLabel").textContent = "Stop";
+      document.getElementById("recIndicator").classList.add("active");
+      startRecTimer();
+    }catch(err){
+      alert("Microphone access required. Please allow microphone access in your browser.");
+    }
+  }
+  function startRecTimer(){
+    recSeconds = 0;
+    document.getElementById("recTimer").textContent = "0:00";
+    recTimerInterval = setInterval(()=>{
+      recSeconds++;
+      document.getElementById("recTimer").textContent = formatTime(recSeconds);
+    },1000);
+  }
+  function stopRecTimer(){
+    clearInterval(recTimerInterval);
+    document.getElementById("recTimer").textContent = formatTime(recSeconds);
+  }
+  function renderVoiceClips(){
+    const row = document.getElementById("voiceClipsRow");
+    if(!voiceBlobs.length){row.innerHTML = '<span style="font-size:11px;color:var(--muted2);">No voice clips yet. Hit Record while the video plays.</span>';return;}
+    row.innerHTML = voiceBlobs.map((v,i)=>{
+      const url = URL.createObjectURL(v.blob);
+      return `
+        <div class="voice-clip-mini">
+          <button onclick="playVoice('${url}')" title="Play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
+          <span>@ ${formatTime(v.videoTime)} · ${formatTime(v.duration)}</span>
+          <button class="del" onclick="deleteVoice(${i})" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+        </div>`;
+    }).join("");
+  }
+  function playVoice(url){const a = new Audio(url); a.play();}
+  function deleteVoice(i){voiceBlobs.splice(i,1); renderVoiceClips();}
+
+  // ── TIMER ──
+  function timerTick(){
+    const elapsed = timerElapsed + (timerRunning ? (Date.now()-timerStart) : 0);
+    document.getElementById("timerBigDisplay").textContent = formatStopwatch(elapsed);
+    document.getElementById("timerOverlayTime").textContent = formatStopwatch(elapsed);
+  }
+  function timerStartStop(){
+    if(timerRunning){
+      timerElapsed += Date.now() - timerStart;
+      timerRunning = false;
+      clearInterval(timerInterval);
+      timerInterval = null;
+      document.getElementById("timerStartBtn").innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start';
+    } else {
+      timerStart = Date.now();
+      timerRunning = true;
+      timerInterval = setInterval(timerTick, 33);
+      document.getElementById("timerStartBtn").innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg>Stop';
+    }
+  }
+  function timerLap(){
+    const elapsed = timerElapsed + (timerRunning ? (Date.now()-timerStart) : 0);
+    timerSplits.push(elapsed);
+    renderSplits();
+  }
+  function timerReset(){
+    clearInterval(timerInterval);
+    timerInterval = null;
+    timerRunning = false;
+    timerElapsed = 0;
+    timerSplits = [];
+    document.getElementById("timerStartBtn").innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start';
+    document.getElementById("timerBigDisplay").textContent = "0:00.00";
+    document.getElementById("timerOverlayTime").textContent = "0:00.00";
+    renderSplits();
+  }
+  function renderSplits(){
+    const out = document.getElementById("timerOverlaySplits");
+    if(!timerSplits.length){out.innerHTML = "";return;}
+    out.innerHTML = timerSplits.map((t,i)=>`<div class="timer-split-row"><span>Split ${i+1}</span><strong>${formatStopwatch(t)}</strong></div>`).join("");
+  }
+  function toggleTimerOverlay(){
+    const o = document.getElementById("timerOverlay");
+    o.classList.toggle("active");
+    document.getElementById("timerOverlayBtn").classList.toggle("active");
+  }
+  function toggleInterval(){
+    const inputEl = document.getElementById("intervalSec");
+    const sec = parseInt(inputEl.value);
+    if(intervalRunning){
+      clearInterval(intervalInterval);
+      intervalInterval = null;
+      intervalRunning = false;
+      document.getElementById("intervalBtn").classList.remove("active");
+      return;
+    }
+    if(!sec || sec<1){inputEl.focus();return;}
+    intervalElapsed = 0;
+    intervalRunning = true;
+    document.getElementById("intervalBtn").classList.add("active");
+    intervalInterval = setInterval(()=>{
+      intervalElapsed++;
+      if(intervalElapsed >= sec){
+        // beep using WebAudio
+        try{
+          const ac = new (window.AudioContext||window.webkitAudioContext)();
+          const osc = ac.createOscillator();
+          const gain = ac.createGain();
+          osc.connect(gain); gain.connect(ac.destination);
+          osc.frequency.value = 880;
+          gain.gain.setValueAtTime(0.15, ac.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime+0.3);
+          osc.start(); osc.stop(ac.currentTime+0.3);
+        }catch(_){}
+        intervalElapsed = 0;
+      }
+    },1000);
+  }
+
+  // ── SEND REVIEW MODAL ──
+  function openSendModal(){
+    document.getElementById("cntAnnot").textContent = drawHistory.length;
+    document.getElementById("cntVoice").textContent = voiceBlobs.length;
+    document.getElementById("cntSplits").textContent = timerSplits.length;
+    document.getElementById("sendModal").classList.add("open");
+  }
+  function closeSendModal(){document.getElementById("sendModal").classList.remove("open");}
+
+  const VOICE_BUCKET = "voice-feedback";
+
+  async function uploadVoiceClips(btn){
+    const uploaded = [];
+    for(let i = 0; i < voiceBlobs.length; i++){
+      btn.innerHTML = `Uploading voice ${i+1}/${voiceBlobs.length}...`;
+      const v = voiceBlobs[i];
+      const id = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+"-"+i);
+      const path = `${currentUser.id}/${submission.id}/${id}.webm`;
+      const {error: upErr} = await supabase.storage
+        .from(VOICE_BUCKET)
+        .upload(path, v.blob, {contentType:"audio/webm", upsert:false});
+      if(upErr) throw new Error(upErr.message);
+      const {data: pub} = supabase.storage.from(VOICE_BUCKET).getPublicUrl(path);
+      uploaded.push({
+        url: pub.publicUrl,
+        path: path,
+        video_time: Math.round((v.videoTime||0)*100)/100,
+        duration: v.duration||0
+      });
+    }
+    return uploaded;
+  }
+
+  function resetSendBtn(btn){
+    btn.disabled = false;
+    btn.style.background = "";
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send to Athlete';
+  }
+
+  async function sendFeedback(){
+    const feedback = document.getElementById("fbMain").value.trim();
+    const takeaways = document.getElementById("fbTakeaways").value.trim();
+    const drills = document.getElementById("fbDrills").value.trim();
+
+    const btn = document.getElementById("modalSendBtn");
+    btn.disabled = true;
+    btn.innerHTML = "Preparing...";
+
+    // 1. Upload voice clips first (if any)
+    let voiceClips = [];
+    if(voiceBlobs.length){
+      try{
+        voiceClips = await uploadVoiceClips(btn);
+      }catch(err){
+        alert("Voice clip upload failed.\n\n"+err.message+"\n\nMake sure a public Storage bucket named '"+VOICE_BUCKET+"' exists in your Supabase project.");
+        resetSendBtn(btn);
+        return;
+      }
+    }
+
+    btn.innerHTML = "Saving review...";
+
+    const splitNote = timerSplits.length ? `${timerSplits.length} timer split(s) captured.` : "";
+    const annotNote = drawHistory.length ? `${drawHistory.length} annotation step(s) on canvas.` : "";
+    const voiceNote = voiceClips.length ? `${voiceClips.length} voice clip(s) attached.` : "";
+    const meta = [annotNote, voiceNote, splitNote].filter(Boolean).join(" ");
+    const fullFeedback = [feedback, meta?"\n\n"+meta:""].join("");
+
+    // 2. Insert feedback row with voice_clips JSON
+    const {error} = await supabase.from("feedback").insert({
+      submission_id: submission.id,
+      coach_id: currentUser.id,
+      athlete_id: submission.athlete_id,
+      written_feedback: fullFeedback,
+      key_takeaways: takeaways,
+      drill_recommendations: drills,
+      voice_clips: voiceClips.length ? voiceClips : null
+    });
+
+    if(error){
+      // Voice clips already uploaded — give the coach the option to retry the DB insert
+      const msg = "Voice clips uploaded but the review didn't save:\n\n"+error.message+
+        (error.message && error.message.toLowerCase().includes("voice_clips")
+          ? "\n\nLikely cause: the 'feedback' table is missing a 'voice_clips' jsonb column."
+          : "");
+      alert(msg);
+      resetSendBtn(btn);
+      return;
+    }
+
+    await supabase.from("submissions").update({status:"completed"}).eq("id",submission.id);
+
+    btn.innerHTML = "✓ Sent!";
+    btn.style.background = "linear-gradient(135deg,#16a34a,#15803d)";
+    setTimeout(()=>{window.location.href = "coach-dashboard.html";}, 1200);
+  }
+
+  init();
+</script>
+
+<!-- ─────────────────────────────────────────────────────
+     AI POSE OVERLAY — MediaPipe Tasks Vision (PoseLandmarker)
+     Loads ~3MB lite model from Google's CDN on first Enable.
+     Runs client-side on GPU via WebGL. No server cost.
+     ───────────────────────────────────────────────────── -->
+<script type="module">
+  import { PoseLandmarker, FilesetResolver }
+    from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+  const POSE_CONNECTIONS = [
+    // face
+    [9,10],
+    // arms
+    [11,12],[11,13],[13,15],[12,14],[14,16],
+    [15,17],[15,19],[15,21],[17,19],
+    [16,18],[16,20],[16,22],[18,20],
+    // torso
+    [11,23],[12,24],[23,24],
+    // legs
+    [23,25],[25,27],[27,29],[27,31],[29,31],
+    [24,26],[26,28],[28,30],[28,32],[30,32]
+  ];
+
+  // [name, a, vertex, c] — angle = a–vertex–c
+  const ANGLES = [
+    ["L Elbow", 11, 13, 15],
+    ["R Elbow", 12, 14, 16],
+    ["L Shoulder", 13, 11, 23],
+    ["R Shoulder", 14, 12, 24],
+    ["L Hip", 11, 23, 25],
+    ["R Hip", 12, 24, 26],
+    ["L Knee", 23, 25, 27],
+    ["R Knee", 24, 26, 28]
+  ];
+
+  let poseLandmarker = null;
+  let modelLoadedKind = null;
+  let aiActive = false;
+  let showAngles = true;
+  let lastVideoTime = -1;
+  let rafId = null;
+  let lastFrameTimes = [];
+
+  const video = document.getElementById("athleteVideo");
+  const aiCanvas = document.getElementById("aiSkeletonCanvas");
+  const aiCtx = aiCanvas.getContext("2d");
+  const status = () => document.getElementById("aiStatus");
+  const fpsEl = () => document.getElementById("aiFps");
+
+  async function loadModel(kind){
+    status().textContent = "Loading WASM...";
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+    );
+    status().textContent = "Loading "+kind+" model...";
+    const url = kind === "full"
+      ? "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task"
+      : "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task";
+
+    if(poseLandmarker){
+      try{poseLandmarker.close();}catch(_){}
+      poseLandmarker = null;
+    }
+    poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+      baseOptions: { modelAssetPath: url, delegate: "GPU" },
+      runningMode: "VIDEO",
+      numPoses: 1,
+      minPoseDetectionConfidence: 0.5,
+      minPosePresenceConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+    modelLoadedKind = kind;
+  }
+
+  function landmarkToCanvas(lm){
+    // lm.x, lm.y are normalized 0..1 relative to the video frame.
+    // The video is centered within the canvas (max-width/max-height:100%),
+    // so compute where it's actually rendered within the canvas coord space.
+    const stageRect = document.getElementById("videoStage").getBoundingClientRect();
+    const videoRect = video.getBoundingClientRect();
+    const factor = aiCanvas.width / Math.max(1, stageRect.width);
+    const offX = (videoRect.left - stageRect.left) * factor;
+    const offY = (videoRect.top - stageRect.top) * factor;
+    const w = videoRect.width * factor;
+    const h = videoRect.height * factor;
+    return { x: offX + lm.x * w, y: offY + lm.y * h };
+  }
+
+  function angleDeg(a, b, c){
+    const v1x = a.x - b.x, v1y = a.y - b.y;
+    const v2x = c.x - b.x, v2y = c.y - b.y;
+    const dot = v1x * v2x + v1y * v2y;
+    const m1 = Math.hypot(v1x, v1y), m2 = Math.hypot(v2x, v2y);
+    if(!m1 || !m2) return 0;
+    return Math.acos(Math.min(1, Math.max(-1, dot / (m1 * m2)))) * 180 / Math.PI;
+  }
+
+  function drawSkeleton(landmarks){
+    aiCtx.clearRect(0, 0, aiCanvas.width, aiCanvas.height);
+    if(!landmarks) return;
+
+    // bones
+    aiCtx.strokeStyle = "rgba(167,139,250,.92)";
+    aiCtx.lineWidth = 3;
+    aiCtx.lineCap = "round";
+    for(const [i,j] of POSE_CONNECTIONS){
+      const p1 = landmarks[i], p2 = landmarks[j];
+      if(!p1 || !p2) continue;
+      if((p1.visibility ?? 0) < 0.4 || (p2.visibility ?? 0) < 0.4) continue;
+      const a = landmarkToCanvas(p1), b = landmarkToCanvas(p2);
+      aiCtx.beginPath();
+      aiCtx.moveTo(a.x, a.y);
+      aiCtx.lineTo(b.x, b.y);
+      aiCtx.stroke();
+    }
+
+    // joints
+    aiCtx.fillStyle = "#fbbf24";
+    aiCtx.strokeStyle = "rgba(0,0,0,.8)";
+    aiCtx.lineWidth = 2;
+    for(let i = 0; i < landmarks.length; i++){
+      const lm = landmarks[i];
+      if((lm.visibility ?? 0) < 0.4) continue;
+      const p = landmarkToCanvas(lm);
+      aiCtx.beginPath();
+      aiCtx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      aiCtx.fill();
+      aiCtx.stroke();
+    }
+
+    if(!showAngles) return;
+
+    // joint-angle labels
+    aiCtx.font = "bold 11px system-ui, sans-serif";
+    aiCtx.textBaseline = "middle";
+    for(const [, ai, bi, ci] of ANGLES){
+      const a = landmarks[ai], b = landmarks[bi], c = landmarks[ci];
+      if(!a || !b || !c) continue;
+      if((a.visibility ?? 0) < 0.5 || (b.visibility ?? 0) < 0.5 || (c.visibility ?? 0) < 0.5) continue;
+      const deg = Math.round(angleDeg(a, b, c));
+      const vertex = landmarkToCanvas(b);
+      const label = deg + "°";
+      aiCtx.fillStyle = "rgba(2,6,23,.82)";
+      aiCtx.fillRect(vertex.x + 8, vertex.y - 9, 34, 18);
+      aiCtx.strokeStyle = "rgba(251,191,36,.55)";
+      aiCtx.lineWidth = 1;
+      aiCtx.strokeRect(vertex.x + 8, vertex.y - 9, 34, 18);
+      aiCtx.fillStyle = "#fbbf24";
+      aiCtx.textAlign = "left";
+      aiCtx.fillText(label, vertex.x + 13, vertex.y);
+    }
+  }
+
+  function tick(){
+    rafId = null;
+    if(!aiActive) return;
+    if(poseLandmarker && video.readyState >= 2 && video.currentTime !== lastVideoTime){
+      lastVideoTime = video.currentTime;
+      const now = performance.now();
+      try{
+        const result = poseLandmarker.detectForVideo(video, now);
+        drawSkeleton(result.landmarks && result.landmarks[0]);
+        lastFrameTimes.push(performance.now() - now);
+        if(lastFrameTimes.length > 20) lastFrameTimes.shift();
+        const avg = lastFrameTimes.reduce((s,v)=>s+v,0)/lastFrameTimes.length;
+        if(fpsEl()) fpsEl().textContent = avg.toFixed(0)+"ms · "+(1000/avg).toFixed(0)+" fps";
+      }catch(err){
+        console.warn("Pose detect failed:", err);
+      }
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  window.toggleAI = async function(){
+    const btn = document.getElementById("aiEnableBtn");
+    if(aiActive){
+      aiActive = false;
+      btn.classList.remove("active");
+      if(rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+      aiCtx.clearRect(0,0,aiCanvas.width,aiCanvas.height);
+      status().textContent = "Paused";
+      fpsEl().textContent = "";
+      return;
+    }
+    btn.classList.add("active");
+    aiActive = true;
+    const kind = document.getElementById("aiModelSelect").value;
+    try{
+      if(!poseLandmarker || modelLoadedKind !== kind){
+        await loadModel(kind);
+      }
+      status().textContent = "Running · GPU";
+      lastVideoTime = -1;
+      tick();
+    }catch(err){
+      console.error(err);
+      status().textContent = "Failed to load model — check console";
+      aiActive = false;
+      btn.classList.remove("active");
+    }
+  };
+
+  window.toggleAngles = function(){
+    showAngles = !showAngles;
+    document.getElementById("aiAnglesBtn").classList.toggle("active", showAngles);
+    // re-run last frame with new angle setting
+    lastVideoTime = -1;
+  };
+
+  // Reload model when selection changes (only if already enabled)
+  document.getElementById("aiModelSelect").addEventListener("change", async ()=>{
+    if(!aiActive) return;
+    const kind = document.getElementById("aiModelSelect").value;
+    if(modelLoadedKind === kind) return;
+    status().textContent = "Switching model...";
+    await loadModel(kind);
+    status().textContent = "Running · GPU";
+  });
+
+  // Bake current AI skeleton into the permanent annotation canvas
+  window.captureAIFrame = function(){
+    if(!aiActive){
+      status().textContent = "Enable Skeleton first";
+      return;
+    }
+    const annot = document.getElementById("annotationCanvas");
+    const actx = annot.getContext("2d");
+    actx.drawImage(aiCanvas, 0, 0);
+    // push into draw history so Undo works
+    if(typeof drawHistory !== "undefined"){
+      drawHistory.push(actx.getImageData(0,0,annot.width,annot.height));
+      if(drawHistory.length > 40) drawHistory.shift();
+    }
+    const btn = document.getElementById("aiCaptureBtn");
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Saved';
+    btn.classList.add("active");
+    setTimeout(()=>{btn.innerHTML = orig; btn.classList.remove("active");}, 900);
+  };
+</script>
+</body>
+</html>

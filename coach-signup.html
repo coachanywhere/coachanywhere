@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Coach Sign Up – CoachAnywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{--amber:#fbbf24;--text:#e5e7eb;--muted:#94a3b8;--border:rgba(148,163,184,.2);--transition:160ms ease-out;}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 0%,#1a0f00 0%,#020B24 50%,#020617 100%);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+    a{text-decoration:none;color:inherit;}
+    header{backdrop-filter:blur(18px);background:linear-gradient(to bottom,rgba(3,7,18,.96),rgba(3,7,18,.88),transparent);border-bottom:1px solid rgba(180,83,9,.4);padding:12px 32px;display:flex;align-items:center;justify-content:space-between;}
+    .nav-wordmark{font-size:18px;font-weight:800;letter-spacing:.04em;color:#fff;text-transform:uppercase;}
+    .nav-wordmark span{color:#60a5fa;}
+    .nav-back{font-size:13px;color:var(--muted);transition:color var(--transition);}
+    .nav-back:hover{color:#fff;}
+    .page{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+    .card{width:100%;max-width:440px;background:linear-gradient(145deg,rgba(15,23,42,.95),rgba(9,14,35,.98));border:1px solid var(--border);border-radius:24px;padding:36px;box-shadow:0 30px 80px rgba(0,0,0,.5);}
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:rgba(234,179,8,.1);border:1px solid rgba(251,191,36,.3);font-size:11px;font-weight:700;color:#fbbf24;text-transform:uppercase;letter-spacing:.16em;margin-bottom:20px;}
+    h1{font-size:26px;font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:6px;}
+    .sub{font-size:14px;color:var(--muted);margin-bottom:28px;}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+    .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+    .form-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+    .required{color:#f87171;margin-left:2px;}
+    .form-input{padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#f1f5f9;font-size:14px;font-family:inherit;outline:none;width:100%;transition:border-color var(--transition);}
+    .form-input:focus{border-color:rgba(251,191,36,.4);}
+    .form-input::placeholder{color:rgba(148,163,184,.5);}
+    .password-wrap{position:relative;}
+    .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;font-weight:600;text-transform:uppercase;}
+    .strength-bar{display:flex;gap:4px;margin-top:6px;}
+    .strength-seg{height:3px;border-radius:2px;flex:1;background:rgba(148,163,184,.2);transition:background .3s;}
+    .strength-seg.weak{background:#ef4444;}.strength-seg.fair{background:#f59e0b;}.strength-seg.good{background:#3b82f6;}.strength-seg.strong{background:#22c55e;}
+    .strength-text{font-size:11px;color:var(--muted);margin-top:3px;}
+    .terms-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:20px;margin-top:6px;}
+    .terms-row input{width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:#fbbf24;cursor:pointer;}
+    .terms-text{font-size:13px;color:var(--muted);line-height:1.5;}
+    .terms-text a{color:#fbbf24;text-decoration:underline;}
+    .submit-btn{width:100%;padding:14px;border-radius:999px;background:linear-gradient(135deg,#d97706,#92400e);color:#fff;font-weight:700;font-size:15px;border:none;cursor:pointer;box-shadow:0 12px 30px rgba(180,83,9,.35);transition:transform var(--transition);font-family:inherit;}
+    .submit-btn:hover{transform:translateY(-1px);}
+    .submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .error-msg{padding:10px 14px;border-radius:8px;margin-bottom:14px;background:rgba(127,29,29,.2);border:1px solid rgba(239,68,68,.3);font-size:13px;color:#fca5a5;display:none;}
+    .login-link{text-align:center;font-size:13px;color:var(--muted);margin-top:16px;}
+    .login-link a{color:#fbbf24;font-weight:600;}
+    footer{padding:16px 32px;text-align:center;font-size:11px;color:rgba(148,163,184,.5);}
+    @media(max-width:480px){.form-row{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="nav-wordmark">COACH<span>ANYWHERE</span></a>
+  <a href="index.html" class="nav-back">← Back to home</a>
+</header>
+<div class="page">
+  <div class="card">
+    <div class="badge"><span style="width:6px;height:6px;border-radius:50%;background:#fbbf24;display:inline-block;"></span> Coach Sign Up</div>
+    <h1>Create your account</h1>
+    <p class="sub">Your online coaching business starts here.</p>
+    <div id="errorMsg" class="error-msg"></div>
+    <form id="signupForm" onsubmit="handleSignup(event)">
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">First name <span class="required">*</span></label>
+          <input class="form-input" type="text" name="first_name" placeholder="First name" required/>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Last name <span class="required">*</span></label>
+          <input class="form-input" type="text" name="last_name" placeholder="Last name" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email <span class="required">*</span></label>
+        <input class="form-input" type="email" name="email" placeholder="your@email.com" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mobile <span class="required">*</span></label>
+        <input class="form-input" type="tel" name="mobile" placeholder="e.g. 0412 345 678" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password <span class="required">*</span></label>
+        <div class="password-wrap">
+          <input class="form-input" type="password" id="pwInput" name="password" placeholder="Min. 8 characters" required style="padding-right:60px;" oninput="checkStrength(this.value)"/>
+          <button type="button" class="pw-toggle" id="pwToggle">Show</button>
+        </div>
+        <div class="strength-bar"><div class="strength-seg" id="s1"></div><div class="strength-seg" id="s2"></div><div class="strength-seg" id="s3"></div><div class="strength-seg" id="s4"></div></div>
+        <div class="strength-text" id="strengthText"></div>
+      </div>
+      <div class="terms-row">
+        <input type="checkbox" id="terms" required/>
+        <label for="terms" class="terms-text">I agree to CoachAnywhere's <a href="terms-of-service.html" target="_blank">Terms of Service</a> and <a href="privacy-policy.html" target="_blank">Privacy Policy</a>. I understand joining requires a subscription.</label>
+      </div>
+      <button type="submit" class="submit-btn" id="submitBtn">Create my account →</button>
+    </form>
+    <div class="login-link">Already have an account? <a href="login.html">Log in</a></div>
+  </div>
+</div>
+<footer>© CoachAnywhere. Built for every athlete, Australia wide.</footer>
+<script>
+  const SUPABASE_URL = "https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ca-auth",storage:window.localStorage,detectSessionInUrl:true}});
+
+  document.getElementById("pwToggle").addEventListener("click", function(){
+    const input=document.getElementById("pwInput");
+    if(input.type==="password"){input.type="text";this.textContent="Hide";}
+    else{input.type="password";this.textContent="Show";}
+  });
+
+  function checkStrength(val){
+    let score=0;
+    if(val.length>=8)score++;
+    if(/[A-Z]/.test(val))score++;
+    if(/[0-9]/.test(val))score++;
+    if(/[^A-Za-z0-9]/.test(val))score++;
+    const segs=["s1","s2","s3","s4"];
+    const classes=["","weak","fair","good","strong"];
+    const labels=["","Weak","Fair","Good","Strong"];
+    segs.forEach((id,i)=>{const el=document.getElementById(id);el.className="strength-seg";if(i<score)el.classList.add(classes[score]);});
+    document.getElementById("strengthText").textContent=val.length>0?labels[score]:"";
+  }
+
+  async function handleSignup(e){
+    e.preventDefault();
+    const form=e.target;
+    const first=form.first_name.value.trim();
+    const last=form.last_name.value.trim();
+    const email=form.email.value.trim();
+    const password=form.password.value;
+    const btn=document.getElementById("submitBtn");
+    const errMsg=document.getElementById("errorMsg");
+    errMsg.style.display="none";
+    btn.textContent="Creating your account...";
+    btn.disabled=true;
+
+    // Clear any stale session so signUp creates a new account cleanly
+    // rather than colliding with whoever is currently signed in.
+    try { await sb.auth.signOut(); } catch (e) {}
+
+    // Stash name in user_metadata + send confirmation-link clickers straight
+    // to profile setup (instead of the default site URL). Profile row is
+    // created lazily by coach-profile-setup.html on first arrival, because
+    // we can't insert it here when email confirmation is on (no session).
+    const {data,error}=await sb.auth.signUp({
+      email, password,
+      options: {
+        data: { first_name: first, last_name: last, role: "coach" },
+        emailRedirectTo: window.location.origin + "/coach-profile-setup.html"
+      }
+    });
+    if(error){errMsg.textContent=error.message;errMsg.style.display="block";btn.textContent="Create my account →";btn.disabled=false;return;}
+
+    // If a session was created immediately (email confirmation OFF), insert
+    // the profile row now and jump to setup.
+    const {data:sess}=await sb.auth.getSession();
+    if(sess.session){
+      await sb.from("profiles").upsert({id:data.user.id,role:"coach",first_name:first,last_name:last});
+      window.location.href="coach-profile-setup.html";
+      return;
+    }
+
+    // No session → email confirmation is enabled. Show the "Check your
+    // email" screen; the confirmation link will land them on
+    // coach-profile-setup.html with a valid session.
+    document.body.innerHTML='<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0d1117;font-family:system-ui,sans-serif;"><div style="text-align:center;max-width:380px;padding:40px;"><div style="font-size:22px;font-weight:800;color:#f9fafb;margin-bottom:10px;">Check your email</div><div style="font-size:14px;color:#94a3b8;line-height:1.6;">We sent a confirmation link to <strong style="color:#f59e0b;">'+email+'</strong>. Click it and you\'ll land straight on your profile setup.</div></div></div>';
+  }
+
+  // No auto-redirect when a session exists — handleSignup signs the user out
+  // on submit so a fresh account is always created cleanly.
+</script>
+</body>
+</html>

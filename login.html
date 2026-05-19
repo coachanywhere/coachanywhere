@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login – CoachAnywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --blue:#2563eb;--blue-bright:#3b82f6;--blue-dark:#1d4ed8;--blue-light:#93c5fd;
+      --amber:#fbbf24;--amber-mid:#d97706;--amber-dark:#92400e;
+      --navy:#020617;--navy2:#0a1535;
+      --text:#e5e7eb;--muted:#94a3b8;--border:rgba(148,163,184,.2);
+      --transition:160ms ease-out;
+      --shadow-soft:0 30px 80px rgba(0,0,0,.5);
+    }
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+      background:radial-gradient(circle at 20% 0%,#0A1C4A 0%,#020B24 65%,#020617 100%);
+      color:var(--text);min-height:100vh;display:flex;flex-direction:column;
+    }
+    a{text-decoration:none;color:inherit;}
+
+    header{
+      backdrop-filter:blur(18px);
+      background:linear-gradient(to bottom,rgba(3,7,18,.96),rgba(3,7,18,.88),transparent);
+      border-bottom:1px solid rgba(30,64,175,.7);
+      padding:12px 32px;display:flex;align-items:center;justify-content:space-between;
+    }
+    .nav-wordmark{font-size:18px;font-weight:800;letter-spacing:.04em;color:#fff;text-transform:uppercase;}
+    .nav-wordmark span{color:#60a5fa;}
+    .nav-back{font-size:13px;color:var(--muted);transition:color var(--transition);}
+    .nav-back:hover{color:#fff;}
+
+    .page{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+
+    /* ── Login card — mirrors .portal-card on index.html ── */
+    .login-card{
+      width:100%;max-width:480px;
+      background:rgba(15,23,42,.85);
+      backdrop-filter:blur(12px);
+      border:1px solid rgba(148,163,184,.2);
+      border-radius:26px;
+      padding:30px;
+      box-shadow:var(--shadow-soft);
+      position:relative;overflow:hidden;
+      transition:border-color var(--transition);
+    }
+    .login-card:has(#btnCoach.active){border-color:rgba(234,179,8,.28);}
+
+    /* Decorative bottom-right glow (mirrors .portal-glow) — colour swaps with active role */
+    .card-glow{
+      position:absolute;right:-60px;bottom:-60px;
+      width:220px;height:220px;border-radius:999px;
+      background:radial-gradient(circle,rgba(37,99,235,.22),transparent 60%);
+      pointer-events:none;z-index:0;
+      transition:background 260ms ease-out;
+    }
+    .login-card:has(#btnCoach.active) .card-glow{
+      background:radial-gradient(circle,rgba(217,119,6,.22),transparent 60%);
+    }
+    .login-card > :not(.card-glow){position:relative;z-index:1;}
+
+    /* ── Role label pill (mirrors .portal-label) — only one is visible at a time ── */
+    .role-label{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 11px;border-radius:999px;
+      font-size:11px;font-weight:700;
+      text-transform:uppercase;letter-spacing:.1em;
+      margin-bottom:18px;
+    }
+    .role-label.for-athlete{background:rgba(59,130,246,.15);color:#93c5fd;border:1px solid rgba(59,130,246,.4);}
+    .role-label.for-coach{background:rgba(234,179,8,.12);color:#fbbf24;border:1px solid rgba(234,179,8,.4);display:none;}
+    .login-card:has(#btnCoach.active) .role-label.for-athlete{display:none;}
+    .login-card:has(#btnCoach.active) .role-label.for-coach{display:inline-flex;}
+
+    /* ── Role toggle — cards with rounded icon badges ── */
+    .role-toggle{
+      display:grid;grid-template-columns:1fr 1fr;gap:10px;
+      margin-bottom:22px;
+    }
+    .role-btn{
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      padding:14px 12px;border-radius:14px;border:1px solid var(--border);
+      cursor:pointer;background:rgba(15,23,42,.5);
+      font-size:14px;font-weight:700;font-family:inherit;
+      color:var(--muted);
+      transition:all var(--transition);
+    }
+    .role-btn:hover{background:rgba(15,23,42,.78);border-color:rgba(148,163,184,.35);color:#e2e8f0;}
+    .role-icon{
+      width:30px;height:30px;border-radius:999px;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+      background:rgba(148,163,184,.12);color:var(--muted);
+      transition:all var(--transition);
+    }
+    .role-icon svg{width:15px;height:15px;}
+    .role-btn.active{color:#f9fafb;}
+    #btnAthlete.active{
+      background:linear-gradient(145deg,rgba(37,99,235,.22),rgba(29,78,216,.12));
+      border-color:rgba(59,130,246,.5);
+      box-shadow:0 8px 22px rgba(37,99,235,.22);
+    }
+    #btnAthlete.active .role-icon{background:rgba(59,130,246,.28);color:#93c5fd;}
+    #btnCoach.active{
+      background:linear-gradient(145deg,rgba(217,119,6,.2),rgba(146,64,14,.12));
+      border-color:rgba(234,179,8,.5);
+      box-shadow:0 8px 22px rgba(180,83,9,.25);
+    }
+    #btnCoach.active .role-icon{background:rgba(234,179,8,.25);color:#fbbf24;}
+
+    /* ── Tabs — accent matches active role ── */
+    .tab-toggle{display:flex;gap:0;margin-bottom:22px;border-bottom:1px solid var(--border);}
+    .tab-btn{
+      flex:1;padding:11px;border:none;background:transparent;
+      font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;
+      font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-1px;
+      transition:all var(--transition);
+    }
+    .tab-btn.active{color:#93c5fd;border-bottom-color:#3b82f6;}
+    .login-card:has(#btnCoach.active) .tab-btn.active{color:#fbbf24;border-bottom-color:#d97706;}
+
+    /* ── Form ── */
+    .form-title{font-size:22px;font-weight:800;color:#f9fafb;margin-bottom:6px;letter-spacing:-.01em;}
+    .form-sub{font-size:13px;color:rgba(148,163,184,.85);margin-bottom:22px;}
+
+    .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+    .form-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+    .form-input{
+      padding:13px 14px;border-radius:11px;border:1px solid var(--border);
+      background:rgba(255,255,255,.04);color:#f1f5f9;font-size:14px;
+      font-family:inherit;outline:none;width:100%;
+      transition:border-color var(--transition),background var(--transition);
+    }
+    .form-input:focus{border-color:rgba(59,130,246,.55);background:rgba(59,130,246,.06);}
+    .login-card:has(#btnCoach.active) .form-input:focus{border-color:rgba(234,179,8,.55);background:rgba(234,179,8,.05);}
+    .form-input::placeholder{color:rgba(148,163,184,.45);}
+
+    /* ── Submit button — mirrors .portal-cta-btn ── */
+    .submit-btn{
+      width:100%;padding:14px;border-radius:999px;
+      background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);
+      color:#fff;font-weight:700;font-size:15px;border:none;cursor:pointer;
+      box-shadow:0 12px 30px rgba(37,99,235,.45);
+      transition:transform var(--transition),box-shadow var(--transition);
+      font-family:inherit;margin-top:8px;
+      display:flex;align-items:center;justify-content:center;gap:6px;
+    }
+    .submit-btn:hover{transform:translateY(-1px);box-shadow:0 16px 38px rgba(37,99,235,.55);}
+    .submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .submit-btn.coach-btn{
+      background:linear-gradient(135deg,#d97706,#92400e);
+      box-shadow:0 12px 30px rgba(180,83,9,.35);
+    }
+    .submit-btn.coach-btn:hover{
+      background:linear-gradient(135deg,#b45309,#78350f);
+      box-shadow:0 16px 36px rgba(180,83,9,.5);
+    }
+
+    .error-msg{
+      padding:10px 14px;border-radius:10px;margin-bottom:14px;
+      background:rgba(127,29,29,.2);border:1px solid rgba(239,68,68,.35);
+      font-size:13px;color:#fca5a5;display:none;
+    }
+    .success-msg{
+      padding:10px 14px;border-radius:10px;margin-bottom:14px;
+      background:rgba(22,163,74,.15);border:1px solid rgba(34,197,94,.35);
+      font-size:13px;color:#86efac;display:none;
+    }
+
+    .divider{display:flex;align-items:center;gap:10px;margin:18px 0;}
+    .divider-line{flex:1;height:1px;background:rgba(148,163,184,.15);}
+    .divider-text{font-size:11px;color:rgba(148,163,184,.5);text-transform:uppercase;letter-spacing:.1em;}
+
+    .forgot-link{text-align:center;font-size:13px;color:var(--muted);margin-top:16px;}
+    .forgot-link a{color:#60a5fa;transition:color var(--transition);}
+    .login-card:has(#btnCoach.active) .forgot-link a{color:#fbbf24;}
+
+    footer{padding:16px 32px;text-align:center;font-size:11px;color:rgba(148,163,184,.5);}
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="nav-wordmark">COACH<span>ANYWHERE</span></a>
+  <a href="index.html" class="nav-back">← Back to home</a>
+</header>
+
+<div class="page">
+  <div class="login-card">
+
+    <!-- Role label pills (mirrors .portal-label on index.html — only one shows at a time, driven by which role button is active) -->
+    <div class="role-label for-athlete">ATHLETE PORTAL</div>
+    <div class="role-label for-coach">COACH PORTAL</div>
+
+    <!-- Role toggle -->
+    <div class="role-toggle">
+      <button class="role-btn active" id="btnAthlete" onclick="setRole('athlete')">
+        <div class="role-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="2.2"/><path d="M11 9l-2.5 4 3.5 1.5L11 20"/><path d="M9 11l-3 1.5"/><path d="M14.5 13l3.5-1"/></svg>
+        </div>
+        <span>Athlete</span>
+      </button>
+      <button class="role-btn" id="btnCoach" onclick="setRole('coach')">
+        <div class="role-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6M9 14h6M9 18h4"/></svg>
+        </div>
+        <span>Coach</span>
+      </button>
+    </div>
+
+    <!-- Login / Signup tabs -->
+    <div class="tab-toggle">
+      <button class="tab-btn active" id="tabLogin" onclick="setTab('login')">Log in</button>
+      <button class="tab-btn" id="tabSignup" onclick="setTab('signup')">Create account</button>
+    </div>
+
+    <div id="errorMsg" class="error-msg"></div>
+    <div id="successMsg" class="success-msg"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <div class="form-title" id="loginTitle">Welcome back</div>
+      <div class="form-sub" id="loginSub">Log in to your athlete account</div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="loginEmail" placeholder="your@email.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="loginPassword" placeholder="Your password"/>
+      </div>
+      <button class="submit-btn" id="loginBtn" onclick="handleLogin()">Log in →</button>
+      <div class="forgot-link"><a href="#" onclick="showForgot(true);return false;">Forgot your password?</a></div>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signupForm" style="display:none;">
+      <div class="form-title" id="signupTitle">Create your account</div>
+      <div class="form-sub" id="signupSub">Join CoachAnywhere as an athlete</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label class="form-label">First name</label>
+          <input class="form-input" type="text" id="signupFirst" placeholder="First name"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last name</label>
+          <input class="form-input" type="text" id="signupLast" placeholder="Last name"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="signupEmail" placeholder="your@email.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="signupPassword" placeholder="Min. 8 characters"/>
+      </div>
+      <button class="submit-btn" id="signupBtn" onclick="handleSignup()">Create account →</button>
+    </div>
+
+    <!-- FORGOT-PASSWORD FORM -->
+    <div id="forgotForm" style="display:none;">
+      <div class="form-title">Reset your password</div>
+      <div class="form-sub">Enter your email and we'll send you a reset link.</div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="forgotEmail" placeholder="your@email.com"/>
+      </div>
+      <button class="submit-btn" id="forgotBtn" onclick="handleForgotSubmit()">Send reset email →</button>
+      <div class="forgot-link"><a href="#" onclick="showForgot(false);return false;">← Back to login</a></div>
+    </div>
+
+    <div class="card-glow"></div>
+  </div>
+</div>
+
+<footer>© CoachAnywhere. Built for every athlete, Australia wide.</footer>
+
+<script>
+  const SUPABASE_URL = "https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ca-auth",storage:window.localStorage,detectSessionInUrl:true}});
+
+  let currentRole = "athlete";
+  let currentTab = "login";
+
+  function setRole(role) {
+    currentRole = role;
+    document.getElementById("btnAthlete").classList.toggle("active", role === "athlete");
+    document.getElementById("btnCoach").classList.toggle("active", role === "coach");
+    document.getElementById("btnCoach").classList.toggle("coach", role === "coach");
+    updateLabels();
+  }
+
+  function setTab(tab) {
+    currentTab = tab;
+    document.getElementById("tabLogin").classList.toggle("active", tab === "login");
+    document.getElementById("tabSignup").classList.toggle("active", tab === "signup");
+    document.getElementById("loginForm").style.display = tab === "login" ? "block" : "none";
+    document.getElementById("signupForm").style.display = tab === "signup" ? "block" : "none";
+    clearMessages();
+    updateLabels();
+  }
+
+  function updateLabels() {
+    const roleLabel = currentRole === "athlete" ? "athlete" : "coach";
+    document.getElementById("loginTitle").textContent = "Welcome back";
+    document.getElementById("loginSub").textContent = `Log in to your ${roleLabel} account`;
+    document.getElementById("signupTitle").textContent = "Create your account";
+    document.getElementById("signupSub").textContent = `Join CoachAnywhere as a ${roleLabel}`;
+    const loginBtn = document.getElementById("loginBtn");
+    const signupBtn = document.getElementById("signupBtn");
+    if (currentRole === "coach") {
+      loginBtn.classList.add("coach-btn");
+      signupBtn.classList.add("coach-btn");
+    } else {
+      loginBtn.classList.remove("coach-btn");
+      signupBtn.classList.remove("coach-btn");
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("errorMsg");
+    el.textContent = msg;
+    el.style.display = "block";
+    document.getElementById("successMsg").style.display = "none";
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById("successMsg");
+    el.textContent = msg;
+    el.style.display = "block";
+    document.getElementById("errorMsg").style.display = "none";
+  }
+
+  function clearMessages() {
+    document.getElementById("errorMsg").style.display = "none";
+    document.getElementById("successMsg").style.display = "none";
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    const btn = document.getElementById("loginBtn");
+
+    if (!email || !password) { showError("Please enter your email and password."); return; }
+
+    btn.textContent = "Logging in...";
+    btn.disabled = true;
+    clearMessages();
+
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      showError(error.message);
+      btn.textContent = "Log in →";
+      btn.disabled = false;
+      return;
+    }
+
+    // Wait until the session is actually persisted to storage before redirecting
+    let tries = 0, found = false;
+    while (tries < 20) {
+      const { data: s } = await sb.auth.getSession();
+      if (s.session) { found = true; break; }
+      await new Promise(r => setTimeout(r, 100));
+      tries++;
+    }
+
+    // DEBUG: confirm session state before redirect
+    let keys = [];
+    try { for (let i=0;i<localStorage.length;i++) keys.push(localStorage.key(i)); } catch(e){ keys=["(localStorage blocked)"]; }
+    if (!found) {
+      alert("DEBUG — Login succeeded but NO session persisted.\n\nUser ID: " + (data.user?.id||"?") + "\nlocalStorage keys: " + (keys.join(", ")||"(none)") + "\n\nScreenshot this.");
+    }
+
+    // Get profile to determine role and redirect
+    const { data: profile } = await sb
+      .from("profiles")
+      .select("role, selected_tier")
+      .eq("id", data.user.id)
+      .single();
+
+    const role = profile?.role || currentRole;
+    if (role === "coach") {
+      // Coaches who haven't finished profile-setup must complete it first.
+      // selected_tier is set only by coach-profile-setup.html on save.
+      window.location.href = (profile?.selected_tier)
+        ? "coach-dashboard.html"
+        : "coach-profile-setup.html";
+    } else {
+      window.location.href = "athlete-dashboard.html";
+    }
+  }
+
+  async function handleSignup() {
+    const first = document.getElementById("signupFirst").value.trim();
+    const last = document.getElementById("signupLast").value.trim();
+    const email = document.getElementById("signupEmail").value.trim();
+    const password = document.getElementById("signupPassword").value;
+    const btn = document.getElementById("signupBtn");
+
+    if (!first || !last || !email || !password) { showError("Please fill in all fields."); return; }
+    if (password.length < 8) { showError("Password must be at least 8 characters."); return; }
+
+    btn.textContent = "Creating account...";
+    btn.disabled = true;
+    clearMessages();
+
+    const { data, error } = await sb.auth.signUp({ email, password });
+
+    if (error) {
+      showError(error.message);
+      btn.textContent = "Create account →";
+      btn.disabled = false;
+      return;
+    }
+
+    // Create profile
+    await sb.from("profiles").insert({
+      id: data.user.id,
+      role: currentRole,
+      first_name: first,
+      last_name: last
+    });
+
+    showSuccess("Account created! Check your email to confirm, then log in.");
+    btn.textContent = "Create account →";
+    btn.disabled = false;
+    setTimeout(() => setTab("login"), 2000);
+  }
+
+  // Switch into / out of forgot-password mode. Hides login + signup tabs while in.
+  function showForgot(show){
+    document.querySelector(".tab-toggle").style.display = show ? "none" : "flex";
+    document.getElementById("loginForm").style.display  = show ? "none" : (currentTab === "login"  ? "block" : "none");
+    document.getElementById("signupForm").style.display = show ? "none" : (currentTab === "signup" ? "block" : "none");
+    document.getElementById("forgotForm").style.display = show ? "block" : "none";
+    clearMessages();
+    if(show){
+      // Pre-fill from the login email if the user already typed it.
+      const e = document.getElementById("loginEmail").value.trim();
+      if(e) document.getElementById("forgotEmail").value = e;
+      document.getElementById("forgotEmail").focus();
+    }
+  }
+
+  async function handleForgotSubmit(){
+    const email = document.getElementById("forgotEmail").value.trim();
+    const btn = document.getElementById("forgotBtn");
+    if(!email){ showError("Enter your email address."); return; }
+    btn.textContent = "Sending..."; btn.disabled = true;
+    const redirectTo = new URL("reset-password.html", window.location.href).toString();
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+    btn.textContent = "Send reset email →"; btn.disabled = false;
+    if(error){ showError(error.message); return; }
+    showSuccess("Password reset email sent! Check your inbox.");
+  }
+
+  // Check if already logged in
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      sb.from("profiles").select("role, selected_tier").eq("id", session.user.id).single()
+        .then(({ data: profile }) => {
+          if (profile?.role === "coach") {
+            // Same setup-first rule as the fresh-login path above.
+            window.location.href = (profile?.selected_tier)
+              ? "coach-dashboard.html"
+              : "coach-profile-setup.html";
+          } else {
+            window.location.href = "athlete-dashboard.html";
+          }
+        });
+    }
+  });
+</script>
+</body>
+</html>
