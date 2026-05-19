@@ -1078,6 +1078,10 @@
 
       const iso = new Date(at).toISOString();
 
+      // Sessions now insert as 'pending' — the other party must Accept /
+      // Modify / Decline from their calendar icon before it becomes a real
+      // 'scheduled' session. last_response_by stamps who acted last so the
+      // UI can show 'awaiting them' / 'awaiting you'.
       const { error: sErr } = await sb.from("mentor_sessions").insert({
         mentee_id:        currentUser.id,
         mentor_id:        mentor.id,
@@ -1085,16 +1089,19 @@
         duration_minutes: duration,
         topic:            topic || null,
         notes:            notes || null,
-        status:           "scheduled"
+        status:           "pending",
+        last_response_by: currentUser.id
       });
       if (sErr) { alert("Couldn't schedule: " + sErr.message); btn.disabled=false; btn.textContent="Send request"; return; }
 
-      // Drop a message so the mentor sees it without polling sessions
+      // Drop a message so the mentor sees it in their inbox AND the calendar
+      // icon notification panel.
       await sb.from("messages").insert({
         from_id: currentUser.id,
         to_id:   mentor.id,
         message: `📅 Session request: ${topic || "(no topic set)"} — ${new Date(iso).toLocaleString()} · ${duration} min` +
-                 (notes ? "\n\nNotes: " + notes : "")
+                 (notes ? "\n\nNotes: " + notes : "") +
+                 `\n\nReview, accept or modify this in your calendar icon.`
       });
 
       closeSchedule();

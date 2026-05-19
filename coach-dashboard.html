@@ -437,7 +437,7 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
           <input type="text" placeholder="Search athletes, sports, or videos..."/>
         </div>
         <div class="icon-btn" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><div class="icon-badge" id="notifBadge" style="display:none;">0</div></div>
-        <div class="icon-btn" onclick="showSection('schedule')" title="Schedule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="icon-btn" onclick="openSessionRequests()" title="Session requests"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><div class="icon-badge" id="calBadge" style="display:none;">0</div></div>
         <div class="status-pill" id="statusPill" onclick="cycleStatus()">
           <div class="status-dot" id="statusDot"></div>
           <span class="status-text" id="statusText">Available</span>
@@ -728,16 +728,25 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
 
     <!-- ══ MENTOR REQUESTS SECTION ══ -->
     <div class="section" id="section-mentor-requests">
-      <div class="sec-title">Mentor Requests</div>
-      <div class="panel">
+      <div class="sec-title">Mentorship</div>
+      <div class="panel" style="margin-bottom:14px;">
         <div class="panel-hdr">
-          <div class="panel-title">Coaches who've asked you to be their mentor</div>
+          <div class="panel-title">Pending requests</div>
         </div>
         <div id="mentorRequestsBody" style="padding:8px;">
           <div style="padding:32px 20px;text-align:center;color:var(--muted);font-size:13px;">
             <div style="font-weight:700;color:var(--text);margin-bottom:4px;font-size:14px;">No pending mentor requests</div>
             <div>When a coach asks you to be their mentor, you'll see them here.</div>
           </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title">Active mentees</div>
+          <span style="font-size:11px;color:var(--muted);">Schedule sessions with coaches you mentor</span>
+        </div>
+        <div id="activeMenteesBody" style="padding:8px;">
+          <div style="padding:24px 16px;text-align:center;color:var(--muted);font-size:13px;">Loading…</div>
         </div>
       </div>
     </div>
@@ -767,6 +776,121 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ══ SESSION REQUESTS LIST MODAL ══ -->
+<div class="modal-overlay" id="sessionListModal">
+  <div class="modal-box" style="max-width:560px;">
+    <h3>Session requests</h3>
+    <div class="modal-sub" id="sessionListSub">Pending mentor sessions you're a party to. Click one to accept, modify, or decline.</div>
+    <div id="sessionListBody" style="margin-top:10px;max-height:60vh;overflow-y:auto;">
+      <div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Loading…</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeSessionList()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SESSION DETAIL MODAL (Accept / Modify / Decline) ══ -->
+<div class="modal-overlay" id="sessionDetailModal">
+  <div class="modal-box" style="max-width:540px;">
+    <h3 id="sdTitle">Session details</h3>
+    <div class="modal-sub" id="sdSub">—</div>
+
+    <div style="display:flex;gap:14px;align-items:center;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--border);margin:10px 0;">
+      <div id="sdAv" style="width:48px;height:48px;border-radius:50%;flex-shrink:0;overflow:hidden;border:2px solid rgba(251,191,36,.4);"></div>
+      <div style="flex:1;min-width:0;">
+        <div id="sdOtherName" style="font-size:14px;font-weight:700;color:#f9fafb;">—</div>
+        <div id="sdOtherTier" style="font-size:11px;color:var(--muted);">—</div>
+      </div>
+    </div>
+
+    <div class="req-review-block">
+      <div class="req-review-label">Proposed time</div>
+      <div class="req-review-text" id="sdWhen">—</div>
+    </div>
+    <div class="req-review-block">
+      <div class="req-review-label">Topic</div>
+      <div class="req-review-text" id="sdTopic">—</div>
+    </div>
+    <div class="req-review-block" id="sdNotesBlock">
+      <div class="req-review-label">Notes</div>
+      <div class="req-review-text" id="sdNotes">—</div>
+    </div>
+    <div class="req-review-block" id="sdModifyBlock" style="display:none;">
+      <div class="req-review-label">Modify reason from the other party</div>
+      <div class="req-review-text req-review-notes" id="sdModifyReason">—</div>
+    </div>
+    <div id="sdAwaitingNote" style="display:none;font-size:12px;color:var(--muted);font-style:italic;margin-top:6px;"></div>
+
+    <div class="modal-foot" id="sdActionRow">
+      <button class="btn-ghost" onclick="closeSessionDetail()">Close</button>
+      <button class="btn-decline" id="sdDeclineBtn" onclick="openSessionDecline()">Decline</button>
+      <button class="btn-ghost"   id="sdModifyBtn"  onclick="openSessionModify()">Modify</button>
+      <button class="btn-accept"  id="sdAcceptBtn"  onclick="acceptSession()">Accept</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DECLINE SESSION MODAL ══ -->
+<div class="modal-overlay" id="sessionDeclineModal">
+  <div class="modal-box">
+    <h3>Decline session request</h3>
+    <div class="modal-sub" id="sdDeclineSub">Tell the other coach why so they have context for a reschedule.</div>
+    <label>Reason</label>
+    <textarea id="sdDeclineReason" placeholder="e.g. clash with another commitment — happy to look at next week."></textarea>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeSessionDecline()">Cancel</button>
+      <button class="btn-decline" id="sdDeclineSubmitBtn" onclick="submitSessionDecline()">Send decline</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODIFY SESSION MODAL ══ -->
+<div class="modal-overlay" id="sessionModifyModal">
+  <div class="modal-box">
+    <h3>Propose a different time</h3>
+    <div class="modal-sub">Pick a new date/time and tell them why. They'll see the modified request in their calendar icon to accept or decline.</div>
+    <label>New date &amp; time</label>
+    <input type="datetime-local" id="sdModifyAt" style="width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#f1f5f9;font-size:13px;font-family:inherit;outline:none;margin-bottom:14px;"/>
+    <label>Duration</label>
+    <select id="sdModifyDuration" style="width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#f1f5f9;font-size:13px;font-family:inherit;outline:none;margin-bottom:14px;">
+      <option value="30">30 min</option>
+      <option value="60" selected>60 min</option>
+      <option value="90">90 min</option>
+    </select>
+    <label>Reason for the change</label>
+    <textarea id="sdModifyReasonInput" placeholder="e.g. could we push to Thursday evening? Tuesday is a clash."></textarea>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeSessionModify()">Cancel</button>
+      <button class="btn-primary" id="sdModifySubmitBtn" onclick="submitSessionModify()">Send modified request</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MENTOR SCHEDULE-A-MENTEE MODAL (coach initiating) ══ -->
+<div class="modal-overlay" id="mentorScheduleModal">
+  <div class="modal-box">
+    <h3>Schedule a session</h3>
+    <div class="modal-sub" id="msScheduleSub">Propose a time with your mentee. They'll accept, modify or decline from their calendar.</div>
+    <label>Date &amp; time</label>
+    <input type="datetime-local" id="msAt" style="width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#f1f5f9;font-size:13px;font-family:inherit;outline:none;margin-bottom:14px;"/>
+    <label>Topic</label>
+    <input type="text" id="msTopic" placeholder="e.g. Pre-season planning review" style="width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#f1f5f9;font-size:13px;font-family:inherit;outline:none;margin-bottom:14px;"/>
+    <label>Duration</label>
+    <select id="msDuration" style="width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#f1f5f9;font-size:13px;font-family:inherit;outline:none;margin-bottom:14px;">
+      <option value="30">30 min</option>
+      <option value="60" selected>60 min</option>
+      <option value="90">90 min</option>
+    </select>
+    <label>Notes (optional)</label>
+    <textarea id="msNotes" placeholder="Anything you want them to prep beforehand?"></textarea>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeMentorSchedule()">Cancel</button>
+      <button class="btn-primary" id="msSubmitBtn" onclick="submitMentorSchedule()">Send request</button>
+    </div>
   </div>
 </div>
 
@@ -917,8 +1041,415 @@ async function init(){
   await loadRealData();
   await loadMessages();
   await loadMentorRequests();
+  await loadActiveMentees();
+  await loadPendingSessions();
   renderSpotlightPanel();
 }
+
+// ── ACTIVE MENTEES ─────────────────────────────────────────
+// Coaches this coach has accepted to mentor. Renders under the Mentor
+// Requests section so mentors can initiate a session with any active
+// mentee via a Schedule button.
+let _activeMentees = [];
+
+async function loadActiveMentees(){
+  if (!currentUser) return;
+  const { data } = await sb.from("mentor_relationships")
+    .select("*, mentee:profiles!mentor_relationships_mentee_id_fkey(id,first_name,last_name,avatar_url,selected_tier,sport)")
+    .eq("mentor_id", currentUser.id)
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+  _activeMentees = data || [];
+  renderActiveMenteesPanel();
+}
+
+function renderActiveMenteesPanel(){
+  const body = document.getElementById("activeMenteesBody");
+  if (!body) return;
+  if (!_activeMentees.length) {
+    body.innerHTML = `<div style="padding:24px 16px;text-align:center;color:var(--muted);font-size:13px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:4px;font-size:13px;">No active mentees yet</div>
+      <div>Accept a mentor request above and they'll appear here so you can schedule sessions.</div>
+    </div>`;
+    return;
+  }
+  body.innerHTML = `<div class="mreq-list">${_activeMentees.map(r => {
+    const m = r.mentee || {};
+    const name = ((m.first_name||"") + " " + (m.last_name||"")).trim() || "Coach";
+    const esc = s => String(s == null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    const avUrl = m.avatar_url || `https://i.pravatar.cc/200?u=${encodeURIComponent(m.id||"x")}`;
+    return `
+      <div class="mreq-card" style="cursor:default;">
+        <div class="mreq-av"><img src="${esc(avUrl)}" alt="" loading="lazy"/></div>
+        <div>
+          <div class="mreq-name">${esc(name)}</div>
+          <div class="mreq-meta">${esc(m.selected_tier || "Coach")}${m.sport ? " · " + esc(m.sport) : ""}</div>
+        </div>
+        <div class="mreq-actions">
+          <button class="btn-accept" onclick="openMentorSchedule('${esc(m.id)}','${esc(name).replace(/'/g,"\\'")}')">Schedule</button>
+        </div>
+      </div>`;
+  }).join("")}</div>`;
+}
+
+// ── PENDING SESSIONS (calendar icon) ────────────────────────
+// Any mentor_session in status='pending' where this user is mentor or
+// mentee. Drives the calendar icon badge + the Session Requests list.
+let _pendingSessions = [];
+
+async function loadPendingSessions(){
+  if (!currentUser) return;
+  // Two queries to avoid PostgREST .or() embed quirks
+  const [asMentor, asMentee] = await Promise.all([
+    sb.from("mentor_sessions").select("*").eq("mentor_id", currentUser.id).eq("status","pending"),
+    sb.from("mentor_sessions").select("*").eq("mentee_id", currentUser.id).eq("status","pending")
+  ]);
+  const rows = [...(asMentor.data||[]), ...(asMentee.data||[])];
+  // De-dupe (shouldn't happen but defensive) + sort
+  const seen = new Set();
+  _pendingSessions = rows.filter(r => seen.has(r.id) ? false : seen.add(r.id))
+    .sort((a,b) => a.scheduled_at.localeCompare(b.scheduled_at));
+
+  // Look up the "other party" profile for each session in one batch
+  const otherIds = [...new Set(_pendingSessions.map(s =>
+    s.mentor_id === currentUser.id ? s.mentee_id : s.mentor_id
+  ))].filter(Boolean);
+  if (otherIds.length) {
+    const { data: profs } = await sb.from("profiles")
+      .select("id,first_name,last_name,avatar_url,selected_tier")
+      .in("id", otherIds);
+    const byId = Object.fromEntries((profs||[]).map(p => [p.id, p]));
+    _pendingSessions.forEach(s => { s._other = byId[s.mentor_id === currentUser.id ? s.mentee_id : s.mentor_id] || {}; });
+  }
+
+  const badge = document.getElementById("calBadge");
+  if (badge) {
+    if (_pendingSessions.length) {
+      badge.style.display = "inline-block";
+      badge.textContent = _pendingSessions.length;
+    } else {
+      badge.style.display = "none";
+    }
+  }
+}
+
+function openSessionRequests(){
+  const body = document.getElementById("sessionListBody");
+  if (!_pendingSessions.length) {
+    body.innerHTML = `<div style="padding:32px 20px;text-align:center;color:var(--muted);font-size:13px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:4px;font-size:14px;">No pending session requests</div>
+      <div>New session requests from your mentor or mentees will appear here.</div>
+    </div>`;
+  } else {
+    const esc = s => String(s == null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    body.innerHTML = _pendingSessions.map(s => {
+      const o = s._other || {};
+      const name = ((o.first_name||"") + " " + (o.last_name||"")).trim() || "Coach";
+      const waiting = s.last_response_by === currentUser.id ? "Awaiting their reply" : "Awaiting your reply";
+      const waitColor = s.last_response_by === currentUser.id ? "var(--muted)" : "var(--amber)";
+      const dt = new Date(s.scheduled_at);
+      return `
+        <div class="mreq-card" style="margin-bottom:8px;" onclick="openSessionDetail('${esc(s.id)}')">
+          <div class="mreq-av"><img src="${esc(o.avatar_url || `https://i.pravatar.cc/200?u=${encodeURIComponent(o.id||"x")}`)}" alt="" loading="lazy"/></div>
+          <div>
+            <div class="mreq-name">${esc(name)}</div>
+            <div class="mreq-meta">${esc(s.topic || "Mentor session")}</div>
+            <div class="mreq-time">${esc(dt.toLocaleString())} · ${s.duration_minutes||60} min</div>
+            <div style="font-size:11px;color:${waitColor};margin-top:4px;font-weight:600;">${waiting}</div>
+          </div>
+          <div class="mreq-actions"><span class="btn-ghost" style="padding:8px 12px;">Review →</span></div>
+        </div>`;
+    }).join("");
+  }
+  document.getElementById("sessionListModal").classList.add("open");
+}
+function closeSessionList(){
+  document.getElementById("sessionListModal").classList.remove("open");
+}
+
+// ── SESSION DETAIL MODAL ────────────────────────────────────
+let _activeSession = null;
+
+function openSessionDetail(sessionId){
+  const s = _pendingSessions.find(x => x.id === sessionId);
+  if (!s) return;
+  _activeSession = s;
+  closeSessionList();
+  const o = s._other || {};
+  const name = ((o.first_name||"") + " " + (o.last_name||"")).trim() || "Coach";
+  const esc = v => String(v == null ? "" : v)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  const avUrl = o.avatar_url || `https://i.pravatar.cc/200?u=${encodeURIComponent(o.id||"x")}`;
+  document.getElementById("sdAv").innerHTML = `<img src="${esc(avUrl)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;"/>`;
+  document.getElementById("sdOtherName").textContent = name;
+  document.getElementById("sdOtherTier").textContent = o.selected_tier || "Coach";
+  document.getElementById("sdWhen").textContent  = `${new Date(s.scheduled_at).toLocaleString()} · ${s.duration_minutes||60} min`;
+  document.getElementById("sdTopic").textContent = s.topic || "(no topic set)";
+  document.getElementById("sdNotes").textContent = s.notes || "—";
+  document.getElementById("sdNotesBlock").style.display = s.notes ? "block" : "none";
+
+  const isModified = !!s.modify_reason;
+  document.getElementById("sdModifyBlock").style.display = isModified ? "block" : "none";
+  document.getElementById("sdModifyReason").textContent = s.modify_reason || "";
+
+  const awaitingMe = s.last_response_by !== currentUser.id;
+  const actionRow = document.getElementById("sdActionRow");
+  document.getElementById("sdAwaitingNote").style.display = awaitingMe ? "none" : "block";
+  document.getElementById("sdAwaitingNote").textContent =
+    "Awaiting their reply — you'll see their accept/modify/decline here once they respond.";
+  // Hide action buttons when awaiting the OTHER party
+  ["sdAcceptBtn","sdModifyBtn","sdDeclineBtn"].forEach(id => {
+    document.getElementById(id).style.display = awaitingMe ? "" : "none";
+  });
+
+  document.getElementById("sdTitle").textContent =
+    isModified ? "Modified session request" : "Session request";
+  document.getElementById("sdSub").textContent =
+    awaitingMe
+      ? `${name} has proposed a session. Accept, modify, or decline.`
+      : `Waiting on ${name} to respond to your request.`;
+
+  document.getElementById("sessionDetailModal").classList.add("open");
+}
+function closeSessionDetail(){
+  document.getElementById("sessionDetailModal").classList.remove("open");
+  _activeSession = null;
+}
+
+async function acceptSession(){
+  if (!_activeSession) return;
+  const btn = document.getElementById("sdAcceptBtn");
+  btn.disabled = true;
+  try {
+    const { error } = await sb.from("mentor_sessions").update({
+      status: "scheduled",
+      last_response_by: currentUser.id,
+      updated_at: new Date().toISOString()
+    }).eq("id", _activeSession.id);
+    if (error) { alert("Couldn't accept: " + error.message); return; }
+
+    const o = _activeSession._other || {};
+    await sb.from("messages").insert({
+      from_id: currentUser.id,
+      to_id:   o.id,
+      message: `✓ I've accepted the session for ${new Date(_activeSession.scheduled_at).toLocaleString()}. See you then.`
+    });
+
+    closeSessionDetail();
+    await loadPendingSessions();
+    // Offer .ics download for the now-confirmed session
+    offerCalendarDownload(_activeSession);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function offerCalendarDownload(s){
+  const o = s._other || {};
+  const start = new Date(s.scheduled_at);
+  const end   = new Date(start.getTime() + (s.duration_minutes||60) * 60000);
+  const fmt = d => d.toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,"");
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//CoachAnywhere//Mentor Session//EN",
+    "BEGIN:VEVENT",
+    "UID:" + s.id + "@coachanywhere",
+    "DTSTAMP:" + fmt(new Date()),
+    "DTSTART:" + fmt(start),
+    "DTEND:" + fmt(end),
+    "SUMMARY:Mentor session — " + (s.topic || "CoachAnywhere"),
+    "DESCRIPTION:" + (s.notes || "").replace(/\n/g,"\\n"),
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ].join("\r\n");
+  const blob = new Blob([ics], {type:"text/calendar"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "coachanywhere-session-" + s.id.slice(0,8) + ".ics";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function openSessionDecline(){
+  if (!_activeSession) return;
+  document.getElementById("sdDeclineReason").value = "";
+  const o = _activeSession._other || {};
+  const name = ((o.first_name||"") + " " + (o.last_name||"")).trim() || "Coach";
+  document.getElementById("sdDeclineSub").textContent =
+    `Tell ${name} why so they have context for a reschedule.`;
+  document.getElementById("sessionDeclineModal").classList.add("open");
+  setTimeout(() => document.getElementById("sdDeclineReason").focus(), 50);
+}
+function closeSessionDecline(){
+  document.getElementById("sessionDeclineModal").classList.remove("open");
+}
+async function submitSessionDecline(){
+  if (!_activeSession) return;
+  const reason = document.getElementById("sdDeclineReason").value.trim();
+  if (!reason) { alert("Please give a brief reason — the other coach will see this."); return; }
+  const btn = document.getElementById("sdDeclineSubmitBtn");
+  btn.disabled = true; btn.textContent = "Sending…";
+  try {
+    const { error } = await sb.from("mentor_sessions").update({
+      status: "cancelled",
+      decline_reason: reason,
+      last_response_by: currentUser.id,
+      updated_at: new Date().toISOString()
+    }).eq("id", _activeSession.id);
+    if (error) { alert("Couldn't decline: " + error.message); return; }
+
+    const o = _activeSession._other || {};
+    await sb.from("messages").insert({
+      from_id: currentUser.id,
+      to_id:   o.id,
+      message: `I had to decline the session for ${new Date(_activeSession.scheduled_at).toLocaleString()}.\n\nReason: ${reason}`
+    });
+
+    closeSessionDecline();
+    closeSessionDetail();
+    await loadPendingSessions();
+  } finally {
+    btn.disabled = false; btn.textContent = "Send decline";
+  }
+}
+
+function openSessionModify(){
+  if (!_activeSession) return;
+  // Pre-fill with the original time + duration
+  const d = new Date(_activeSession.scheduled_at);
+  const local = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById("sdModifyAt").value = local;
+  document.getElementById("sdModifyDuration").value = String(_activeSession.duration_minutes || 60);
+  document.getElementById("sdModifyReasonInput").value = "";
+  document.getElementById("sessionModifyModal").classList.add("open");
+  setTimeout(() => document.getElementById("sdModifyReasonInput").focus(), 50);
+}
+function closeSessionModify(){
+  document.getElementById("sessionModifyModal").classList.remove("open");
+}
+async function submitSessionModify(){
+  if (!_activeSession) return;
+  const at = document.getElementById("sdModifyAt").value;
+  const dur = parseInt(document.getElementById("sdModifyDuration").value) || 60;
+  const reason = document.getElementById("sdModifyReasonInput").value.trim();
+  if (!at) { alert("Pick a new date and time."); return; }
+  if (!reason) { alert("Add a brief reason for the change."); return; }
+  const btn = document.getElementById("sdModifySubmitBtn");
+  btn.disabled = true; btn.textContent = "Sending…";
+  try {
+    const iso = new Date(at).toISOString();
+    const { error } = await sb.from("mentor_sessions").update({
+      scheduled_at:          iso,
+      duration_minutes:      dur,
+      modify_reason:         reason,
+      original_scheduled_at: _activeSession.scheduled_at,
+      status:                "pending",
+      last_response_by:      currentUser.id,
+      updated_at:            new Date().toISOString()
+    }).eq("id", _activeSession.id);
+    if (error) { alert("Couldn't modify: " + error.message); return; }
+
+    const o = _activeSession._other || {};
+    await sb.from("messages").insert({
+      from_id: currentUser.id,
+      to_id:   o.id,
+      message: `🔁 Proposed a new time for our session: ${new Date(iso).toLocaleString()} · ${dur} min.\n\nReason: ${reason}\n\nReview in your calendar icon to accept or decline.`
+    });
+
+    closeSessionModify();
+    closeSessionDetail();
+    await loadPendingSessions();
+  } finally {
+    btn.disabled = false; btn.textContent = "Send modified request";
+  }
+}
+
+// ── MENTOR INITIATES A SESSION (with an active mentee) ──────
+let _mentorScheduleTarget = null;  // { menteeId, menteeName }
+
+function openMentorSchedule(menteeId, menteeName){
+  _mentorScheduleTarget = { menteeId, menteeName };
+  // Pre-fill with tomorrow 10am local
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(10,0,0,0);
+  const local = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById("msAt").value = local;
+  document.getElementById("msTopic").value = "";
+  document.getElementById("msDuration").value = "60";
+  document.getElementById("msNotes").value = "";
+  document.getElementById("msScheduleSub").textContent =
+    `Propose a time with ${menteeName}. They'll accept, modify or decline from their calendar.`;
+  document.getElementById("mentorScheduleModal").classList.add("open");
+  setTimeout(() => document.getElementById("msAt").focus(), 50);
+}
+function closeMentorSchedule(){
+  document.getElementById("mentorScheduleModal").classList.remove("open");
+  _mentorScheduleTarget = null;
+}
+async function submitMentorSchedule(){
+  if (!_mentorScheduleTarget) return;
+  const at = document.getElementById("msAt").value;
+  const topic = document.getElementById("msTopic").value.trim();
+  const duration = parseInt(document.getElementById("msDuration").value) || 60;
+  const notes = document.getElementById("msNotes").value.trim();
+  if (!at) { alert("Pick a date and time."); return; }
+
+  const btn = document.getElementById("msSubmitBtn");
+  btn.disabled = true; btn.textContent = "Sending…";
+  try {
+    const iso = new Date(at).toISOString();
+    const { error } = await sb.from("mentor_sessions").insert({
+      mentor_id:        currentUser.id,
+      mentee_id:        _mentorScheduleTarget.menteeId,
+      scheduled_at:     iso,
+      duration_minutes: duration,
+      topic:            topic || null,
+      notes:            notes || null,
+      status:           "pending",
+      last_response_by: currentUser.id
+    });
+    if (error) { alert("Couldn't schedule: " + error.message); return; }
+
+    await sb.from("messages").insert({
+      from_id: currentUser.id,
+      to_id:   _mentorScheduleTarget.menteeId,
+      message: `📅 Mentor session: ${topic || "(no topic set)"} — ${new Date(iso).toLocaleString()} · ${duration} min` +
+               (notes ? "\n\nNotes: " + notes : "") +
+               `\n\nReview, accept or modify this in your calendar icon.`
+    });
+
+    closeMentorSchedule();
+    await loadPendingSessions();
+    alert("Session request sent.");
+  } finally {
+    btn.disabled = false; btn.textContent = "Send request";
+  }
+}
+
+window.openSessionRequests   = openSessionRequests;
+window.closeSessionList      = closeSessionList;
+window.openSessionDetail     = openSessionDetail;
+window.closeSessionDetail    = closeSessionDetail;
+window.acceptSession         = acceptSession;
+window.openSessionDecline    = openSessionDecline;
+window.closeSessionDecline   = closeSessionDecline;
+window.submitSessionDecline  = submitSessionDecline;
+window.openSessionModify     = openSessionModify;
+window.closeSessionModify    = closeSessionModify;
+window.submitSessionModify   = submitSessionModify;
+window.openMentorSchedule    = openMentorSchedule;
+window.closeMentorSchedule   = closeMentorSchedule;
+window.submitMentorSchedule  = submitMentorSchedule;
 
 // ── SPOTLIGHT ──────────────────────────────────────────────
 // Renders the Spotlight tab. Shows "Activate" when inactive, status
