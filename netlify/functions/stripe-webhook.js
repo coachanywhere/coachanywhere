@@ -31,13 +31,13 @@ exports.handler = async (event) => {
   switch (stripeEvent.type) {
 
     // ── PAYMENT SUCCESSFUL → ACTIVATE SUBSCRIPTION ──
-    // Dispatch on metadata.type: 'spotlight' or 'coach_tier'.
+    // Dispatch on metadata.type: 'spotlight' | 'coach_tier' | 'coach_package'.
     case "checkout.session.completed": {
       const type = session.metadata?.type;
-      const coachId = session.metadata?.coach_id;
-      if (!coachId) break;
+      const coachId   = session.metadata?.coach_id;
+      const athleteId = session.metadata?.athlete_id;
 
-      if (type === "spotlight") {
+      if (type === "spotlight" && coachId) {
         const { error } = await supabase
           .from("profiles")
           .update({
@@ -54,7 +54,7 @@ exports.handler = async (event) => {
         break;
       }
 
-      if (type === "coach_tier") {
+      if (type === "coach_tier" && coachId) {
         // First-time tier subscription complete — flip the coach Live and
         // stash their Stripe IDs so future events can find them.
         const { error } = await supabase
@@ -69,6 +69,51 @@ exports.handler = async (event) => {
           .eq("id", coachId);
         if (error) console.error("Coach tier activation error:", error);
         else console.log("Coach tier activated:", coachId, session.metadata?.tier);
+        break;
+      }
+
+      if (type === "coach_package" && athleteId && coachId) {
+        // Athlete just bought a coaching package. Write the subscription row
+        // with Stripe IDs so we can update / cancel via the API later. Also
+        // insert the athlete_coaches link so the coach sees them.
+        // Mode for coach_package checkouts is currently 'payment' (one-shot)
+        // in create-coach-subscription.js — session.subscription will be null
+        // for those, but we still capture customer + session id. If this is
+        // ever switched to a recurring subscription, the same code captures
+        // session.subscription correctly.
+        const packageName  = session.metadata?.package_name  || null;
+        const packagePrice = session.metadata?.package_price || null;
+
+        const subRow = {
+          athlete_id:             athleteId,
+          coach_id:               coachId,
+          status:                 "active",
+          package_name:           packageName,
+          stripe_customer_id:     session.customer || null,
+          stripe_subscription_id: session.subscription || null,
+          updated_at:             new Date().toISOString()
+        };
+
+        // Upsert by stripe_subscription_id when available, else just insert.
+        if (subRow.stripe_subscription_id) {
+          const { data: existing } = await supabase.from("subscriptions")
+            .select("id").eq("stripe_subscription_id", subRow.stripe_subscription_id).maybeSingle();
+          if (existing) {
+            await supabase.from("subscriptions").update(subRow).eq("id", existing.id);
+          } else {
+            await supabase.from("subscriptions").insert(subRow);
+          }
+        } else {
+          // No Stripe sub ID (one-shot payment). Insert a fresh row.
+          await supabase.from("subscriptions").insert(subRow);
+        }
+
+        // Link athlete to coach (idempotent — unique constraint on the pair).
+        await supabase.from("athlete_coaches")
+          .upsert({ athlete_id: athleteId, coach_id: coachId }, { onConflict: "athlete_id,coach_id" });
+
+        console.log("Coach package subscription activated:",
+          { athleteId, coachId, packageName, subscription: session.subscription });
         break;
       }
 
@@ -114,6 +159,20 @@ exports.handler = async (event) => {
           .eq("tier_stripe_subscription_id", subscriptionId);
         console.log("Coach tier renewed for subscription:", subscriptionId);
       }
+
+      // Athlete package subscription renewal — flips back to active if
+      // previously past_due. Mirrors the tier-renewal grace pattern.
+      const { data: pkgSubs } = await supabase
+        .from("subscriptions")
+        .select("id, status")
+        .eq("stripe_subscription_id", subscriptionId);
+      if (pkgSubs && pkgSubs.length) {
+        await supabase
+          .from("subscriptions")
+          .update({ status: "active", updated_at: new Date().toISOString() })
+          .eq("stripe_subscription_id", subscriptionId);
+        console.log("Athlete package renewed for subscription:", subscriptionId);
+      }
       break;
     }
 
@@ -135,17 +194,40 @@ exports.handler = async (event) => {
       // Tier cancellation — coach is no longer Live on the platform.
       const { data: tierCoaches } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, tier_cancelled_at")
         .eq("tier_stripe_subscription_id", subscriptionId);
       if (tierCoaches && tierCoaches.length) {
+        const patch = {
+          tier_status: "cancelled",
+          profile_status: "Cancelled"
+        };
+        // If the user hasn't explicitly cancelled via the in-app modal, stamp
+        // the cancellation moment now so the dashboard panel can count it.
+        if (!tierCoaches[0].tier_cancelled_at) patch.tier_cancelled_at = new Date().toISOString();
         await supabase
           .from("profiles")
-          .update({
-            tier_status: "cancelled",
-            profile_status: "Cancelled"
-          })
+          .update(patch)
           .eq("tier_stripe_subscription_id", subscriptionId);
         console.log("Coach tier cancelled for subscription:", subscriptionId);
+      }
+
+      // Athlete package subscription cancellation — flip status + stamp
+      // cancelled_at if it wasn't already set by the in-app modal.
+      const { data: pkgSubs } = await supabase
+        .from("subscriptions")
+        .select("id, cancelled_at")
+        .eq("stripe_subscription_id", subscriptionId);
+      if (pkgSubs && pkgSubs.length) {
+        const patch = {
+          status:     "cancelled",
+          updated_at: new Date().toISOString()
+        };
+        if (!pkgSubs[0].cancelled_at) patch.cancelled_at = new Date().toISOString();
+        await supabase
+          .from("subscriptions")
+          .update(patch)
+          .eq("stripe_subscription_id", subscriptionId);
+        console.log("Athlete package cancelled for subscription:", subscriptionId);
       }
       break;
     }
@@ -174,6 +256,21 @@ exports.handler = async (event) => {
           .update({ tier_status: "past_due" })
           .eq("tier_stripe_subscription_id", subscriptionId);
         console.log("Coach tier marked past_due for subscription:", subscriptionId);
+      }
+
+      // Athlete package payment failure — mirror the tier grace pattern.
+      // Mark past_due, keep the row visible so the coach still sees them
+      // on their athletes list while the athlete updates their card.
+      const { data: pkgSubs } = await supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("stripe_subscription_id", subscriptionId);
+      if (pkgSubs && pkgSubs.length) {
+        await supabase
+          .from("subscriptions")
+          .update({ status: "past_due", updated_at: new Date().toISOString() })
+          .eq("stripe_subscription_id", subscriptionId);
+        console.log("Athlete package marked past_due for subscription:", subscriptionId);
       }
       console.log("Payment failed processed for subscription:", subscriptionId);
       break;
