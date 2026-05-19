@@ -2073,29 +2073,23 @@
   window.cancelOfferRespond = cancelOfferRespond;
 
   async function recordOfferOnly(ctx){
-    // Record reason + offer outcome without setting cancelled_at — they're
-    // accepting our save offer, not cancelling.
+    // Record reason + offer outcome on a SEPARATE endpoint that does NOT
+    // touch cancelled_at and does NOT call Stripe. The subscription stays
+    // fully active — we're just remembering why they almost left.
     if (!session) return;
     try {
-      await fetch("/.netlify/functions/cancel-subscription", {
+      await fetch("/.netlify/functions/record-cancellation-feedback", {
         method: "POST",
         headers: {
           "content-type": "application/json",
           Authorization:  "Bearer " + session.access_token
         },
         body: JSON.stringify({
-          type:    ctx.type,
-          id:      ctx.id,
-          reason:  ctx.reason,
-          detail:  ctx.detail,
-          feedback_offer: ctx.offer,
-          // Special flag — cancel-subscription always writes cancelled_at.
-          // We're recording the offer outcome only; the row stays active.
-          // For now we just call the same endpoint but tag the offer as
-          // 'accepted' — the row will show cancelled_at but business logic
-          // can ignore that if cancellation_feedback_offer ends in
-          // '_accepted'. This is a known compromise documented in the
-          // summary.
+          type:           ctx.type,
+          id:             ctx.id,
+          reason:         ctx.reason,
+          detail:         ctx.detail,
+          feedback_offer: ctx.offer
         })
       });
     } catch(e) { console.warn("[cancel] record offer failed", e); }

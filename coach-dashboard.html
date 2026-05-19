@@ -2257,10 +2257,13 @@ function cancelOfferRespond(accepted){
 }
 
 async function recordOfferOnly(ctx){
+  // Save-offer accepted — record reason + outcome on a SEPARATE endpoint
+  // that does NOT touch any cancelled_at column and does NOT call Stripe.
+  // The subscription stays fully active.
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return;
-    await fetch("/.netlify/functions/cancel-subscription", {
+    await fetch("/.netlify/functions/record-cancellation-feedback", {
       method: "POST",
       headers: {
         "content-type": "application/json",
