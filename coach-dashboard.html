@@ -749,16 +749,16 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
   </div>
 </div>
 
-<!-- ══ DECLINE MENTOR REQUEST MODAL ══ -->
-<div class="modal-overlay" id="declineModal">
+<!-- ══ MENTOR REQUEST REPLY MODAL (accept + decline) ══ -->
+<div class="modal-overlay" id="replyModal">
   <div class="modal-box">
-    <h3>Decline mentor request</h3>
-    <div class="modal-sub" id="declineSub">Send a short reason so the coach knows.</div>
-    <label>Reason</label>
-    <textarea id="declineReason" placeholder="e.g. I'm at capacity right now — happy to reconnect in a few months."></textarea>
+    <h3 id="replyTitle">Mentor request</h3>
+    <div class="modal-sub" id="replySub">—</div>
+    <label id="replyLabel">Message</label>
+    <textarea id="replyText" placeholder=""></textarea>
     <div class="modal-foot">
-      <button class="btn-ghost" onclick="closeDeclineModal()">Cancel</button>
-      <button class="btn-primary" id="declineSubmitBtn" onclick="submitDecline()">Send decline</button>
+      <button class="btn-ghost" onclick="closeReplyModal()">Cancel</button>
+      <button class="btn-primary" id="replySubmitBtn" onclick="submitReply()">Send</button>
     </div>
   </div>
 </div>
@@ -825,7 +825,9 @@ async function init(){
 // ── MENTOR REQUESTS ─────────────────────────────────────────
 // Coaches who've asked this coach to be their mentor (status='pending').
 // Shows in the Mentor Requests section with Accept/Decline actions.
-let _declineCtx = null;  // { relId, mentee_id, name }
+// Both actions open the same modal so the coach can write a personal
+// message that goes to the mentee along with the status change.
+let _replyCtx = null;  // { relId, menteeId, name, action: 'accept' | 'decline' }
 
 async function loadMentorRequests(){
   if (!currentUser) return;
@@ -878,77 +880,84 @@ function mentorReqCard(r){
         <div class="mreq-time">Requested ${timeAgo(r.created_at)}</div>
       </div>
       <div class="mreq-actions">
-        <button class="btn-accept"  onclick="acceptMentorRequest('${r.id}','${escAttr(m.id)}','${escAttr(name)}')">Accept</button>
-        <button class="btn-decline" onclick="openDeclineModal('${r.id}','${escAttr(m.id)}','${escAttr(name)}')">Decline</button>
+        <button class="btn-accept"  onclick="openReplyModal('accept','${r.id}','${escAttr(m.id)}','${escAttr(name)}')">Accept</button>
+        <button class="btn-decline" onclick="openReplyModal('decline','${r.id}','${escAttr(m.id)}','${escAttr(name)}')">Decline</button>
       </div>
     </div>`;
 }
 
-async function acceptMentorRequest(relId, menteeId, name){
-  if (!confirm(`Accept ${name} as your mentee?\n\nThey'll get an acceptance message and can start scheduling sessions.`)) return;
-  // Disable the buttons in this card while we work
-  const card = event?.target?.closest(".mreq-card");
-  card?.querySelectorAll("button").forEach(b => b.disabled = true);
+function openReplyModal(action, relId, menteeId, name){
+  _replyCtx = { relId, menteeId, name, action };
+  const isAccept = action === "accept";
+  const firstName = (name || "").split(" ")[0] || "there";
 
-  const { error } = await sb.from("mentor_relationships").update({
-    status: "active",
-    updated_at: new Date().toISOString()
-  }).eq("id", relId);
-  if (error) {
-    card?.querySelectorAll("button").forEach(b => b.disabled = false);
-    alert("Couldn't accept: " + error.message);
+  document.getElementById("replyTitle").textContent = isAccept
+    ? "Accept mentor request"
+    : "Decline mentor request";
+  document.getElementById("replySub").textContent = isAccept
+    ? `Send ${name} a welcome message with your acceptance. Edit anything you like.`
+    : `Send ${name} a short reason so they know why.`;
+  document.getElementById("replyLabel").textContent = isAccept ? "Welcome message" : "Reason";
+
+  const ta = document.getElementById("replyText");
+  ta.value = isAccept
+    ? `Hi ${firstName} — I've accepted your mentor request. Looking forward to working with you. Schedule our first session whenever you're ready.`
+    : "";
+  ta.placeholder = isAccept
+    ? "Edit the welcome message or leave as-is."
+    : "e.g. I'm at capacity right now — happy to reconnect in a few months.";
+
+  const btn = document.getElementById("replySubmitBtn");
+  btn.textContent = isAccept ? "Accept & send" : "Send decline";
+  btn.className = isAccept ? "btn-accept" : "btn-primary";
+
+  document.getElementById("replyModal").classList.add("open");
+  setTimeout(() => ta.focus(), 50);
+}
+
+function closeReplyModal(){
+  document.getElementById("replyModal").classList.remove("open");
+  _replyCtx = null;
+}
+
+async function submitReply(){
+  if (!_replyCtx) return;
+  const isAccept = _replyCtx.action === "accept";
+  const text = document.getElementById("replyText").value.trim();
+  if (!text) {
+    alert(isAccept
+      ? "Please write a short welcome message — your mentee will see this."
+      : "Please write a short reason — your mentee will see this.");
     return;
   }
 
-  // Acceptance message so the mentee gets a notification trail
-  await sb.from("messages").insert({
-    from_id: currentUser.id,
-    to_id:   menteeId,
-    message: `✓ I've accepted your mentor request. Looking forward to working with you — schedule our first session whenever you're ready.`
-  });
-
-  await loadMentorRequests();
-}
-
-function openDeclineModal(relId, menteeId, name){
-  _declineCtx = { relId, menteeId, name };
-  document.getElementById("declineReason").value = "";
-  document.getElementById("declineSub").textContent =
-    `Send ${name} a short reason so they know why.`;
-  document.getElementById("declineModal").classList.add("open");
-  // Focus the textarea so the coach can just start typing
-  setTimeout(() => document.getElementById("declineReason").focus(), 50);
-}
-
-function closeDeclineModal(){
-  document.getElementById("declineModal").classList.remove("open");
-  _declineCtx = null;
-}
-
-async function submitDecline(){
-  if (!_declineCtx) return;
-  const reason = document.getElementById("declineReason").value.trim();
-  if (!reason) { alert("Please write a short reason — the coach will see this in their messages."); return; }
-
-  const btn = document.getElementById("declineSubmitBtn");
+  const btn = document.getElementById("replySubmitBtn");
   btn.disabled = true;
   const origLabel = btn.textContent;
   btn.textContent = "Sending…";
 
   try {
+    const newStatus = isAccept ? "active" : "inactive";
     const { error } = await sb.from("mentor_relationships").update({
-      status: "inactive",
+      status:     newStatus,
       updated_at: new Date().toISOString()
-    }).eq("id", _declineCtx.relId);
-    if (error) { alert("Couldn't decline: " + error.message); return; }
+    }).eq("id", _replyCtx.relId);
+    if (error) {
+      alert("Couldn't " + (isAccept ? "accept" : "decline") + ": " + error.message);
+      return;
+    }
+
+    const messageBody = isAccept
+      ? text
+      : `Thanks for reaching out — unfortunately I can't take you on as a mentee right now.\n\nReason: ${text}`;
 
     await sb.from("messages").insert({
       from_id: currentUser.id,
-      to_id:   _declineCtx.menteeId,
-      message: `Thanks for reaching out — unfortunately I can't take you on as a mentee right now.\n\nReason: ${reason}`
+      to_id:   _replyCtx.menteeId,
+      message: messageBody
     });
 
-    closeDeclineModal();
+    closeReplyModal();
     await loadMentorRequests();
   } finally {
     btn.disabled = false;
