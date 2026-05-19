@@ -1,12 +1,13 @@
 [build]
   functions = "netlify/functions"
-  # Env vars whose values are public-by-design (Supabase URL is paired with
-  # the publishable anon key, price IDs are Stripe object IDs, APP_URL is a
-  # plain domain). Listing them here tells Netlify's secret scanner not to
-  # flag their appearance in committed code. Real secrets (STRIPE_SECRET_KEY,
-  # STRIPE_WEBHOOK_SECRET, SUPABASE_SERVICE_KEY) are NOT in this list — the
-  # scanner will still catch them if they ever slip in.
-  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL,STRIPE_PUBLISHABLE_KEY,APP_URL,STRIPE_COACH_L1_PRICE_ID,STRIPE_COACH_L1_FOUNDATION_PRICE_ID,STRIPE_COACH_L2_PRICE_ID,STRIPE_COACH_L2_FOUNDATION_PRICE_ID,STRIPE_COACH_L3_PRICE_ID,STRIPE_COACH_L3_FOUNDATION_PRICE_ID,STRIPE_COACH_L4_PRICE_ID,STRIPE_SPOTLIGHT_L1_PRICE_ID,STRIPE_SPOTLIGHT_L2_PRICE_ID,STRIPE_SPOTLIGHT_L3_PRICE_ID,STRIPE_PKG_STARTER_PRICE_ID,STRIPE_PKG_STANDARD_PRICE_ID,STRIPE_PKG_PRO_PRICE_ID,STRIPE_PKG_ELITE_PRICE_ID,STRIPE_PKG_PREMIUM_PRICE_ID,STRIPE_MENTOR_99_PRICE_ID,STRIPE_MENTOR_129_PRICE_ID,STRIPE_MENTOR_149_PRICE_ID,STRIPE_MENTOR_199_PRICE_ID,STRIPE_MENTOR_SESSION_PRICE_ID,STRIPE_LOCKER_ROOM_PASS_PRICE_ID,STRIPE_LOCKER_ROOM_TICKET_ENTRY_PRICE_ID,STRIPE_LOCKER_ROOM_TICKET_STANDARD_PRICE_ID,STRIPE_LOCKER_ROOM_TICKET_PREMIUM_PRICE_ID"
+
+[build.environment]
+  # SUPABASE_URL is paired with the publishable anon key and is intentionally
+  # embedded in every client HTML page that talks to Supabase. Listing it
+  # here tells Netlify's secret scanner not to flag those occurrences.
+  # Real secrets (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, SUPABASE_SERVICE_KEY)
+  # are deliberately not on this list — the scanner still guards them.
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL"
 
 [functions]
   node_bundler = "esbuild"
