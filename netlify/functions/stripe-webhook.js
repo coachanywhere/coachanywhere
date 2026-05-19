@@ -1,7 +1,7 @@
 // netlify/functions/stripe-webhook.js
 // Handles Stripe webhook events to auto-activate/deactivate Spotlight
 // Set this URL in Stripe Dashboard → Webhooks → Add endpoint:
-// https://app.coachanywhere247.com/.netlify/functions/stripe-webhook
+// https://<YOUR-NETLIFY-DOMAIN>/.netlify/functions/stripe-webhook
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { createClient } = require("@supabase/supabase-js");
