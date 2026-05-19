@@ -386,10 +386,10 @@
           <div class="stat-value" id="statCompleted">0</div>
           <div class="stat-sub">This month</div>
         </div>
-        <div class="stat-card amber">
+        <div class="stat-card amber" onclick="openFocusModal()" style="cursor:pointer;">
           <div class="stat-label">Focus Area</div>
-          <input class="stat-edit" id="statFocus" placeholder="Set focus area" maxlength="60"/>
-          <div class="stat-sub">Click to edit, blur to save</div>
+          <div class="stat-value" id="statFocusDisplay" style="font-size:16px;line-height:1.3;">Set focus area</div>
+          <div class="stat-sub">Click to edit</div>
         </div>
         <div class="stat-card purple">
           <div class="stat-label">Mentorship Progress</div>
@@ -599,6 +599,33 @@
     <div class="modal-foot">
       <button class="btn" onclick="closeSchedule()">Cancel</button>
       <button class="btn primary" id="schedSubmitBtn" onclick="submitSchedule()">Send request</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FOCUS AREA MINI-PROFILE MODAL ══ -->
+<div class="modal-overlay" id="focusModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-title">Your focus area</div>
+    <div class="modal-sub">What do you want your mentor to help you with? Be specific — the clearer the brief, the better the guidance.</div>
+
+    <!-- Mini-profile header -->
+    <div style="display:flex;gap:14px;align-items:center;padding:14px;border-radius:12px;background:rgba(234,179,8,.08);border:1px solid rgba(251,191,36,.25);margin:6px 0 16px;">
+      <div id="focusModalAv" style="width:56px;height:56px;border-radius:50%;flex-shrink:0;overflow:hidden;border:2px solid rgba(251,191,36,.4);background:linear-gradient(135deg,#3b82f6,#1d4ed8);"></div>
+      <div style="flex:1;min-width:0;">
+        <div id="focusModalName" style="font-size:15px;font-weight:800;color:#f9fafb;">—</div>
+        <div id="focusModalLevel" style="font-size:12px;color:var(--amber);font-weight:600;margin-top:2px;">—</div>
+      </div>
+    </div>
+
+    <div class="modal-field">
+      <label>Focus area / what you want help with</label>
+      <textarea class="modal-textarea" id="focusModalText" rows="6" placeholder="e.g. I'm a Level 2 coach moving into representative work. I want to get better at building game plans, managing parent comms, and reading defenders during live games."></textarea>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn" onclick="closeFocusModal()">Cancel</button>
+      <button class="btn primary" id="focusSaveBtn" onclick="saveFocusArea()">Save focus area</button>
     </div>
   </div>
 </div>
@@ -950,19 +977,57 @@
   }
 
   // ──────────────────────────────────────────────────────────────
-  // FOCUS AREA — inline edit, save on blur
+  // FOCUS AREA — click stat card → opens mini-profile modal where
+  // the coach can describe what they want to discuss with their mentor.
   // ──────────────────────────────────────────────────────────────
   function renderFocusAreaInput() {
-    const el = document.getElementById("statFocus");
-    el.value = currentProfile.mentor_focus_area || "";
-    el.addEventListener("blur", async () => {
-      const v = el.value.trim();
-      if (v === (currentProfile.mentor_focus_area || "")) return;
-      const { error } = await sb.from("profiles").update({ mentor_focus_area: v || null }).eq("id", currentUser.id);
-      if (error) { alert("Couldn't save focus area: " + error.message); return; }
-      currentProfile.mentor_focus_area = v;
-    });
+    const display = document.getElementById("statFocusDisplay");
+    const v = (currentProfile.mentor_focus_area || "").trim();
+    display.textContent = v || "Set focus area";
+    display.style.opacity = v ? "1" : ".55";
   }
+
+  function openFocusModal(){
+    // Mini-profile header — show the coach (this user), their level,
+    // and a roomy textarea for what they want to work on with the mentor.
+    document.getElementById("focusModalName").textContent = fullName(currentProfile);
+    document.getElementById("focusModalLevel").textContent =
+      LEVEL_NAMES[currentProfile.selected_tier] || (currentProfile.selected_tier || "Coach");
+    const av = document.getElementById("focusModalAv");
+    if (currentProfile.avatar_url) {
+      av.innerHTML = `<img src="${escapeHTML(currentProfile.avatar_url)}" alt="" loading="lazy"/>`;
+    } else {
+      // Use pravatar fallback for consistency with the rest of the app
+      const src = `https://i.pravatar.cc/200?u=${encodeURIComponent(currentUser.id)}`;
+      av.innerHTML = `<img src="${escapeHTML(src)}" alt="" loading="lazy"/>`;
+    }
+    document.getElementById("focusModalText").value = currentProfile.mentor_focus_area || "";
+    document.getElementById("focusModal").classList.add("open");
+    setTimeout(() => document.getElementById("focusModalText").focus(), 50);
+  }
+  function closeFocusModal(){
+    document.getElementById("focusModal").classList.remove("open");
+  }
+  async function saveFocusArea(){
+    const v = document.getElementById("focusModalText").value.trim();
+    const btn = document.getElementById("focusSaveBtn");
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = "Saving…";
+    try {
+      const { error } = await sb.from("profiles").update({ mentor_focus_area: v || null }).eq("id", currentUser.id);
+      if (error) { alert("Couldn't save: " + error.message); return; }
+      currentProfile.mentor_focus_area = v;
+      renderFocusAreaInput();
+      closeFocusModal();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = orig;
+    }
+  }
+  window.openFocusModal  = openFocusModal;
+  window.closeFocusModal = closeFocusModal;
+  window.saveFocusArea   = saveFocusArea;
 
   // ──────────────────────────────────────────────────────────────
   // SECTION NAV
