@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Console — CoachAnywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#020617;--bg2:#020B24;--bg3:#0A1C4A;
+      --card:rgba(15,23,42,.7);--card2:rgba(15,23,42,.85);
+      --border:rgba(148,163,184,.18);--border-strong:rgba(148,163,184,.32);
+      --text:#e5e7eb;--muted:#94a3b8;--muted2:#64748b;
+      --blue:#3b82f6;--blue2:#60a5fa;--amber:#fbbf24;--amber2:#d97706;
+      --green:#22c55e;--green2:#86efac;--red:#ef4444;--red2:#fca5a5;
+      --purple:#a78bfa;
+      --tr:160ms ease-out;
+    }
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+      background:radial-gradient(circle at 20% 0%,var(--bg3) 0%,var(--bg2) 65%,var(--bg) 100%);
+      color:var(--text);min-height:100vh;line-height:1.5;
+    }
+    a{text-decoration:none;color:inherit;}
+
+    /* ── HEADER ── */
+    header{
+      position:sticky;top:0;z-index:20;
+      backdrop-filter:blur(18px);
+      background:linear-gradient(to bottom,rgba(3,7,18,.96),rgba(3,7,18,.88));
+      border-bottom:1px solid rgba(30,64,175,.45);
+      padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px;
+    }
+    .brand{display:flex;align-items:center;gap:14px;}
+    .brand-mark{font-size:17px;font-weight:800;letter-spacing:.04em;color:#fff;text-transform:uppercase;}
+    .brand-mark span{color:var(--blue2);}
+    .brand-tag{
+      font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--amber);border:1px solid rgba(251,191,36,.4);
+      background:rgba(234,179,8,.08);padding:3px 9px;border-radius:6px;
+    }
+    .meta-row{display:flex;align-items:center;gap:14px;}
+    .last-updated{font-size:12px;color:var(--muted);}
+    .refresh-btn{
+      padding:9px 16px;border-radius:9px;
+      background:linear-gradient(135deg,var(--blue),#1d4ed8);
+      color:#fff;font-weight:600;font-size:13px;
+      border:none;cursor:pointer;font-family:inherit;
+      transition:transform var(--tr),box-shadow var(--tr);
+      box-shadow:0 8px 22px rgba(37,99,235,.35);
+      display:inline-flex;align-items:center;gap:6px;
+    }
+    .refresh-btn:hover{transform:translateY(-1px);}
+    .refresh-btn:disabled{opacity:.55;cursor:wait;transform:none;}
+    .refresh-btn svg{width:14px;height:14px;}
+
+    /* ── MAIN ── */
+    main{max-width:1480px;margin:0 auto;padding:28px;display:flex;flex-direction:column;gap:28px;}
+
+    .row-label{
+      font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:10px;
+    }
+    .row-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+    /* ── KPI CARDS (Row 1) ── */
+    .kpi-grid{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:14px;
+    }
+    .kpi-card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:18px 20px;
+      transition:border-color var(--tr),background var(--tr);
+    }
+    .kpi-card:hover{border-color:var(--border-strong);background:var(--card2);}
+    .kpi-label{
+      font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+      color:var(--muted);margin-bottom:10px;
+    }
+    .kpi-value{font-size:28px;font-weight:800;color:#f9fafb;line-height:1.1;letter-spacing:-.02em;}
+    .kpi-sub{font-size:11px;color:var(--muted2);margin-top:6px;}
+    .kpi-card.warn .kpi-value{color:var(--amber);}
+    .kpi-card.danger .kpi-value{color:var(--red2);}
+
+    /* ── CHARTS (Row 2) ── */
+    .charts-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+    }
+    .panel{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:18px 20px;
+    }
+    .panel-title{
+      font-size:13px;font-weight:700;color:#f1f5f9;
+      margin-bottom:4px;
+    }
+    .panel-sub{font-size:11px;color:var(--muted);margin-bottom:14px;}
+    .chart-svg{width:100%;height:140px;display:block;}
+    .chart-axis{font-size:9px;fill:var(--muted2);font-family:inherit;}
+
+    /* ── PANELS (Row 3) ── */
+    .panels-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+    .coach-table{width:100%;border-collapse:collapse;font-size:13px;}
+    .coach-table th{
+      text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+      color:var(--muted);padding:8px 6px;border-bottom:1px solid var(--border);
+    }
+    .coach-table td{padding:10px 6px;border-bottom:1px solid rgba(148,163,184,.08);}
+    .coach-table tr:last-child td{border-bottom:none;}
+    .coach-name{color:#f1f5f9;font-weight:600;}
+    .coach-tier{color:var(--muted);font-size:11px;display:block;margin-top:2px;}
+    .coach-stat{color:var(--amber);font-weight:700;text-align:right;}
+
+    .activity-list{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;}
+    .activity-list::-webkit-scrollbar{width:6px;}
+    .activity-list::-webkit-scrollbar-thumb{background:rgba(148,163,184,.25);border-radius:999px;}
+    .activity-item{
+      display:flex;align-items:flex-start;gap:10px;
+      padding:8px 4px;border-bottom:1px solid rgba(148,163,184,.06);font-size:13px;
+    }
+    .activity-dot{
+      width:6px;height:6px;border-radius:50%;background:var(--blue2);
+      margin-top:6px;flex-shrink:0;
+    }
+    .activity-text{flex:1;color:var(--text);}
+    .activity-ts{font-size:11px;color:var(--muted2);flex-shrink:0;}
+
+    /* ── AI INSIGHTS (Row 4) ── */
+    .insights-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+    }
+    .insight-card{
+      padding:14px 16px;border-radius:12px;border:1px solid var(--border);
+      background:var(--card);display:flex;align-items:flex-start;gap:12px;
+    }
+    .insight-card.warning   {background:rgba(127,29,29,.16);border-color:rgba(239,68,68,.4);}
+    .insight-card.opportunity{background:rgba(20,83,45,.16);border-color:rgba(34,197,94,.4);}
+    .insight-card.info      {background:rgba(30,58,138,.18);border-color:rgba(59,130,246,.4);}
+    .insight-ic{
+      width:28px;height:28px;border-radius:8px;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;font-size:13px;
+    }
+    .insight-card.warning   .insight-ic{background:rgba(239,68,68,.2);color:var(--red2);}
+    .insight-card.opportunity .insight-ic{background:rgba(34,197,94,.2);color:var(--green2);}
+    .insight-card.info      .insight-ic{background:rgba(59,130,246,.2);color:var(--blue2);}
+    .insight-msg{font-size:13px;line-height:1.55;color:var(--text);}
+
+    /* ── HEALTH (Row 5) ── */
+    .health-grid{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:12px;
+    }
+    .health-card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:14px 16px;
+    }
+    .health-label{
+      font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+      color:var(--muted);margin-bottom:6px;
+    }
+    .health-value{font-size:20px;font-weight:800;color:#f9fafb;}
+    .health-card.attention .health-value{color:var(--amber);}
+    .health-card.critical  .health-value{color:var(--red2);}
+
+    /* ── RESPONSIVE ── */
+    @media (max-width:1200px){
+      .kpi-grid     {grid-template-columns:repeat(3,1fr);}
+      .health-grid  {grid-template-columns:repeat(3,1fr);}
+      .charts-grid  {grid-template-columns:1fr;}
+      .panels-grid  {grid-template-columns:1fr;}
+      .insights-grid{grid-template-columns:1fr;}
+    }
+    @media (max-width:700px){
+      header{padding:12px 16px;flex-direction:column;align-items:flex-start;}
+      main{padding:18px 14px;gap:20px;}
+      .kpi-grid    {grid-template-columns:repeat(2,1fr);}
+      .health-grid {grid-template-columns:repeat(2,1fr);}
+    }
+
+    /* ── LOADING / EMPTY ── */
+    .empty{
+      padding:36px;text-align:center;color:var(--muted);font-size:13px;
+    }
+    .pulse{animation:pulse 1.6s ease-in-out infinite;}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+  </style>
+</head>
+<body style="visibility:hidden">
+
+<header>
+  <div class="brand">
+    <a class="brand-mark" href="index.html">COACH<span>ANYWHERE</span></a>
+    <span class="brand-tag">Admin Console</span>
+  </div>
+  <div class="meta-row">
+    <span class="last-updated" id="lastUpdated">Loading…</span>
+    <button class="refresh-btn" id="refreshBtn" title="Refresh now">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+      Refresh now
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ══ ROW 1 — KPIs ══ -->
+  <section>
+    <div class="row-label">Key Metrics</div>
+    <div class="kpi-grid" id="kpiGrid">
+      <!-- 10 cards injected by JS -->
+    </div>
+  </section>
+
+  <!-- ══ ROW 2 — Charts ══ -->
+  <section>
+    <div class="row-label">Last 12 Weeks</div>
+    <div class="charts-grid">
+      <div class="panel">
+        <div class="panel-title">Athlete signups</div>
+        <div class="panel-sub">Weekly new athlete profiles</div>
+        <svg class="chart-svg" id="signupsChart" preserveAspectRatio="none" viewBox="0 0 420 140"></svg>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Revenue proxy</div>
+        <div class="panel-sub">Sum of package prices on new subscriptions / week</div>
+        <svg class="chart-svg" id="revenueChart" preserveAspectRatio="none" viewBox="0 0 420 140"></svg>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Uploads per week</div>
+        <div class="panel-sub">Submissions created in each week</div>
+        <svg class="chart-svg" id="uploadsChart" preserveAspectRatio="none" viewBox="0 0 420 140"></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ ROW 3 — Top coaches + activity ══ -->
+  <section>
+    <div class="row-label">Coaches & Activity</div>
+    <div class="panels-grid">
+      <div class="panel">
+        <div class="panel-title">Top 5 coaches</div>
+        <div class="panel-sub">Ranked by athletes assigned + completed reviews (reviews weighted 2×)</div>
+        <table class="coach-table">
+          <thead><tr><th>Coach</th><th style="text-align:right;">Athletes</th><th style="text-align:right;">Reviews</th></tr></thead>
+          <tbody id="topCoachesBody"><tr><td colspan="3" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Live activity</div>
+        <div class="panel-sub">Latest 20 platform events (signups, uploads, completed reviews)</div>
+        <div class="activity-list" id="activityList"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ ROW 4 — AI insights ══ -->
+  <section>
+    <div class="row-label">AI Insights <span style="color:var(--muted2);font-weight:500;text-transform:none;letter-spacing:0;margin-left:8px;">refreshes every 5 min</span></div>
+    <div class="insights-grid" id="insightsGrid">
+      <div class="insight-card info">
+        <div class="insight-ic">i</div>
+        <div class="insight-msg">Generating insights from this cycle's data…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ ROW 5 — Platform health ══ -->
+  <section>
+    <div class="row-label">Platform Health</div>
+    <div class="health-grid" id="healthGrid">
+      <!-- 5 cards injected by JS -->
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // ──────────────────────────────────────────────────────────────
+  // CONFIG
+  // ──────────────────────────────────────────────────────────────
+  const SB_URL = "https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const ADMIN_UUID = "405840be-8ce2-4c8c-acfa-cb27d7e15291";
+  const STATS_ENDPOINT    = "/.netlify/functions/admin-stats";
+  const INSIGHTS_ENDPOINT = "/.netlify/functions/admin-insights";
+  const REFRESH_MS         = 60 * 1000;
+  const INSIGHTS_REFRESH_MS = 5 * 60 * 1000;
+
+  const sb = window.supabase.createClient(SB_URL, SB_KEY, {
+    auth:{ persistSession:true, autoRefreshToken:true, storageKey:"ca-auth", storage:window.localStorage, detectSessionInUrl:true }
+  });
+
+  let session         = null;
+  let lastStats       = null;
+  let lastInsightsAt  = 0;
+  let inflight        = false;
+
+  // ──────────────────────────────────────────────────────────────
+  // ACCESS GATE
+  // ──────────────────────────────────────────────────────────────
+  (async () => {
+    // Retry getSession briefly — storage may not be ready on first paint
+    for (let i = 0; i < 12 && !session; i++) {
+      const { data } = await sb.auth.getSession();
+      if (data.session) { session = data.session; break; }
+      await new Promise(r => setTimeout(r, 120));
+    }
+    if (!session || session.user.id !== ADMIN_UUID) {
+      // No error message — just bounce silently as specified.
+      window.location.replace("index.html");
+      return;
+    }
+    document.body.style.visibility = "visible";
+
+    document.getElementById("refreshBtn").addEventListener("click", () => refreshAll(true));
+
+    await refreshAll(true);
+    setInterval(() => refreshAll(false), REFRESH_MS);
+    // Insights kicked off inside refreshAll on first run; the 5-min cadence
+    // is enforced by lastInsightsAt rather than a second setInterval, so a
+    // failed call doesn't drift the cycle.
+  })();
+
+  // ──────────────────────────────────────────────────────────────
+  // FORMAT HELPERS
+  // ──────────────────────────────────────────────────────────────
+  function fmtMoney(n){
+    if (n == null || isNaN(n)) return "$0";
+    if (n >= 1000) return "$" + Math.round(n).toLocaleString();
+    return "$" + Math.round(n);
+  }
+  function fmtPct(n){
+    if (n == null || isNaN(n)) return "0%";
+    return (n * 100).toFixed(1) + "%";
+  }
+  function fmtNum(n){
+    if (n == null || isNaN(n)) return "0";
+    return n.toLocaleString();
+  }
+  function fmtHours(h){
+    if (h == null || isNaN(h)) return "—";
+    if (h < 1) return Math.round(h * 60) + "m";
+    if (h < 24) return h.toFixed(1) + "h";
+    return (h / 24).toFixed(1) + "d";
+  }
+  function fmtBytes(b){
+    if (!b) return "0 B";
+    const units = ["B","KB","MB","GB","TB"];
+    let i = 0; while (b >= 1024 && i < units.length - 1) { b /= 1024; i++; }
+    return b.toFixed(b < 10 ? 2 : 1) + " " + units[i];
+  }
+  function timeAgo(iso){
+    const diff = (Date.now() - new Date(iso)) / 1000;
+    if (diff < 60)    return Math.max(1, Math.floor(diff))         + "s ago";
+    if (diff < 3600)  return Math.floor(diff / 60)                  + "m ago";
+    if (diff < 86400) return Math.floor(diff / 3600)                + "h ago";
+    return                  Math.floor(diff / 86400)                + "d ago";
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // REFRESH
+  // ──────────────────────────────────────────────────────────────
+  async function refreshAll(force){
+    if (inflight) return;
+    inflight = true;
+    const btn = document.getElementById("refreshBtn");
+    btn.disabled = true;
+    try {
+      const resp = await fetch(STATS_ENDPOINT, {
+        headers: { Authorization: "Bearer " + session.access_token }
+      });
+      if (!resp.ok) throw new Error("stats HTTP " + resp.status);
+      const data = await resp.json();
+      lastStats = data;
+
+      renderKPIs(data.kpis);
+      renderCharts(data.charts);
+      renderTopCoaches(data.topCoaches);
+      renderActivity(data.activityFeed);
+      renderHealth(data.health);
+
+      document.getElementById("lastUpdated").textContent =
+        "Updated " + new Date(data.generated_at).toLocaleTimeString();
+
+      // Insights: every 5 min, or on forced refresh from button if it's been > 60s.
+      const sinceInsights = Date.now() - lastInsightsAt;
+      if (force ? sinceInsights > 60000 : sinceInsights > INSIGHTS_REFRESH_MS) {
+        lastInsightsAt = Date.now();
+        refreshInsights(buildInsightsPayload(data, lastStats));
+      }
+    } catch (e) {
+      document.getElementById("lastUpdated").textContent = "Refresh failed: " + e.message;
+      console.error("[admin] refresh failed", e);
+    } finally {
+      inflight = false;
+      btn.disabled = false;
+    }
+  }
+
+  async function refreshInsights(payload){
+    try {
+      const resp = await fetch(INSIGHTS_ENDPOINT, {
+        method:  "POST",
+        headers: {
+          Authorization:  "Bearer " + session.access_token,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!resp.ok) throw new Error("insights HTTP " + resp.status);
+      const data = await resp.json();
+      renderInsights(data.insights || []);
+    } catch (e) {
+      console.error("[admin] insights failed", e);
+      renderInsights([{ type:"warning", message:"Couldn't reach AI insights service: " + e.message }]);
+    }
+  }
+
+  function buildInsightsPayload(current, prev){
+    // Pass everything the model needs to reason about deltas + zero-activity coaches.
+    const k = current.kpis;
+    const c = current.charts.weeks;
+    return {
+      this_week: {
+        signups:       c[c.length - 1]?.signups       || 0,
+        uploads:       c[c.length - 1]?.uploads       || 0,
+        revenue_proxy: c[c.length - 1]?.revenueProxy  || 0
+      },
+      last_week: {
+        signups:       c[c.length - 2]?.signups       || 0,
+        uploads:       c[c.length - 2]?.uploads       || 0,
+        revenue_proxy: c[c.length - 2]?.revenueProxy  || 0
+      },
+      totals: {
+        athletes:           k.totalAthletes,
+        coaches:            k.totalCoaches,
+        active_subs:        k.activeSubs,
+        potential_mrr:      k.potentialMRR,
+        est_commission_mtd: k.estCommissionThisMonth
+      },
+      operations: {
+        avg_response_hours:    k.avgResponseHours,
+        uploads_this_month:    k.uploadsThisMonth,
+        completed_this_month:  k.completedThisMonth,
+        churn_rate:            k.churnRate,
+        conversion_to_paid:    k.conversionToPaid
+      },
+      health: current.health,
+      top_coaches: current.topCoaches,
+      coaches_with_zero_activity: current.health.coachesNoAthletes
+    };
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // RENDER — Row 1 (KPIs)
+  // ──────────────────────────────────────────────────────────────
+  function renderKPIs(k){
+    const cards = [
+      { label: "Total athletes",         value: fmtNum(k.totalAthletes),         sub: "All-time signups" },
+      { label: "Total coaches",          value: fmtNum(k.totalCoaches),          sub: "All-time signups" },
+      { label: "Potential MRR",          value: fmtMoney(k.potentialMRR),        sub: "Coaches × tier price" },
+      { label: "Est. commission MTD",    value: fmtMoney(k.estCommissionThisMonth), sub: "20% of active package revenue" },
+      { label: "Active subscriptions",   value: fmtNum(k.activeSubs),            sub: "Athletes paired with a coach" },
+      { label: "Uploads this month",     value: fmtNum(k.uploadsThisMonth),      sub: "Submissions created" },
+      { label: "Reviews completed MTD",  value: fmtNum(k.completedThisMonth),    sub: "Marked completed" },
+      { label: "Avg response time",      value: fmtHours(k.avgResponseHours),    sub: "Upload → completed" },
+      { label: "Churn rate (month)",     value: fmtPct(k.churnRate),             sub: "Cancelled / active at start", warnIf: v => v > 0.05 },
+      { label: "Conversion to paid",     value: fmtPct(k.conversionToPaid),      sub: "Athletes with a coach" }
+    ];
+    document.getElementById("kpiGrid").innerHTML = cards.map(c => {
+      const cls = c.warnIf && c.warnIf(parseFloat(c.value)) ? " warn" : "";
+      return `
+        <div class="kpi-card${cls}">
+          <div class="kpi-label">${c.label}</div>
+          <div class="kpi-value">${c.value}</div>
+          <div class="kpi-sub">${c.sub}</div>
+        </div>`;
+    }).join("");
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // RENDER — Row 2 (Charts)
+  // Inline SVG line/bar charts. Auto-scales to peak in window.
+  // ──────────────────────────────────────────────────────────────
+  function renderCharts(charts){
+    const weeks = charts.weeks || [];
+    const W = 420, H = 140, padL = 20, padR = 8, padT = 12, padB = 22;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    function build(svgId, key, kind, colour){
+      const svg = document.getElementById(svgId);
+      const max = Math.max(1, ...weeks.map(w => w[key] || 0));
+      const xStep = plotW / Math.max(1, weeks.length - 1);
+      const barW  = Math.max(2, (plotW / weeks.length) * 0.7);
+
+      // Y-axis ticks (3)
+      const yTicks = [0, max/2, max].map(v => Math.round(v));
+      const yAxis = yTicks.map((v, i) => {
+        const y = padT + plotH - (v / max) * plotH;
+        return `<text class="chart-axis" x="${padL - 4}" y="${y + 3}" text-anchor="end">${v}</text>` +
+               `<line x1="${padL}" x2="${W - padR}" y1="${y}" y2="${y}" stroke="rgba(148,163,184,.08)" stroke-width="1"/>`;
+      }).join("");
+
+      // X-axis labels (every other)
+      const xLabels = weeks.map((w, i) => {
+        if (i % 2 !== 0 && i !== weeks.length - 1) return "";
+        const x = padL + i * xStep;
+        return `<text class="chart-axis" x="${x}" y="${H - 6}" text-anchor="middle">${w.label}</text>`;
+      }).join("");
+
+      let plot = "";
+      if (kind === "line") {
+        const pts = weeks.map((w, i) => {
+          const x = padL + i * xStep;
+          const y = padT + plotH - ((w[key] || 0) / max) * plotH;
+          return `${x},${y}`;
+        });
+        const areaPath = `M${pts[0]} L${pts.join(" L")} L${padL + (weeks.length-1)*xStep},${padT + plotH} L${padL},${padT + plotH} Z`;
+        const linePath = `M${pts.join(" L")}`;
+        plot = `
+          <defs><linearGradient id="grad-${svgId}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${colour}" stop-opacity=".3"/>
+            <stop offset="100%" stop-color="${colour}" stop-opacity="0"/>
+          </linearGradient></defs>
+          <path d="${areaPath}" fill="url(#grad-${svgId})"/>
+          <path d="${linePath}" fill="none" stroke="${colour}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          ${weeks.map((w, i) => {
+            const x = padL + i * xStep;
+            const y = padT + plotH - ((w[key] || 0) / max) * plotH;
+            return `<circle cx="${x}" cy="${y}" r="2.5" fill="${colour}"/>`;
+          }).join("")}
+        `;
+      } else { // bar
+        plot = weeks.map((w, i) => {
+          const x = padL + i * xStep - barW / 2;
+          const h = ((w[key] || 0) / max) * plotH;
+          const y = padT + plotH - h;
+          return `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(0, h)}" fill="${colour}" rx="2"/>`;
+        }).join("");
+      }
+
+      svg.innerHTML = yAxis + plot + xLabels;
+    }
+
+    build("signupsChart", "signups",      "line", "var(--blue2)");
+    build("revenueChart", "revenueProxy", "line", "var(--amber)");
+    build("uploadsChart", "uploads",      "bar",  "var(--purple)");
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // RENDER — Row 3 (Top coaches + activity)
+  // ──────────────────────────────────────────────────────────────
+  function renderTopCoaches(rows){
+    const tbody = document.getElementById("topCoachesBody");
+    if (!rows || !rows.length) {
+      tbody.innerHTML = `<tr><td colspan="3" class="empty">No coaches yet</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(c => `
+      <tr>
+        <td>
+          <div class="coach-name">${escapeHTML(c.name)}</div>
+          <span class="coach-tier">${escapeHTML(c.tier)}</span>
+        </td>
+        <td class="coach-stat">${c.assigned}</td>
+        <td class="coach-stat">${c.reviews}</td>
+      </tr>`).join("");
+  }
+
+  function renderActivity(items){
+    const list = document.getElementById("activityList");
+    if (!items || !items.length) {
+      list.innerHTML = `<div class="empty">No activity yet</div>`;
+      return;
+    }
+    list.innerHTML = items.map(i => `
+      <div class="activity-item">
+        <div class="activity-dot"></div>
+        <div class="activity-text">${escapeHTML(i.text)}</div>
+        <div class="activity-ts">${timeAgo(i.ts)}</div>
+      </div>`).join("");
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // RENDER — Row 4 (AI insights)
+  // ──────────────────────────────────────────────────────────────
+  function renderInsights(items){
+    const grid = document.getElementById("insightsGrid");
+    if (!items || !items.length) {
+      grid.innerHTML = `<div class="insight-card info"><div class="insight-ic">i</div><div class="insight-msg">No insights returned this cycle.</div></div>`;
+      return;
+    }
+    const iconFor = t =>
+      t === "warning"     ? "!" :
+      t === "opportunity" ? "↑" :
+                            "i";
+    grid.innerHTML = items.map(i => `
+      <div class="insight-card ${escapeHTML(i.type || "info")}">
+        <div class="insight-ic">${iconFor(i.type)}</div>
+        <div class="insight-msg">${escapeHTML(i.message || "")}</div>
+      </div>`).join("");
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // RENDER — Row 5 (Platform health)
+  // ──────────────────────────────────────────────────────────────
+  function renderHealth(h){
+    const cards = [
+      { label: "Storage used",            value: fmtBytes(h.storageBytes),     cls: "" },
+      { label: "Failed submissions",      value: fmtNum(h.failedSubmissions),  cls: h.failedSubmissions > 0 ? "attention" : "" },
+      { label: "Coaches w/ no athletes",  value: fmtNum(h.coachesNoAthletes),  cls: h.coachesNoAthletes > 0 ? "attention" : "" },
+      { label: "Athletes w/ no coach",    value: fmtNum(h.athletesNoCoach),    cls: h.athletesNoCoach   > 0 ? "attention" : "" },
+      { label: "Unconfirmed accounts",    value: fmtNum(h.unconfirmed),        cls: h.unconfirmed       > 0 ? "attention" : "" }
+    ];
+    document.getElementById("healthGrid").innerHTML = cards.map(c => `
+      <div class="health-card ${c.cls}">
+        <div class="health-label">${c.label}</div>
+        <div class="health-value">${c.value}</div>
+      </div>`).join("");
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // UTIL
+  // ──────────────────────────────────────────────────────────────
+  function escapeHTML(s){
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+</script>
+
+</body>
+</html>
