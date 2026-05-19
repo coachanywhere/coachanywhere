@@ -239,19 +239,19 @@
     <div class="row-label">Last 12 Weeks</div>
     <div class="charts-grid">
       <div class="panel">
-        <div class="panel-title">Athlete signups</div>
-        <div class="panel-sub">Weekly new athlete profiles</div>
+        <div class="panel-title">Signups by role</div>
+        <div class="panel-sub">New athletes (blue) + new coaches (amber), last 12 weeks</div>
         <svg class="chart-svg" id="signupsChart" preserveAspectRatio="none" viewBox="0 0 420 140"></svg>
       </div>
       <div class="panel">
-        <div class="panel-title">Revenue proxy</div>
-        <div class="panel-sub">Sum of package prices on new subscriptions / week</div>
-        <svg class="chart-svg" id="revenueChart" preserveAspectRatio="none" viewBox="0 0 420 140"></svg>
+        <div class="panel-title">Coaches by tier</div>
+        <div class="panel-sub">Current breakdown across L1 — L4</div>
+        <svg class="chart-svg" id="tierChart" preserveAspectRatio="none" viewBox="0 0 420 140"></svg>
       </div>
       <div class="panel">
-        <div class="panel-title">Uploads per week</div>
-        <div class="panel-sub">Submissions created in each week</div>
-        <svg class="chart-svg" id="uploadsChart" preserveAspectRatio="none" viewBox="0 0 420 140"></svg>
+        <div class="panel-title">Mentor sessions by status</div>
+        <div class="panel-sub">All-time session counts by lifecycle state</div>
+        <svg class="chart-svg" id="sessionsChart" preserveAspectRatio="none" viewBox="0 0 420 140"></svg>
       </div>
     </div>
   </section>
@@ -440,34 +440,47 @@
   }
 
   function buildInsightsPayload(current, prev){
-    // Pass everything the model needs to reason about deltas + zero-activity coaches.
+    // Pass everything the model needs to reason about deltas + activity.
     const k = current.kpis;
     const c = current.charts.weeks;
     return {
       this_week: {
-        signups:       c[c.length - 1]?.signups       || 0,
-        uploads:       c[c.length - 1]?.uploads       || 0,
-        revenue_proxy: c[c.length - 1]?.revenueProxy  || 0
+        athlete_signups: c[c.length - 1]?.athleteSignups || 0,
+        coach_signups:   c[c.length - 1]?.coachSignups   || 0,
+        uploads:         c[c.length - 1]?.uploads        || 0,
+        mentor_sessions: c[c.length - 1]?.mentorSessions || 0
       },
       last_week: {
-        signups:       c[c.length - 2]?.signups       || 0,
-        uploads:       c[c.length - 2]?.uploads       || 0,
-        revenue_proxy: c[c.length - 2]?.revenueProxy  || 0
+        athlete_signups: c[c.length - 2]?.athleteSignups || 0,
+        coach_signups:   c[c.length - 2]?.coachSignups   || 0,
+        uploads:         c[c.length - 2]?.uploads        || 0,
+        mentor_sessions: c[c.length - 2]?.mentorSessions || 0
       },
       totals: {
-        athletes:           k.totalAthletes,
-        coaches:            k.totalCoaches,
-        active_subs:        k.activeSubs,
-        potential_mrr:      k.potentialMRR,
-        est_commission_mtd: k.estCommissionThisMonth
+        users:         k.totalUsers,
+        athletes:      k.totalAthletes,
+        coaches:       k.totalCoaches,
+        coaches_live:  k.coachesLive,
+        active_subs:   k.activeSubs
+      },
+      revenue: {
+        tier_mrr:               k.tierMonthlyRevenue,
+        tier_active_count:      k.tierActiveCount,
+        tier_revenue_by_tier:   k.tierRevenueByTier,
+        spotlight_mrr:          k.spotlightMonthlyRevenue,
+        spotlight_active_count: k.spotlightActiveCount
       },
       operations: {
         avg_response_hours:    k.avgResponseHours,
         uploads_this_month:    k.uploadsThisMonth,
         completed_this_month:  k.completedThisMonth,
-        churn_rate:            k.churnRate,
         conversion_to_paid:    k.conversionToPaid
       },
+      mentor: {
+        relationships: k.mentorRel,
+        sessions:      k.mentorSessions
+      },
+      coaches_by_tier: k.coachesByTier,
       health: current.health,
       top_coaches: current.topCoaches,
       coaches_with_zero_activity: current.health.coachesNoAthletes
@@ -478,27 +491,40 @@
   // RENDER — Row 1 (KPIs)
   // ──────────────────────────────────────────────────────────────
   function renderKPIs(k){
+    const todaySignups = (k.signupsTodayAthletes || 0) + (k.signupsTodayCoaches || 0);
+    const weekSignups  = (k.signupsWeekAthletes  || 0) + (k.signupsWeekCoaches  || 0);
+    const mr  = k.mentorRel      || {};
+    const ms  = k.mentorSessions || {};
     const cards = [
-      { label: "Total athletes",         value: fmtNum(k.totalAthletes),         sub: "All-time signups" },
-      { label: "Total coaches",          value: fmtNum(k.totalCoaches),          sub: "All-time signups" },
-      { label: "Potential MRR",          value: fmtMoney(k.potentialMRR),        sub: "Coaches × tier price" },
-      { label: "Est. commission MTD",    value: fmtMoney(k.estCommissionThisMonth), sub: "20% of active package revenue" },
+      // Headline
+      { label: "Total users",            value: fmtNum(k.totalUsers),            sub: `${fmtNum(k.totalAthletes)} athletes · ${fmtNum(k.totalCoaches)} coaches` },
+      { label: "Active coaches",         value: fmtNum(k.coachesLive),           sub: "profile_status = Live" },
+      { label: "Signups today",          value: fmtNum(todaySignups),            sub: `${fmtNum(k.signupsTodayAthletes)} athletes · ${fmtNum(k.signupsTodayCoaches)} coaches` },
+      { label: "Signups this week",      value: fmtNum(weekSignups),             sub: `${fmtNum(k.signupsWeekAthletes)} athletes · ${fmtNum(k.signupsWeekCoaches)} coaches` },
       { label: "Active subscriptions",   value: fmtNum(k.activeSubs),            sub: "Athletes paired with a coach" },
+
+      // Revenue (real data — Stripe-backed)
+      { label: "Tier MRR",               value: fmtMoney(k.tierMonthlyRevenue),  sub: `${fmtNum(k.tierActiveCount)} paying subscriptions` },
+      { label: "Spotlight MRR",          value: fmtMoney(k.spotlightMonthlyRevenue), sub: `${fmtNum(k.spotlightActiveCount)} active spotlights` },
+
+      // Mentor funnel
+      { label: "Active mentorships",     value: fmtNum(mr.active),               sub: `${fmtNum(mr.pending)} pending · ${fmtNum(mr.total)} total` },
+      { label: "Mentor sessions",        value: fmtNum(ms.total),                sub: `${fmtNum(ms.scheduled)} confirmed · ${fmtNum(ms.pending)} pending` },
+
+      // Engagement
       { label: "Uploads this month",     value: fmtNum(k.uploadsThisMonth),      sub: "Submissions created" },
       { label: "Reviews completed MTD",  value: fmtNum(k.completedThisMonth),    sub: "Marked completed" },
       { label: "Avg response time",      value: fmtHours(k.avgResponseHours),    sub: "Upload → completed" },
-      { label: "Churn rate (month)",     value: fmtPct(k.churnRate),             sub: "Cancelled / active at start", warnIf: v => v > 0.05 },
-      { label: "Conversion to paid",     value: fmtPct(k.conversionToPaid),      sub: "Athletes with a coach" }
+      { label: "Conversion to paid",     value: fmtPct(k.conversionToPaid),      sub: "Athletes with a coach" },
+      { label: "Sessions completed",     value: fmtNum(ms.completed),            sub: "All-time mentor sessions" },
+      { label: "Sessions cancelled",     value: fmtNum(ms.cancelled),            sub: "Declined or cancelled" }
     ];
-    document.getElementById("kpiGrid").innerHTML = cards.map(c => {
-      const cls = c.warnIf && c.warnIf(parseFloat(c.value)) ? " warn" : "";
-      return `
-        <div class="kpi-card${cls}">
-          <div class="kpi-label">${c.label}</div>
-          <div class="kpi-value">${c.value}</div>
-          <div class="kpi-sub">${c.sub}</div>
-        </div>`;
-    }).join("");
+    document.getElementById("kpiGrid").innerHTML = cards.map(c => `
+      <div class="kpi-card">
+        <div class="kpi-label">${c.label}</div>
+        <div class="kpi-value">${c.value}</div>
+        <div class="kpi-sub">${c.sub}</div>
+      </div>`).join("");
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -507,68 +533,101 @@
   // ──────────────────────────────────────────────────────────────
   function renderCharts(charts){
     const weeks = charts.weeks || [];
-    const W = 420, H = 140, padL = 20, padR = 8, padT = 12, padB = 22;
+    const W = 420, H = 140, padL = 28, padR = 12, padT = 12, padB = 22;
     const plotW = W - padL - padR;
     const plotH = H - padT - padB;
 
-    function build(svgId, key, kind, colour){
-      const svg = document.getElementById(svgId);
-      const max = Math.max(1, ...weeks.map(w => w[key] || 0));
+    // ── Chart 1: overlay athlete + coach signup lines ──────────
+    (function buildSignupsOverlay(){
+      const svg = document.getElementById("signupsChart");
+      const maxA = Math.max(...weeks.map(w => w.athleteSignups || 0));
+      const maxC = Math.max(...weeks.map(w => w.coachSignups   || 0));
+      const max  = Math.max(1, maxA, maxC);
       const xStep = plotW / Math.max(1, weeks.length - 1);
-      const barW  = Math.max(2, (plotW / weeks.length) * 0.7);
-
-      // Y-axis ticks (3)
       const yTicks = [0, max/2, max].map(v => Math.round(v));
-      const yAxis = yTicks.map((v, i) => {
+      const yAxis = yTicks.map((v) => {
         const y = padT + plotH - (v / max) * plotH;
         return `<text class="chart-axis" x="${padL - 4}" y="${y + 3}" text-anchor="end">${v}</text>` +
                `<line x1="${padL}" x2="${W - padR}" y1="${y}" y2="${y}" stroke="rgba(148,163,184,.08)" stroke-width="1"/>`;
       }).join("");
-
-      // X-axis labels (every other)
       const xLabels = weeks.map((w, i) => {
         if (i % 2 !== 0 && i !== weeks.length - 1) return "";
         const x = padL + i * xStep;
         return `<text class="chart-axis" x="${x}" y="${H - 6}" text-anchor="middle">${w.label}</text>`;
       }).join("");
-
-      let plot = "";
-      if (kind === "line") {
+      function line(key, colour){
         const pts = weeks.map((w, i) => {
           const x = padL + i * xStep;
           const y = padT + plotH - ((w[key] || 0) / max) * plotH;
           return `${x},${y}`;
         });
-        const areaPath = `M${pts[0]} L${pts.join(" L")} L${padL + (weeks.length-1)*xStep},${padT + plotH} L${padL},${padT + plotH} Z`;
-        const linePath = `M${pts.join(" L")}`;
-        plot = `
-          <defs><linearGradient id="grad-${svgId}" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="${colour}" stop-opacity=".3"/>
-            <stop offset="100%" stop-color="${colour}" stop-opacity="0"/>
-          </linearGradient></defs>
-          <path d="${areaPath}" fill="url(#grad-${svgId})"/>
-          <path d="${linePath}" fill="none" stroke="${colour}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          ${weeks.map((w, i) => {
+        return `<path d="M${pts.join(" L")}" fill="none" stroke="${colour}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>` +
+          weeks.map((w, i) => {
             const x = padL + i * xStep;
             const y = padT + plotH - ((w[key] || 0) / max) * plotH;
-            return `<circle cx="${x}" cy="${y}" r="2.5" fill="${colour}"/>`;
-          }).join("")}
-        `;
-      } else { // bar
-        plot = weeks.map((w, i) => {
-          const x = padL + i * xStep - barW / 2;
-          const h = ((w[key] || 0) / max) * plotH;
-          const y = padT + plotH - h;
-          return `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(0, h)}" fill="${colour}" rx="2"/>`;
-        }).join("");
+            return `<circle cx="${x}" cy="${y}" r="2" fill="${colour}"/>`;
+          }).join("");
       }
+      svg.innerHTML = yAxis +
+        line("athleteSignups", "var(--blue2)") +
+        line("coachSignups",   "var(--amber)") +
+        xLabels;
+    })();
 
-      svg.innerHTML = yAxis + plot + xLabels;
-    }
+    // ── Chart 2: coaches by tier (vertical bars) ──────────────
+    (function buildCoachesByTier(){
+      const svg = document.getElementById("tierChart");
+      const byTier = (lastStats?.kpis?.coachesByTier) || { L1:0, L2:0, L3:0, L4:0 };
+      const labels = ["L1","L2","L3","L4"];
+      const values = labels.map(l => byTier[l] || 0);
+      const max = Math.max(1, ...values);
+      const barW = (plotW / labels.length) * 0.55;
+      const colours = { L1:"var(--blue2)", L2:"var(--green2)", L3:"var(--amber)", L4:"var(--purple)" };
+      const yTicks = [0, Math.ceil(max/2), max];
+      const yAxis = yTicks.map((v) => {
+        const y = padT + plotH - (v / max) * plotH;
+        return `<text class="chart-axis" x="${padL - 4}" y="${y + 3}" text-anchor="end">${v}</text>` +
+               `<line x1="${padL}" x2="${W - padR}" y1="${y}" y2="${y}" stroke="rgba(148,163,184,.08)" stroke-width="1"/>`;
+      }).join("");
+      const bars = labels.map((lab, i) => {
+        const v = values[i];
+        const slot = padL + (plotW / labels.length) * (i + 0.5);
+        const h = (v / max) * plotH;
+        const y = padT + plotH - h;
+        return `<rect x="${slot - barW/2}" y="${y}" width="${barW}" height="${Math.max(0, h)}" fill="${colours[lab]}" rx="3"/>` +
+               `<text class="chart-axis" x="${slot}" y="${H - 6}" text-anchor="middle">${lab}</text>` +
+               `<text class="chart-axis" x="${slot}" y="${y - 4}" text-anchor="middle" style="fill:#f1f5f9;font-weight:700;">${v}</text>`;
+      }).join("");
+      svg.innerHTML = yAxis + bars;
+    })();
 
-    build("signupsChart", "signups",      "line", "var(--blue2)");
-    build("revenueChart", "revenueProxy", "line", "var(--amber)");
-    build("uploadsChart", "uploads",      "bar",  "var(--purple)");
+    // ── Chart 3: mentor sessions by status (vertical bars) ────
+    (function buildSessionsByStatus(){
+      const svg = document.getElementById("sessionsChart");
+      const ms = (lastStats?.kpis?.mentorSessions) || {};
+      const labels = ["Pending","Scheduled","Completed","Cancelled"];
+      const keys   = ["pending", "scheduled", "completed", "cancelled"];
+      const values = keys.map(k => ms[k] || 0);
+      const max = Math.max(1, ...values);
+      const barW = (plotW / labels.length) * 0.55;
+      const colours = ["var(--amber)","var(--blue2)","var(--green2)","var(--red2)"];
+      const yTicks = [0, Math.ceil(max/2), max];
+      const yAxis = yTicks.map((v) => {
+        const y = padT + plotH - (v / max) * plotH;
+        return `<text class="chart-axis" x="${padL - 4}" y="${y + 3}" text-anchor="end">${v}</text>` +
+               `<line x1="${padL}" x2="${W - padR}" y1="${y}" y2="${y}" stroke="rgba(148,163,184,.08)" stroke-width="1"/>`;
+      }).join("");
+      const bars = labels.map((lab, i) => {
+        const v = values[i];
+        const slot = padL + (plotW / labels.length) * (i + 0.5);
+        const h = (v / max) * plotH;
+        const y = padT + plotH - h;
+        return `<rect x="${slot - barW/2}" y="${y}" width="${barW}" height="${Math.max(0, h)}" fill="${colours[i]}" rx="3"/>` +
+               `<text class="chart-axis" x="${slot}" y="${H - 6}" text-anchor="middle">${lab}</text>` +
+               `<text class="chart-axis" x="${slot}" y="${y - 4}" text-anchor="middle" style="fill:#f1f5f9;font-weight:700;">${v}</text>`;
+      }).join("");
+      svg.innerHTML = yAxis + bars;
+    })();
   }
 
   // ──────────────────────────────────────────────────────────────
