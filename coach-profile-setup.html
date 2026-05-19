@@ -191,12 +191,12 @@
 
 <div class="page-wrap">
   <div class="page-header">
-    <div class="coach-badge">
+    <div class="coach-badge" id="pageBadge">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Coach Sign Up
+      <span id="pageBadgeText">Coach Sign Up</span>
     </div>
-    <h1 class="page-title">Build your coach profile</h1>
-    <p class="page-sub">Complete your profile to go live and start attracting athletes.</p>
+    <h1 class="page-title" id="pageTitle">Build your coach profile</h1>
+    <p class="page-sub" id="pageSub">Complete your profile to go live and start attracting athletes.</p>
   </div>
 
   <!-- BASIC INFO -->
@@ -376,9 +376,9 @@
     <div class="modal-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
-    <div class="modal-title">Your profile is live!</div>
-    <div class="modal-sub">Athletes can now find and subscribe to you on CoachAnywhere. Your Foundation Member pricing is locked in — keep your subscription active to keep it.</div>
-    <div class="modal-live-badge"><div class="live-dot"></div>Now visible to athletes</div>
+    <div class="modal-title" id="successTitle">Your profile is live!</div>
+    <div class="modal-sub" id="successSub">Athletes can now find and subscribe to you on CoachAnywhere. Your Foundation Member pricing is locked in — keep your subscription active to keep it.</div>
+    <div class="modal-live-badge" id="successBadge"><div class="live-dot"></div>Now visible to athletes</div>
     <button class="modal-btn" onclick="window.location.href='coach-dashboard.html'">Go to my dashboard →</button>
   </div>
 </div>
@@ -389,6 +389,29 @@
   const SUPABASE_URL="https://rtaxjewvshhpdnkpojjn.supabase.co";
   const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
   const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ca-auth",storage:window.localStorage,detectSessionInUrl:true}});
+
+  // "Change tier" mode — coach-dashboard sidebar links here with ?mode=change.
+  // In change mode we skip the "already-set, go to dashboard" redirect and
+  // rewrite a couple of bits of copy so the page reads as an update rather
+  // than initial setup. The AI reasoning flow is preserved exactly.
+  const IS_CHANGE_MODE = new URLSearchParams(window.location.search).get("mode") === "change";
+  if (IS_CHANGE_MODE) {
+    document.title = "Change coaching tier – CoachAnywhere";
+    document.addEventListener("DOMContentLoaded", () => {
+      const badgeText = document.getElementById("pageBadgeText");
+      const title     = document.getElementById("pageTitle");
+      const sub       = document.getElementById("pageSub");
+      const sTitle    = document.getElementById("successTitle");
+      const sSub      = document.getElementById("successSub");
+      const sBadge    = document.getElementById("successBadge");
+      if (badgeText) badgeText.textContent = "Change Tier";
+      if (title)     title.textContent     = "Update your coaching tier";
+      if (sub)       sub.textContent       = "Re-run the AI recommendation, then agree or pick a different tier. Your other profile details are kept as-is.";
+      if (sTitle)    sTitle.textContent    = "Tier updated";
+      if (sSub)      sSub.textContent      = "Your new tier is saved. Athletes will see the updated tier on your profile next time they load it.";
+      if (sBadge)    sBadge.style.display  = "none";
+    });
+  }
 
   let currentUser=null;
   let selectedTier=null;
@@ -443,9 +466,11 @@
       profile = newRow;
     }
     if(profile){
-      // If setup is already complete (selected_tier set by setup save), skip setup.
-      // Mirrors coach-dashboard.html's gate so we don't bounce between pages.
-      if(profile.selected_tier && String(profile.selected_tier).trim()){
+      // If setup is already complete (selected_tier set by setup save), skip setup
+      // — UNLESS we arrived via ?mode=change, in which case the coach explicitly
+      // came here to change their tier. In change mode we re-run the AI flow so
+      // they see the reasoning, then they can agree or pick a different tier.
+      if(profile.selected_tier && String(profile.selected_tier).trim() && !IS_CHANGE_MODE){
         window.location.href="coach-dashboard.html";return;
       }
       if(profile.first_name)document.getElementById("firstName").value=profile.first_name;
