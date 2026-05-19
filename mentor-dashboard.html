@@ -758,13 +758,17 @@
     document.getElementById("statLevelSub").textContent = currentProfile.selected_tier || "Coach tier";
   }
 
+  // Deterministic stock headshot when the mentor has no avatar uploaded.
+  function fallbackAvatar(p){
+    return `https://i.pravatar.cc/300?u=${encodeURIComponent(p.id)}`;
+  }
+
   function renderMentor() {
     document.getElementById("mentorName").textContent = fullName(mentor);
     document.getElementById("mentorAv").textContent   = getInitials(mentor);
-    if (mentor.avatar_url) {
-      document.getElementById("mentorAv").innerHTML =
-        `<img src="${escapeHTML(mentor.avatar_url)}" alt=""/>`;
-    }
+    const mentorImg = mentor.avatar_url || fallbackAvatar(mentor);
+    document.getElementById("mentorAv").innerHTML =
+      `<img src="${escapeHTML(mentorImg)}" alt="" loading="lazy"/>`;
     document.getElementById("mentorTier").textContent  = mentor.selected_tier || "Coach";
     document.getElementById("mentorSport").textContent = mentor.sport ? "Sport: " + mentor.sport : "";
     document.getElementById("mentorBio").textContent   = mentor.bio || "No bio available yet.";
@@ -780,7 +784,7 @@
     document.getElementById("mymentorPanel").innerHTML = `
       <div class="row-label" style="margin-bottom:14px;">Mentor Profile</div>
       <div class="mentor-top">
-        <div class="mentor-av">${mentor.avatar_url ? `<img src="${escapeHTML(mentor.avatar_url)}" alt=""/>` : escapeHTML(getInitials(mentor))}</div>
+        <div class="mentor-av"><img src="${escapeHTML(mentorImg)}" alt="" loading="lazy"/></div>
         <div class="mentor-info">
           <div class="mentor-name">${escapeHTML(fullName(mentor))}</div>
           <div class="mentor-meta">

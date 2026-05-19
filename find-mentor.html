@@ -383,6 +383,13 @@
     wrap.innerHTML = `<div class="mentor-grid">${rows.map(cardHTML).join("")}</div>`;
   }
 
+  // Deterministic stock headshot when the mentor hasn't uploaded one.
+  // Pravatar serves real-looking faces seeded by ?u= so the same mentor
+  // always shows the same face.
+  function fallbackAvatar(m){
+    return `https://i.pravatar.cc/300?u=${encodeURIComponent(m.id)}`;
+  }
+
   function cardHTML(m) {
     const status = myRequests.get(m.id);
     const initials = getInitials(m);
@@ -395,10 +402,11 @@
     } else {
       btn = `<button class="btn primary" onclick="requestMentor('${m.id}')">Request Mentor</button>`;
     }
+    const imgSrc = m.avatar_url || fallbackAvatar(m);
     return `
       <div class="mentor-card">
         <div class="mc-top">
-          <div class="mc-avatar">${m.avatar_url ? `<img src="${escapeHTML(m.avatar_url)}" alt=""/>` : escapeHTML(initials)}</div>
+          <div class="mc-avatar"><img src="${escapeHTML(imgSrc)}" alt="" loading="lazy"/></div>
           <div style="flex:1;min-width:0;">
             <div class="mc-name">${escapeHTML(fullName(m))}</div>
             <div class="mc-meta">

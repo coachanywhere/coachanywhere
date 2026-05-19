@@ -517,11 +517,22 @@ function applyFilters(){
   renderCoaches();
 }
 
+// Deterministic stock headshot when the coach hasn't uploaded their own.
+// Pravatar serves real-looking faces from Unsplash, keyed by ?u= so the
+// same coach always gets the same face. Sport is still conveyed elsewhere
+// on the card (tier badge + tags) — the photo isn't sport-specific. Swap
+// to curated sport-themed URLs later if you want true sport matching.
+function coachFallbackImage(c){
+  const seed = encodeURIComponent(c.id || ((c.first||"") + (c.last||"")) || "coach");
+  return `https://i.pravatar.cc/400?u=${seed}`;
+}
+
 function renderCoaches(){
   document.getElementById("coachCarousel").innerHTML=coaches.map(c=>{
     const badgeCls=c.tier==="TOP"?"badge-top":c.tier==="ELITE"?"badge-elite":"badge-pro";
     const badgeTxt=c.tier==="TOP"?"Top Match":c.tier;
-    const av=c.avatar_url?`<img src="${c.avatar_url}" style="width:100%;height:100%;object-fit:cover;"/>`:"";
+    const imgSrc = c.avatar_url || coachFallbackImage(c);
+    const av = `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;" loading="lazy"/>`;
     return `<div class="coach-card ${c.featured?'featured':''}" onclick="showDetail('${c.id}')">
       <div class="coach-card-img" style="background:linear-gradient(160deg,${c.av},#0a0f1a);">
         ${av}
