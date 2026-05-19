@@ -315,6 +315,33 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
 .drill-card-tags{display:flex;gap:6px;flex-wrap:wrap;}
 .drill-tag{font-size:9px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--bg3);border:1px solid var(--border);color:var(--muted2);}
 
+/* ── MENTOR REQUESTS PANEL ── */
+.mreq-list{display:flex;flex-direction:column;gap:10px;}
+.mreq-card{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);transition:border-color var(--tr);}
+.mreq-card:hover{border-color:rgba(251,191,36,.3);}
+.mreq-av{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#0d2a6e);color:#93c5fd;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(251,191,36,.35);overflow:hidden;flex-shrink:0;}
+.mreq-av img{width:100%;height:100%;object-fit:cover;}
+.mreq-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.mreq-meta{font-size:11px;color:var(--muted);}
+.mreq-time{font-size:10px;color:var(--muted2);margin-top:3px;}
+.mreq-actions{display:flex;gap:8px;flex-shrink:0;}
+.btn-accept{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;border:none;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;cursor:pointer;font-family:inherit;transition:transform var(--tr);}
+.btn-accept:hover{transform:translateY(-1px);}
+.btn-decline{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid rgba(239,68,68,.4);background:rgba(127,29,29,.15);color:#fca5a5;cursor:pointer;font-family:inherit;transition:all var(--tr);}
+.btn-decline:hover{background:rgba(127,29,29,.25);}
+.btn-accept:disabled,.btn-decline:disabled{opacity:.55;cursor:wait;transform:none;}
+
+/* ── DECLINE MODAL (also covers any future modal needs in this file) ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,.78);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal-box{width:100%;max-width:480px;background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(9,14,35,.99));border:1px solid var(--border2);border-radius:18px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.6);}
+.modal-box h3{font-size:18px;font-weight:800;color:#f9fafb;margin-bottom:6px;}
+.modal-box .modal-sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
+.modal-box label{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.modal-box textarea{width:100%;min-height:90px;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#f1f5f9;font-size:13px;font-family:inherit;outline:none;resize:vertical;}
+.modal-box textarea:focus{border-color:var(--amber);}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+
 @media(max-width:1100px){
   .kpi-row{grid-template-columns:repeat(3,1fr);}
   .main-grid{grid-template-columns:1fr;}
@@ -327,6 +354,8 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
   .search-box{display:none;}
   .recent-grid{grid-template-columns:1fr;}
   .perf-grid{grid-template-columns:1fr;}
+  .mreq-card{grid-template-columns:auto 1fr;}
+  .mreq-actions{grid-column:1/-1;margin-top:8px;}
 }
 </style>
 </head>
@@ -355,6 +384,7 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
     <button class="nav-item" onclick="showSection('analyze')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Analyze Video</button>
     <button class="nav-item" onclick="showSection('drills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>Drills Library</button>
     <button class="nav-item" onclick="window.location.href='mentor-dashboard.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Coach Mentorship</button>
+    <button class="nav-item" onclick="showSection('mentor-requests')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Mentor Requests<span class="nav-badge" id="navMentorReqBadge" style="display:none;">0</span></button>
     <button class="nav-item" onclick="window.location.href='find-mentor.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Find Mentor</button>
     <button class="nav-item" onclick="showSection('messages')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages<span class="nav-badge" id="navMsgBadge" style="display:none;">0</span></button>
     <button class="nav-item" onclick="showSection('analytics')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</button>
@@ -683,6 +713,22 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
       </div>
     </div>
 
+    <!-- ══ MENTOR REQUESTS SECTION ══ -->
+    <div class="section" id="section-mentor-requests">
+      <div class="sec-title">Mentor Requests</div>
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title">Coaches who've asked you to be their mentor</div>
+        </div>
+        <div id="mentorRequestsBody" style="padding:8px;">
+          <div style="padding:32px 20px;text-align:center;color:var(--muted);font-size:13px;">
+            <div style="font-weight:700;color:var(--text);margin-bottom:4px;font-size:14px;">No pending mentor requests</div>
+            <div>When a coach asks you to be their mentor, you'll see them here.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ SETTINGS SECTION ══ -->
     <div class="section" id="section-settings">
       <div class="sec-title">Settings</div>
@@ -700,6 +746,20 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ══ DECLINE MENTOR REQUEST MODAL ══ -->
+<div class="modal-overlay" id="declineModal">
+  <div class="modal-box">
+    <h3>Decline mentor request</h3>
+    <div class="modal-sub" id="declineSub">Send a short reason so the coach knows.</div>
+    <label>Reason</label>
+    <textarea id="declineReason" placeholder="e.g. I'm at capacity right now — happy to reconnect in a few months."></textarea>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeDeclineModal()">Cancel</button>
+      <button class="btn-primary" id="declineSubmitBtn" onclick="submitDecline()">Send decline</button>
+    </div>
   </div>
 </div>
 
@@ -759,6 +819,141 @@ async function init(){
   renderAthletes();
   await loadRealData();
   await loadMessages();
+  await loadMentorRequests();
+}
+
+// ── MENTOR REQUESTS ─────────────────────────────────────────
+// Coaches who've asked this coach to be their mentor (status='pending').
+// Shows in the Mentor Requests section with Accept/Decline actions.
+let _declineCtx = null;  // { relId, mentee_id, name }
+
+async function loadMentorRequests(){
+  if (!currentUser) return;
+  const { data, error } = await sb.from("mentor_relationships")
+    .select("*, mentee:profiles!mentor_relationships_mentee_id_fkey(id,first_name,last_name,avatar_url,selected_tier,sport)")
+    .eq("mentor_id", currentUser.id)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.warn("[mentor-requests] read failed:", error.message);
+    return;
+  }
+  const rows = data || [];
+  const badge = document.getElementById("navMentorReqBadge");
+  const body  = document.getElementById("mentorRequestsBody");
+
+  if (!rows.length) {
+    badge.style.display = "none";
+    body.innerHTML = `<div style="padding:32px 20px;text-align:center;color:var(--muted);font-size:13px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:4px;font-size:14px;">No pending mentor requests</div>
+      <div>When a coach asks you to be their mentor, you'll see them here.</div>
+    </div>`;
+    return;
+  }
+
+  badge.style.display = "inline-block";
+  badge.textContent = rows.length;
+
+  body.innerHTML = `<div class="mreq-list">${rows.map(r => mentorReqCard(r)).join("")}</div>`;
+}
+
+function mentorReqCard(r){
+  const m = r.mentee || {};
+  const name = ((m.first_name||"") + " " + (m.last_name||"")).trim() || "Coach";
+  const initials = ((m.first_name?.[0]||"") + (m.last_name?.[0]||"")).toUpperCase() || "C";
+  const esc = s => String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  const escAttr = s => esc(s).replace(/`/g,"&#96;");
+  const av = m.avatar_url
+    ? `<img src="${esc(m.avatar_url)}" alt=""/>`
+    : esc(initials);
+  return `
+    <div class="mreq-card">
+      <div class="mreq-av">${av}</div>
+      <div>
+        <div class="mreq-name">${esc(name)}</div>
+        <div class="mreq-meta">${esc(m.selected_tier || "Coach")}${m.sport ? " · " + esc(m.sport) : ""}</div>
+        <div class="mreq-time">Requested ${timeAgo(r.created_at)}</div>
+      </div>
+      <div class="mreq-actions">
+        <button class="btn-accept"  onclick="acceptMentorRequest('${r.id}','${escAttr(m.id)}','${escAttr(name)}')">Accept</button>
+        <button class="btn-decline" onclick="openDeclineModal('${r.id}','${escAttr(m.id)}','${escAttr(name)}')">Decline</button>
+      </div>
+    </div>`;
+}
+
+async function acceptMentorRequest(relId, menteeId, name){
+  if (!confirm(`Accept ${name} as your mentee?\n\nThey'll get an acceptance message and can start scheduling sessions.`)) return;
+  // Disable the buttons in this card while we work
+  const card = event?.target?.closest(".mreq-card");
+  card?.querySelectorAll("button").forEach(b => b.disabled = true);
+
+  const { error } = await sb.from("mentor_relationships").update({
+    status: "active",
+    updated_at: new Date().toISOString()
+  }).eq("id", relId);
+  if (error) {
+    card?.querySelectorAll("button").forEach(b => b.disabled = false);
+    alert("Couldn't accept: " + error.message);
+    return;
+  }
+
+  // Acceptance message so the mentee gets a notification trail
+  await sb.from("messages").insert({
+    from_id: currentUser.id,
+    to_id:   menteeId,
+    message: `✓ I've accepted your mentor request. Looking forward to working with you — schedule our first session whenever you're ready.`
+  });
+
+  await loadMentorRequests();
+}
+
+function openDeclineModal(relId, menteeId, name){
+  _declineCtx = { relId, menteeId, name };
+  document.getElementById("declineReason").value = "";
+  document.getElementById("declineSub").textContent =
+    `Send ${name} a short reason so they know why.`;
+  document.getElementById("declineModal").classList.add("open");
+  // Focus the textarea so the coach can just start typing
+  setTimeout(() => document.getElementById("declineReason").focus(), 50);
+}
+
+function closeDeclineModal(){
+  document.getElementById("declineModal").classList.remove("open");
+  _declineCtx = null;
+}
+
+async function submitDecline(){
+  if (!_declineCtx) return;
+  const reason = document.getElementById("declineReason").value.trim();
+  if (!reason) { alert("Please write a short reason — the coach will see this in their messages."); return; }
+
+  const btn = document.getElementById("declineSubmitBtn");
+  btn.disabled = true;
+  const origLabel = btn.textContent;
+  btn.textContent = "Sending…";
+
+  try {
+    const { error } = await sb.from("mentor_relationships").update({
+      status: "inactive",
+      updated_at: new Date().toISOString()
+    }).eq("id", _declineCtx.relId);
+    if (error) { alert("Couldn't decline: " + error.message); return; }
+
+    await sb.from("messages").insert({
+      from_id: currentUser.id,
+      to_id:   _declineCtx.menteeId,
+      message: `Thanks for reaching out — unfortunately I can't take you on as a mentee right now.\n\nReason: ${reason}`
+    });
+
+    closeDeclineModal();
+    await loadMentorRequests();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origLabel;
+  }
 }
 
 function titleCase(s){return s? s.charAt(0).toUpperCase()+s.slice(1):s;}
