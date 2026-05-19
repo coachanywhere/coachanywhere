@@ -318,7 +318,18 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
 /* ── MENTOR REQUESTS PANEL ── */
 .mreq-list{display:flex;flex-direction:column;gap:10px;}
 .mreq-card{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);transition:border-color var(--tr);}
+.mreq-card{cursor:pointer;}
 .mreq-card:hover{border-color:rgba(251,191,36,.3);}
+.mreq-notes-preview{font-size:12px;color:rgba(226,232,240,.7);margin-top:6px;font-style:italic;line-height:1.45;}
+.req-review-hdr{display:flex;gap:16px;align-items:flex-start;margin-bottom:18px;}
+.req-review-av{width:72px;height:72px;border-radius:50%;flex-shrink:0;overflow:hidden;border:2px solid rgba(251,191,36,.4);}
+.req-review-av img{width:100%;height:100%;object-fit:cover;}
+.req-review-name{font-size:18px;font-weight:800;color:#f9fafb;margin-bottom:4px;}
+.req-review-meta{font-size:12px;color:var(--muted);}
+.req-review-block{margin-bottom:14px;}
+.req-review-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.req-review-text{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap;}
+.req-review-notes{background:rgba(234,179,8,.08);border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:12px 14px;}
 .mreq-av{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#0d2a6e);color:#93c5fd;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(251,191,36,.35);overflow:hidden;flex-shrink:0;}
 .mreq-av img{width:100%;height:100%;object-fit:cover;}
 .mreq-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;}
@@ -749,6 +760,45 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
   </div>
 </div>
 
+<!-- ══ MENTOR REQUEST REVIEW MODAL (full bio + notes) ══ -->
+<div class="modal-overlay" id="reqReviewModal">
+  <div class="modal-box" style="max-width:560px;">
+    <div class="req-review-hdr">
+      <div class="req-review-av" id="reqReviewAv"></div>
+      <div style="flex:1;min-width:0;">
+        <div class="req-review-name" id="reqReviewName">—</div>
+        <div class="req-review-meta" id="reqReviewMeta">—</div>
+      </div>
+    </div>
+
+    <div class="req-review-block">
+      <div class="req-review-label">What they want help with</div>
+      <div class="req-review-text req-review-notes" id="reqReviewNotes">—</div>
+    </div>
+
+    <div class="req-review-block">
+      <div class="req-review-label">About</div>
+      <div class="req-review-text" id="reqReviewBio">—</div>
+    </div>
+
+    <div class="req-review-block">
+      <div class="req-review-label">Coaching style</div>
+      <div class="req-review-text" id="reqReviewStyle">—</div>
+    </div>
+
+    <div class="req-review-block">
+      <div class="req-review-label">Qualifications</div>
+      <div class="req-review-text" id="reqReviewQual">—</div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeMentorReqReview()">Close</button>
+      <button class="btn-decline" id="reqReviewDeclineBtn">Decline</button>
+      <button class="btn-accept"  id="reqReviewAcceptBtn">Accept</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MENTOR REQUEST REPLY MODAL (accept + decline) ══ -->
 <div class="modal-overlay" id="replyModal">
   <div class="modal-box">
@@ -832,7 +882,7 @@ let _replyCtx = null;  // { relId, menteeId, name, action: 'accept' | 'decline' 
 async function loadMentorRequests(){
   if (!currentUser) return;
   const { data, error } = await sb.from("mentor_relationships")
-    .select("*, mentee:profiles!mentor_relationships_mentee_id_fkey(id,first_name,last_name,avatar_url,selected_tier,sport)")
+    .select("*, mentee:profiles!mentor_relationships_mentee_id_fkey(id,first_name,last_name,avatar_url,selected_tier,sport,bio,coaching_style,qualifications,location)")
     .eq("mentor_id", currentUser.id)
     .eq("status", "pending")
     .order("created_at", { ascending: false });
@@ -860,30 +910,77 @@ async function loadMentorRequests(){
   body.innerHTML = `<div class="mreq-list">${rows.map(r => mentorReqCard(r)).join("")}</div>`;
 }
 
+// Cache by relationship id so the review modal can open from a click without
+// another fetch. Keys are the relationship row's UUID.
+let _mentorReqCache = {};
+
 function mentorReqCard(r){
+  _mentorReqCache[r.id] = r;
   const m = r.mentee || {};
   const name = ((m.first_name||"") + " " + (m.last_name||"")).trim() || "Coach";
   const initials = ((m.first_name?.[0]||"") + (m.last_name?.[0]||"")).toUpperCase() || "C";
   const esc = s => String(s == null ? "" : s)
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-  const escAttr = s => esc(s).replace(/`/g,"&#96;");
-  const av = m.avatar_url
-    ? `<img src="${esc(m.avatar_url)}" alt=""/>`
-    : esc(initials);
+  // Real avatar with pravatar fallback — matches the find-mentor/select-coach
+  // pattern. Seeded by UUID so the same mentee always shows the same face.
+  const avUrl = m.avatar_url || `https://i.pravatar.cc/200?u=${encodeURIComponent(m.id||"x")}`;
+  const av = `<img src="${esc(avUrl)}" alt="" loading="lazy"/>`;
+  const notesPreview = r.request_notes
+    ? `<div class="mreq-notes-preview">"${esc(r.request_notes).slice(0,120)}${r.request_notes.length>120?"…":""}"</div>`
+    : "";
   return `
-    <div class="mreq-card">
+    <div class="mreq-card" onclick="openMentorReqReview('${esc(r.id)}')">
       <div class="mreq-av">${av}</div>
       <div>
         <div class="mreq-name">${esc(name)}</div>
         <div class="mreq-meta">${esc(m.selected_tier || "Coach")}${m.sport ? " · " + esc(m.sport) : ""}</div>
         <div class="mreq-time">Requested ${timeAgo(r.created_at)}</div>
+        ${notesPreview}
       </div>
-      <div class="mreq-actions">
-        <button class="btn-accept"  onclick="openReplyModal('accept','${r.id}','${escAttr(m.id)}','${escAttr(name)}')">Accept</button>
-        <button class="btn-decline" onclick="openReplyModal('decline','${r.id}','${escAttr(m.id)}','${escAttr(name)}')">Decline</button>
+      <div class="mreq-actions" onclick="event.stopPropagation();">
+        <button class="btn-accept"  onclick="openReplyModal('accept','${esc(r.id)}','${esc(m.id)}','${esc(name).replace(/'/g,"\\'")}');event.stopPropagation();">Accept</button>
+        <button class="btn-decline" onclick="openReplyModal('decline','${esc(r.id)}','${esc(m.id)}','${esc(name).replace(/'/g,"\\'")}');event.stopPropagation();">Decline</button>
       </div>
     </div>`;
+}
+
+// Open the full review modal for a pending request — full bio, coaching
+// style, qualifications, and the mentee's request notes verbatim.
+function openMentorReqReview(relId){
+  const r = _mentorReqCache[relId];
+  if (!r) return;
+  const m = r.mentee || {};
+  const name = ((m.first_name||"") + " " + (m.last_name||"")).trim() || "Coach";
+  const esc = s => String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  const avUrl = m.avatar_url || `https://i.pravatar.cc/400?u=${encodeURIComponent(m.id||"x")}`;
+
+  document.getElementById("reqReviewAv").innerHTML  = `<img src="${esc(avUrl)}" alt="" loading="lazy"/>`;
+  document.getElementById("reqReviewName").textContent = name;
+  document.getElementById("reqReviewMeta").textContent =
+    [m.selected_tier || "Coach", m.sport, m.location].filter(Boolean).join(" · ");
+  document.getElementById("reqReviewBio").textContent = m.bio || "This coach hasn't added a bio yet.";
+  document.getElementById("reqReviewStyle").textContent = m.coaching_style || "—";
+  document.getElementById("reqReviewQual").textContent  = m.qualifications || "—";
+  document.getElementById("reqReviewNotes").textContent =
+    r.request_notes || "(No notes — they didn't add specifics with their request.)";
+
+  // Wire the modal's Accept/Decline buttons to the existing reply flow
+  document.getElementById("reqReviewAcceptBtn").onclick = () => {
+    closeMentorReqReview();
+    openReplyModal("accept", r.id, m.id, name);
+  };
+  document.getElementById("reqReviewDeclineBtn").onclick = () => {
+    closeMentorReqReview();
+    openReplyModal("decline", r.id, m.id, name);
+  };
+
+  document.getElementById("reqReviewModal").classList.add("open");
+}
+function closeMentorReqReview(){
+  document.getElementById("reqReviewModal").classList.remove("open");
 }
 
 function openReplyModal(action, relId, menteeId, name){
