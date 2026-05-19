@@ -809,6 +809,11 @@
     const btn=document.getElementById("submitBtn");
     btn.disabled=true;btn.textContent="Saving...";
     const photoUrl=await uploadPhotoIfAny();
+
+    // Save the profile draft. We do NOT set profile_status='Live' here on
+    // first-time setup — the Stripe webhook flips it to 'Live' after the
+    // tier subscription checkout succeeds. In change-tier mode the coach
+    // is already paying so we keep them Live and skip the new checkout.
     const updateData={
       first_name:firstName,last_name:lastName,sport,location,
       bio,qualifications:qual,
@@ -818,14 +823,49 @@
       service_packages:selectedPackages.join(", "),
       ai_recommended_tier:aiRecommendedTier?.id,
       coach_agreed_with_ai:agreedWithAI,
-      profile_status:"Live",
       role:"coach"
     };
+    if(IS_CHANGE_MODE) updateData.profile_status="Live"; // already paying
     if(photoUrl)updateData.avatar_url=photoUrl;
+
     const {error}=await sb.from("profiles").update(updateData).eq("id",currentUser.id);
-    btn.disabled=false;btn.textContent="Go live now →";
-    if(error){alert("Something went wrong. Please try again.");return;}
-    document.getElementById("successModal").classList.add("open");
+    if(error){
+      btn.disabled=false;btn.textContent="Go live now →";
+      alert("Something went wrong. Please try again.");
+      return;
+    }
+
+    // Change-tier mode: no new checkout — coach is already subscribed.
+    // Just show success and let them back to the dashboard.
+    if (IS_CHANGE_MODE) {
+      btn.disabled=false;btn.textContent="Go live now →";
+      document.getElementById("successModal").classList.add("open");
+      return;
+    }
+
+    // First-time setup: hand off to Stripe Checkout for the tier subscription.
+    btn.textContent="Opening Stripe…";
+    try {
+      const resp = await fetch("/.netlify/functions/create-coach-tier-checkout", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          tier:       selectedTier.id,
+          coachId:    currentUser.id,
+          coachEmail: currentUser.email
+        })
+      });
+      const data = await resp.json();
+      if(!resp.ok) {
+        alert("Couldn't open checkout: " + (data.error || resp.status));
+        btn.disabled=false;btn.textContent="Go live now →";
+        return;
+      }
+      window.location.href = data.url;
+    } catch(e) {
+      alert("Network error opening checkout: " + (e.message || e));
+      btn.disabled=false;btn.textContent="Go live now →";
+    }
   }
 
   // ── SAVE & COMPLETE LATER ──
