@@ -294,6 +294,21 @@
       </div>
     </div>
 
+    <!-- COACH SELF-ASSESSMENT (feeds into the AI recommendation) -->
+    <div class="form-group" style="margin-bottom:18px;">
+      <label class="form-label">Which level do you feel best matches your experience?</label>
+      <select class="form-select" id="selfTier">
+        <option value="">Not sure — let the AI decide</option>
+        <option value="Level 1 — Development Coach">Level 1 — Development Coach (grassroots, junior, community)</option>
+        <option value="Level 2 — Performance Coach">Level 2 — Performance Coach (representative, academy)</option>
+        <option value="Level 3 — Elite Coach">Level 3 — Elite Coach (state, national pathway, high performance)</option>
+        <option value="Level 4 — Verified Elite Coach">Level 4 — Verified Elite Coach (professional, Olympic pathway)</option>
+      </select>
+      <div style="font-size:11px;color:rgba(148,163,184,.6);margin-top:6px;line-height:1.5;">
+        Your self-assessment carries weight in the AI's recommendation. The AI will still flag if your bio suggests a different level — but ultimately, it's your call.
+      </div>
+    </div>
+
     <button class="ai-run-btn" id="aiRunBtn" onclick="runAIRecommendation()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
       Get my AI tier recommendation
@@ -545,13 +560,14 @@
   function runAIRecommendation(){
     const bio=document.getElementById("bio").value.trim();
     const qual=document.getElementById("qualifications").value.trim();
+    const selfTierId=document.getElementById("selfTier")?.value || "";
     if(!bio){alert("Please add your coaching bio first so the AI can analyse your experience.");return;}
     document.getElementById("aiRunBtn").style.display="none";
     document.getElementById("aiLoading").style.display="block";
     setTimeout(()=>{
       document.getElementById("aiLoading").style.display="none";
       document.getElementById("aiResult").style.display="block";
-      const rec=calcTier(bio,qual,selectedStyles);
+      const rec=calcTier(bio,qual,selectedStyles,selfTierId);
       aiRecommendedTier=rec.tier;
       document.getElementById("aiRecTierName").textContent=rec.tier.label;
       document.getElementById("aiRecReasoning").textContent=rec.reasoning;
@@ -560,7 +576,7 @@
     },2200);
   }
 
-  function calcTier(bio,qual,styles){
+  function calcTier(bio,qual,styles,selfTierId){
     const text=(bio+" "+qual+" "+styles.join(" ")).toLowerCase();
     let score=0;
     const highKw=["nbl","afl","a-league","state","national","olympic","professional","elite","vfl","nbbl","wnbl","super netball"];
@@ -571,11 +587,49 @@
     lowKw.forEach(k=>{if(text.includes(k))score+=1;});
     if(styles.includes("High Performance")||styles.includes("Analytical"))score+=1;
     if(styles.includes("Junior Development")||styles.includes("Fundamentals First"))score-=1;
-    let tier,reasoning,confidence;
-    if(score>=8){tier=TIERS[2];reasoning="Your profile shows elite-level coaching experience with professional or state-level exposure. The Level 3 Elite tier gives you the tools and positioning to attract serious athletes and command premium packages.";confidence=88;}
-    else if(score>=4){tier=TIERS[1];reasoning="Your profile shows solid coaching experience at representative or academy level. The Level 2 Performance tier is the right fit — it positions you above grassroots coaches and gives you access to more advanced athlete packages.";confidence=78;}
-    else{tier=TIERS[0];reasoning="Your profile shows coaching experience at grassroots or junior level. The Level 1 Development tier is the right starting point — it's affordable, gets you live immediately and you can upgrade anytime as your client base grows.";confidence=72;}
-    return{tier,reasoning,confidence};
+
+    // What the bio alone suggests, before factoring in self-assessment.
+    let bioTier;
+    if(score>=8)      bioTier=TIERS[2];
+    else if(score>=4) bioTier=TIERS[1];
+    else              bioTier=TIERS[0];
+    const bioIdx=TIERS.findIndex(t=>t.id===bioTier.id);
+
+    // Coach's self-assessment, if any.
+    const selfTier=selfTierId ? TIERS.find(t=>t.id===selfTierId) : null;
+    const selfIdx=selfTier ? TIERS.findIndex(t=>t.id===selfTier.id) : -1;
+
+    let tier, reasoning, confidence;
+
+    if(!selfTier){
+      // No self-pick — fall back to bio-only logic (the previous behaviour).
+      tier=bioTier;
+      confidence = bioIdx===2?88 : bioIdx===1?78 : 72;
+      reasoning = bioIdx===2
+        ? "Your profile shows elite-level coaching experience with professional or state-level exposure. The Level 3 Elite tier gives you the tools and positioning to attract serious athletes and command premium packages."
+        : bioIdx===1
+        ? "Your profile shows solid coaching experience at representative or academy level. The Level 2 Performance tier is the right fit — it positions you above grassroots coaches and gives you access to more advanced athlete packages."
+        : "Your profile shows coaching experience at grassroots or junior level. The Level 1 Development tier is the right starting point — it's affordable, gets you live immediately and you can upgrade anytime as your client base grows.";
+    } else if(selfIdx === bioIdx){
+      // Self-pick agrees with bio analysis — strongest confidence.
+      tier=selfTier;
+      confidence=92;
+      reasoning=`Your bio and your own self-assessment both point to ${selfTier.label}. Strong alignment — go live at this level with confidence.`;
+    } else if(Math.abs(selfIdx - bioIdx) === 1){
+      // One tier apart — defer to the coach's pick, mention the AI's read.
+      tier=selfTier;
+      confidence=80;
+      const direction = selfIdx > bioIdx ? "higher than" : "lower than";
+      reasoning=`You've selected ${selfTier.label}. The AI's read of your bio sits ${direction} that at ${bioTier.label} — close enough that your self-assessment is the right call. Lean into the specifics from your bio when athletes find you.`;
+    } else {
+      // Two+ tiers apart — defer to coach but flag the gap.
+      tier=selfTier;
+      confidence=65;
+      const direction = selfIdx > bioIdx ? "higher" : "lower";
+      reasoning=`You've selected ${selfTier.label}. Your bio alone reads notably ${direction} — closer to ${bioTier.label}. We're respecting your call, but consider strengthening your bio with specific experience that backs your tier so athletes feel confident booking you.`;
+    }
+
+    return { tier, reasoning, confidence };
   }
 
   function agreeWithAI(){
