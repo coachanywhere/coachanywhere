@@ -473,6 +473,11 @@
       if(profile.selected_tier && String(profile.selected_tier).trim() && !IS_CHANGE_MODE){
         window.location.href="coach-dashboard.html";return;
       }
+      // Remember the previous tier so submitProfile can show a tier-aware confirm
+      // when the coach is changing rather than setting for the first time.
+      if(IS_CHANGE_MODE && profile.selected_tier){
+        window._previousTier = profile.selected_tier;
+      }
       if(profile.first_name)document.getElementById("firstName").value=profile.first_name;
       if(profile.last_name)document.getElementById("lastName").value=profile.last_name;
       if(profile.sport){const sel=document.getElementById("sport");for(let o of sel.options){if(o.value===profile.sport){sel.value=profile.sport;break;}}}
@@ -728,6 +733,25 @@
     const qual=document.getElementById("qualifications").value.trim();
     if(!firstName||!lastName||!sport||!bio){alert("Please fill in all required fields.");return;}
     if(!selectedTier){alert("Please complete the AI tier recommendation first.");return;}
+
+    // In change mode, show a tier-aware confirm before saving so the coach
+    // doesn't accidentally downgrade and surprise their athletes.
+    if (IS_CHANGE_MODE && window._previousTier) {
+      const prevId = window._previousTier;
+      const newId  = selectedTier.id;
+      if (prevId === newId) {
+        if (!confirm(`You're already on ${prevId}. Save anyway to refresh your billing cycle / packages?`)) return;
+      } else {
+        const prevIdx = TIERS.findIndex(t => t.id === prevId);
+        const newIdx  = TIERS.findIndex(t => t.id === newId);
+        const isDowngrade = newIdx >= 0 && prevIdx >= 0 && newIdx < prevIdx;
+        const msg = isDowngrade
+          ? `Switching from ${prevId} to ${newId} is a tier downgrade.\n\nAthletes on packages above your new tier's scope may be affected at their next billing cycle.\n\nProceed with the change?`
+          : `Switch from ${prevId} to ${newId}?`;
+        if (!confirm(msg)) return;
+      }
+    }
+
     const btn=document.getElementById("submitBtn");
     btn.disabled=true;btn.textContent="Saving...";
     const photoUrl=await uploadPhotoIfAny();
