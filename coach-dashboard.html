@@ -395,7 +395,9 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
     <button class="nav-item" onclick="showSection('analyze')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Analyze Video</button>
     <button class="nav-item" onclick="showSection('drills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>Drills Library</button>
     <button class="nav-item" onclick="window.location.href='find-mentor.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Find Mentor</button>
+    <button class="nav-item" onclick="window.location.href='mentor-dashboard.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Coach Mentorship</button>
     <button class="nav-item" onclick="showSection('mentor-requests')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Mentor Requests<span class="nav-badge" id="navMentorReqBadge" style="display:none;">0</span></button>
+    <button class="nav-item" onclick="showSection('spotlight')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9 12 2"/></svg>Spotlight</button>
     <button class="nav-item" onclick="showSection('messages')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages<span class="nav-badge" id="navMsgBadge" style="display:none;">0</span></button>
     <button class="nav-item" onclick="showSection('analytics')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</button>
     <button class="nav-item" onclick="showSection('earnings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Earnings</button>
@@ -740,6 +742,14 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
       </div>
     </div>
 
+    <!-- ══ SPOTLIGHT SECTION ══ -->
+    <div class="section" id="section-spotlight">
+      <div class="sec-title">Spotlight</div>
+      <div class="panel" id="spotlightPanel">
+        <div style="padding:32px 20px;text-align:center;color:var(--muted);font-size:13px;">Loading…</div>
+      </div>
+    </div>
+
     <!-- ══ SETTINGS SECTION ══ -->
     <div class="section" id="section-settings">
       <div class="sec-title">My Profile</div>
@@ -757,6 +767,42 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ══ SPOTLIGHT ACTIVATION MODAL ══ -->
+<div class="modal-overlay" id="spotlightModal">
+  <div class="modal-box" style="max-width:520px;">
+    <h3>Activate Spotlight</h3>
+    <div class="modal-sub">Spotlight puts your profile at the top of the coach directory for athletes browsing your sport. More views, more inbound requests, more booked packages.</div>
+
+    <div style="background:rgba(234,179,8,.08);border:1px solid rgba(251,191,36,.25);border-radius:12px;padding:16px;margin:14px 0 18px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:10px;">What you get</div>
+      <ul style="list-style:none;padding:0;margin:0;font-size:13px;line-height:1.8;color:var(--text);">
+        <li>★ Top-of-list placement in your sport's coach directory</li>
+        <li>★ "Spotlight" badge on your profile card</li>
+        <li>★ Priority in athlete coach-matching results</li>
+        <li>★ Auto-renews monthly — cancel anytime from Stripe</li>
+      </ul>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);">
+      <div>
+        <div style="font-size:11px;color:var(--muted);">Your tier</div>
+        <div id="spotlightModalTier" style="font-size:13px;font-weight:700;color:var(--text);">—</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;color:var(--muted);">Spotlight cost</div>
+        <div id="spotlightModalPrice" style="font-size:18px;font-weight:800;color:var(--amber);">—</div>
+      </div>
+    </div>
+
+    <div id="spotlightModalError" style="display:none;padding:10px 14px;border-radius:8px;background:rgba(127,29,29,.2);border:1px solid rgba(239,68,68,.3);font-size:12px;color:#fca5a5;margin-top:14px;"></div>
+
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeSpotlightModal()">Maybe later</button>
+      <button class="btn-primary" id="spotlightActivateBtn" onclick="activateSpotlight()">Activate Spotlight</button>
+    </div>
   </div>
 </div>
 
@@ -841,6 +887,7 @@ async function init(){
   }
   currentUser=session.user;
   const {data:p}=await sb.from("profiles").select("*").eq("id",currentUser.id).maybeSingle();
+  window._coachProfile = p || {};
   if(p){
     if(p.role==="athlete"){window.location.href="athlete-dashboard.html";return;}
     // Coaches must finish profile-setup before landing on the dashboard.
@@ -870,7 +917,134 @@ async function init(){
   await loadRealData();
   await loadMessages();
   await loadMentorRequests();
+  renderSpotlightPanel();
 }
+
+// ── SPOTLIGHT ──────────────────────────────────────────────
+// Renders the Spotlight tab. Shows "Activate" when inactive, status
+// + expires-at when active, and a special "Free for L4" message when
+// the coach is on Level 4 (which doesn't pay for Spotlight).
+const SPOTLIGHT_COST = {
+  "Level 1 — Development Coach":     "$29/month",
+  "Level 2 — Performance Coach":     "$49/month",
+  "Level 3 — Elite Coach":           "$79/month",
+  "Level 4 — Verified Elite Coach":  "Free"
+};
+
+function renderSpotlightPanel(){
+  const p = window._coachProfile || {};
+  const tier = p.selected_tier || "Coach";
+  const isActive = !!p.spotlight_active;
+  const expires  = p.spotlight_expires_at;
+  const panel = document.getElementById("spotlightPanel");
+  const cost  = SPOTLIGHT_COST[tier] || "—";
+  if (isActive) {
+    const dt = expires ? new Date(expires) : null;
+    const dateStr = dt ? dt.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"}) : "—";
+    panel.innerHTML = `
+      <div class="panel-hdr">
+        <div class="panel-title">Spotlight is active</div>
+        <span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);background:rgba(34,197,94,.12);padding:4px 10px;border-radius:999px;border:1px solid rgba(34,197,94,.3);">★ Live</span>
+      </div>
+      <div style="padding:20px;">
+        <div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:14px;">
+          You're at the top of the ${escapeHTMLcd(p.sport || "your sport")} coach directory.
+          ${dt ? `Auto-renews on <strong style="color:#f9fafb;">${dateStr}</strong>.` : ""}
+        </div>
+        <div style="font-size:12px;color:var(--muted);">
+          Manage or cancel from Stripe via the email receipt, or contact support.
+        </div>
+      </div>`;
+    return;
+  }
+  panel.innerHTML = `
+    <div class="panel-hdr">
+      <div class="panel-title">Boost your visibility with Spotlight</div>
+    </div>
+    <div style="padding:20px;">
+      <div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:14px;">
+        Get top placement in your sport's coach directory and a "Spotlight" badge on your card.
+        Athletes browsing your sport see you first.
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);margin-bottom:16px;">
+        <div>
+          <div style="font-size:11px;color:var(--muted);">Your tier</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:2px;">${escapeHTMLcd(tier)}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:var(--muted);">Spotlight cost</div>
+          <div style="font-size:18px;font-weight:800;color:var(--amber);margin-top:2px;">${escapeHTMLcd(cost)}</div>
+        </div>
+      </div>
+      <button class="btn-primary" style="width:auto;" onclick="openSpotlightModal()">Activate Spotlight →</button>
+    </div>`;
+}
+
+function escapeHTMLcd(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+function openSpotlightModal(){
+  const p = window._coachProfile || {};
+  const tier = p.selected_tier || "Coach";
+  document.getElementById("spotlightModalTier").textContent  = tier;
+  document.getElementById("spotlightModalPrice").textContent = SPOTLIGHT_COST[tier] || "—";
+  document.getElementById("spotlightModalError").style.display = "none";
+  document.getElementById("spotlightActivateBtn").disabled = false;
+  document.getElementById("spotlightActivateBtn").textContent = "Activate Spotlight";
+  document.getElementById("spotlightModal").classList.add("open");
+}
+function closeSpotlightModal(){
+  document.getElementById("spotlightModal").classList.remove("open");
+}
+
+async function activateSpotlight(){
+  const p = window._coachProfile || {};
+  const tier = p.selected_tier;
+  if (!tier) { alert("No tier set — finish your profile setup first."); return; }
+  const btn = document.getElementById("spotlightActivateBtn");
+  const err = document.getElementById("spotlightModalError");
+  btn.disabled = true; btn.textContent = "Opening Stripe…";
+  err.style.display = "none";
+  try {
+    const resp = await fetch("/.netlify/functions/create-spotlight-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tier,
+        coachId:    currentUser.id,
+        coachEmail: currentUser.email
+      })
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      err.textContent = "Couldn't start checkout: " + (data.error || resp.status);
+      err.style.display = "block";
+      btn.disabled = false; btn.textContent = "Activate Spotlight";
+      return;
+    }
+    if (data.free) {
+      // L4 — no checkout, just mark active server-side via a separate path
+      // (not implemented yet). Surface clearly.
+      err.textContent = "Level 4 Spotlight is free but auto-activation isn't wired yet. Email support to enable.";
+      err.style.display = "block";
+      btn.disabled = false; btn.textContent = "Activate Spotlight";
+      return;
+    }
+    // Hand off to Stripe
+    window.location.href = data.url;
+  } catch (e) {
+    err.textContent = "Network error: " + (e.message || e);
+    err.style.display = "block";
+    btn.disabled = false; btn.textContent = "Activate Spotlight";
+  }
+}
+
+window.openSpotlightModal  = openSpotlightModal;
+window.closeSpotlightModal = closeSpotlightModal;
+window.activateSpotlight   = activateSpotlight;
 
 // ── MENTOR REQUESTS ─────────────────────────────────────────
 // Coaches who've asked this coach to be their mentor (status='pending').
