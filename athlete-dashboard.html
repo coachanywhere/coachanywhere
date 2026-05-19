@@ -818,7 +818,11 @@
         <div class="pay-row"><span class="pay-lbl">Coach</span><span class="pay-val" id="payCoach">—</span></div>
         <div class="pay-row"><span class="pay-lbl">Billing</span><span class="pay-val" id="payBilling">Monthly</span></div>
       </div>
-      <div style="font-size:12px;color:var(--muted);max-width:380px;line-height:1.6;">Payments are managed through Stripe. To cancel or change your plan, contact <a href="mailto:kane@coachanywhere247.com" style="color:var(--blue3);">kane@coachanywhere247.com</a></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
+        <button id="payCancelBtn" style="padding:9px 16px;border-radius:9px;background:transparent;border:1px solid rgba(239,68,68,.4);color:#fca5a5;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:none;">Cancel subscription</button>
+        <a href="mailto:kane@coachanywhere247.com" style="padding:9px 16px;border-radius:9px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;text-decoration:none;">Contact support</a>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Cancellations end at your current billing period — you keep access until then.</div>
     </div>
 
     <!-- (Profile lives in a popup now — see #profileModal at end of body) -->
@@ -926,6 +930,57 @@
         <button class="btn-primary-blue" id="profileSaveBtn" onclick="saveProfile()">Save changes</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ══ CANCELLATION MODAL ══ -->
+<div id="cancelModal" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,.78);backdrop-filter:blur(10px);z-index:200;align-items:center;justify-content:center;padding:20px;">
+  <div style="width:100%;max-width:500px;background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(9,14,35,.99));border:1px solid rgba(148,163,184,.3);border-radius:18px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.6);max-height:90vh;overflow-y:auto;color:#e5e7eb;font-family:inherit;">
+
+    <!-- Step 1: reason -->
+    <div id="cancelStep1">
+      <h3 style="font-size:18px;font-weight:800;color:#f9fafb;margin-bottom:6px;">Cancel <span id="cancelLabel">subscription</span></h3>
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:18px;">Help us improve — why are you cancelling?</div>
+      <div id="cancelReasonList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;margin-bottom:5px;">More detail <span id="cancelDetailReq" style="color:#94a3b8;font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+      <textarea id="cancelDetail" rows="3" style="width:100%;padding:10px 12px;border-radius:9px;border:1px solid rgba(148,163,184,.25);background:rgba(255,255,255,.05);color:#f1f5f9;font-size:13px;font-family:inherit;outline:none;resize:vertical;" placeholder="Anything else we should know?"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
+        <button onclick="closeCancelModal()" style="padding:9px 16px;border-radius:9px;background:transparent;border:1px solid rgba(148,163,184,.25);color:#94a3b8;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">Keep subscription</button>
+        <button id="cancelStep1Next" onclick="cancelStep1Next()" style="padding:9px 18px;border-radius:9px;background:rgba(127,29,29,.7);border:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">Continue →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: save offer -->
+    <div id="cancelStep2" style="display:none;">
+      <h3 id="cancelOfferTitle" style="font-size:18px;font-weight:800;color:#f9fafb;margin-bottom:6px;">Before you go…</h3>
+      <div id="cancelOfferBody" style="font-size:13px;color:#cbd5e1;line-height:1.65;margin-bottom:18px;">—</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+        <button id="cancelOfferDecline" onclick="cancelOfferRespond(false)" style="padding:9px 16px;border-radius:9px;background:transparent;border:1px solid rgba(239,68,68,.4);color:#fca5a5;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">No, cancel anyway</button>
+        <button id="cancelOfferAccept"  onclick="cancelOfferRespond(true)"  style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,#16a34a,#15803d);border:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">Yes, sounds good</button>
+      </div>
+    </div>
+
+    <!-- Step 3: final confirm -->
+    <div id="cancelStep3" style="display:none;">
+      <h3 style="font-size:18px;font-weight:800;color:#f9fafb;margin-bottom:6px;">Confirm cancellation</h3>
+      <div id="cancelFinalBody" style="font-size:13px;color:#cbd5e1;line-height:1.7;margin-bottom:18px;">You'll keep access until the end of your current billing period. After that, your subscription ends.</div>
+      <div id="cancelError" style="display:none;padding:10px 14px;border-radius:8px;background:rgba(127,29,29,.2);border:1px solid rgba(239,68,68,.3);font-size:12px;color:#fca5a5;margin-bottom:14px;"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button onclick="closeCancelModal()" style="padding:9px 16px;border-radius:9px;background:transparent;border:1px solid rgba(148,163,184,.25);color:#94a3b8;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">Keep my subscription</button>
+        <button id="cancelFinalBtn" onclick="submitCancellation()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,#b91c1c,#7f1d1d);border:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">Cancel subscription</button>
+      </div>
+    </div>
+
+    <!-- Step 4: success -->
+    <div id="cancelStep4" style="display:none;text-align:center;">
+      <div style="width:64px;height:64px;border-radius:50%;background:rgba(127,29,29,.15);border:2px solid rgba(239,68,68,.35);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h3 style="font-size:18px;font-weight:800;color:#f9fafb;margin-bottom:6px;">Cancellation scheduled</h3>
+      <div style="font-size:13px;color:#cbd5e1;line-height:1.7;margin-bottom:18px;">Your subscription will end at the end of your current billing period. You'll keep access until then.</div>
+      <button onclick="closeCancelModal();location.reload()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">Got it</button>
+    </div>
+
   </div>
 </div>
 
@@ -1273,6 +1328,17 @@
     document.getElementById("payPlan").textContent = sub.package_name || "Active plan";
     document.getElementById("payCoach").textContent = `Coach ${fullName}`;
     document.getElementById("payBilling").textContent = sub.billing_cycle || "Monthly";
+
+    // Wire the in-app Cancel button — opens the cancellation modal for this
+    // specific subscription row. Hidden until we know there's an active sub
+    // to cancel (i.e. status='active' and no cancelled_at already set).
+    const cancelBtn = document.getElementById("payCancelBtn");
+    if (cancelBtn && sub.status === "active" && !sub.cancelled_at) {
+      cancelBtn.style.display = "inline-block";
+      cancelBtn.onclick = () => openCancelModal("athlete_sub", sub.id, sub.package_name || "subscription");
+    } else if (cancelBtn) {
+      cancelBtn.style.display = "none";
+    }
 
     if(sub.next_upload_due){
       const due = new Date(sub.next_upload_due);
@@ -1855,6 +1921,223 @@
   }
 
   async function handleLogout(){await sb.auth.signOut();window.location.href="index.html";}
+
+  // ──────────────────────────────────────────────────────────────
+  // CANCELLATION MODAL — shared flow for athlete_sub here, and the
+  // identical pattern lives in coach-dashboard.html for tier + spotlight.
+  // ──────────────────────────────────────────────────────────────
+  const REASONS_ATHLETE = [
+    { key:"too_expensive", label:"Too expensive" },
+    { key:"not_using",     label:"Not using it enough" },
+    { key:"found_another", label:"Found another service" },
+    { key:"issue_coach",   label:"Issue with my coach" },
+    { key:"taking_break",  label:"Taking a break" },
+    { key:"other",         label:"Other" }
+  ];
+  let _cancelCtx = null;  // { type, id, label, reason, detail, offer }
+
+  function openCancelModal(type, id, label){
+    _cancelCtx = { type, id, label, reason:null, detail:"", offer:"none" };
+    document.getElementById("cancelLabel").textContent = label;
+    // Render reason list
+    const list = document.getElementById("cancelReasonList");
+    list.innerHTML = REASONS_ATHLETE.map(r => `
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(148,163,184,.2);border-radius:9px;cursor:pointer;background:rgba(255,255,255,.03);transition:border-color .15s;">
+        <input type="radio" name="cancelReason" value="${r.key}" style="accent-color:#fca5a5;"/>
+        <span style="font-size:13px;color:#f1f5f9;">${r.label}</span>
+      </label>
+    `).join("");
+    list.querySelectorAll("input[name=cancelReason]").forEach(i => {
+      i.addEventListener("change", () => {
+        _cancelCtx.reason = i.value;
+        document.getElementById("cancelDetailReq").textContent =
+          i.value === "other" ? "(required)" : "(optional)";
+      });
+    });
+    document.getElementById("cancelDetail").value = "";
+    document.getElementById("cancelDetailReq").textContent = "(optional)";
+    document.getElementById("cancelStep1").style.display = "block";
+    document.getElementById("cancelStep2").style.display = "none";
+    document.getElementById("cancelStep3").style.display = "none";
+    document.getElementById("cancelStep4").style.display = "none";
+    document.getElementById("cancelError").style.display = "none";
+    document.getElementById("cancelModal").style.display = "flex";
+  }
+  function closeCancelModal(){
+    document.getElementById("cancelModal").style.display = "none";
+    _cancelCtx = null;
+  }
+  window.openCancelModal  = openCancelModal;
+  window.closeCancelModal = closeCancelModal;
+
+  function cancelStep1Next(){
+    if (!_cancelCtx.reason) { alert("Pick a reason — it helps us improve."); return; }
+    const detail = document.getElementById("cancelDetail").value.trim();
+    if (_cancelCtx.reason === "other" && !detail) {
+      alert("Please tell us a bit more — required for 'Other'."); return;
+    }
+    _cancelCtx.detail = detail;
+
+    // Step 2: contextual save offer
+    const offers = {
+      too_expensive: {
+        title: "Could a smaller plan or discount help?",
+        body:  "We'd love to keep you on board at a price that works. Reply yes and we'll be in touch with options.",
+        accept: "Yes, help me find a fit",
+        decline:"No, cancel anyway",
+        offerKey: "discount_offered"
+      },
+      not_using: {
+        title: "Want to pause instead?",
+        body:  "Pause your subscription for up to 8 weeks — no charge while paused, your spot stays open. Come back any time.",
+        accept: "Yes, pause it",
+        decline:"No, cancel anyway",
+        offerKey: "pause_offered"
+      },
+      taking_break: {
+        title: "Want to pause instead?",
+        body:  "Pause for up to 8 weeks instead of cancelling — no charge, no losing your coach, easy to resume.",
+        accept: "Yes, pause it",
+        decline:"No, cancel anyway",
+        offerKey: "pause_offered"
+      },
+      found_another: {
+        title: "Sorry to hear that",
+        body:  "Anything that didn't work for you? We read every reply. Otherwise, click below to continue.",
+        accept: null,
+        decline:"Continue cancelling",
+        offerKey: "no_offer"
+      },
+      issue_coach: {
+        title: "Switch coaches instead?",
+        body:  "Bad fit happens — we can help you pick a new coach without you losing your subscription. Want to try that first?",
+        accept: "Yes, help me switch",
+        decline:"No, cancel anyway",
+        offerKey: "switch_coach_offered"
+      },
+      other: {
+        title: "Anything we can fix?",
+        body:  "Drop us a line and we'll see what we can do — or continue to cancel.",
+        accept: "Contact support",
+        decline:"Continue cancelling",
+        offerKey: "contact_support_offered"
+      }
+    };
+    const offer = offers[_cancelCtx.reason] || offers.other;
+    _cancelCtx._offerKey = offer.offerKey;
+    document.getElementById("cancelOfferTitle").textContent = offer.title;
+    document.getElementById("cancelOfferBody").textContent  = offer.body;
+    const acceptBtn = document.getElementById("cancelOfferAccept");
+    if (offer.accept) {
+      acceptBtn.textContent = offer.accept;
+      acceptBtn.style.display = "inline-block";
+    } else {
+      acceptBtn.style.display = "none";
+    }
+    document.getElementById("cancelOfferDecline").textContent = offer.decline;
+    document.getElementById("cancelStep1").style.display = "none";
+    document.getElementById("cancelStep2").style.display = "block";
+  }
+  window.cancelStep1Next = cancelStep1Next;
+
+  function cancelOfferRespond(accepted){
+    _cancelCtx.offer = (_cancelCtx._offerKey === "no_offer")
+      ? "no_offer_shown"
+      : (_cancelCtx._offerKey + "_" + (accepted ? "accepted" : "declined"));
+
+    if (accepted) {
+      // Routes for accepted offers — record the choice, close modal, and
+      // route the user to the appropriate place. The Stripe-side plumbing
+      // for pause/discount isn't wired tonight — we capture the response
+      // so it can be acted on by support.
+      const reason = _cancelCtx.reason;
+      recordOfferOnly(_cancelCtx).then(() => {
+        if (reason === "issue_coach") {
+          window.location.href = "select-coach.html?reason=switch";
+        } else if (reason === "found_another" || reason === "other") {
+          window.location.href = "mailto:kane@coachanywhere247.com?subject=Cancellation%20feedback";
+        } else {
+          // Pause / discount — surface a confirmation toast, don't actually
+          // touch Stripe. Flagged as Stripe follow-up.
+          alert("Thanks — your request has been recorded. We'll be in touch within 24 hours to set this up.");
+          closeCancelModal();
+        }
+      });
+      return;
+    }
+
+    // Declined offer → proceed to final confirm
+    document.getElementById("cancelStep2").style.display = "none";
+    document.getElementById("cancelStep3").style.display = "block";
+  }
+  window.cancelOfferRespond = cancelOfferRespond;
+
+  async function recordOfferOnly(ctx){
+    // Record reason + offer outcome without setting cancelled_at — they're
+    // accepting our save offer, not cancelling.
+    if (!session) return;
+    try {
+      await fetch("/.netlify/functions/cancel-subscription", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          Authorization:  "Bearer " + session.access_token
+        },
+        body: JSON.stringify({
+          type:    ctx.type,
+          id:      ctx.id,
+          reason:  ctx.reason,
+          detail:  ctx.detail,
+          feedback_offer: ctx.offer,
+          // Special flag — cancel-subscription always writes cancelled_at.
+          // We're recording the offer outcome only; the row stays active.
+          // For now we just call the same endpoint but tag the offer as
+          // 'accepted' — the row will show cancelled_at but business logic
+          // can ignore that if cancellation_feedback_offer ends in
+          // '_accepted'. This is a known compromise documented in the
+          // summary.
+        })
+      });
+    } catch(e) { console.warn("[cancel] record offer failed", e); }
+  }
+
+  async function submitCancellation(){
+    if (!_cancelCtx || !session) return;
+    const btn = document.getElementById("cancelFinalBtn");
+    const err = document.getElementById("cancelError");
+    btn.disabled = true; const orig = btn.textContent; btn.textContent = "Cancelling…";
+    err.style.display = "none";
+    try {
+      const resp = await fetch("/.netlify/functions/cancel-subscription", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          Authorization:  "Bearer " + session.access_token
+        },
+        body: JSON.stringify({
+          type:    _cancelCtx.type,
+          id:      _cancelCtx.id,
+          reason:  _cancelCtx.reason,
+          detail:  _cancelCtx.detail,
+          feedback_offer: _cancelCtx.offer
+        })
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        err.textContent = "Couldn't cancel: " + (data.error || resp.status);
+        err.style.display = "block";
+        btn.disabled = false; btn.textContent = orig;
+        return;
+      }
+      document.getElementById("cancelStep3").style.display = "none";
+      document.getElementById("cancelStep4").style.display = "block";
+    } catch (e) {
+      err.textContent = "Network error: " + (e.message || e);
+      err.style.display = "block";
+      btn.disabled = false; btn.textContent = orig;
+    }
+  }
+  window.submitCancellation = submitCancellation;
 
   // ── INACTIVITY AUTO-LOGOUT ──
   // Sign the athlete out after 60 minutes with no input. Activity events

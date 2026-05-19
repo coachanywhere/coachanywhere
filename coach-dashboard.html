@@ -774,6 +774,15 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
           <span id="settingsSaved" style="display:none;font-size:12px;color:var(--green);">✓ Saved</span>
         </div>
       </div>
+
+      <!-- Cancel tier subscription — heavy action: coach disappears from the
+           directory at the end of the billing period. Hidden unless tier is
+           active. -->
+      <div class="fcard" id="cancelTierCard" style="margin-top:14px;border-color:rgba(239,68,68,.3);display:none;">
+        <div style="font-size:13px;font-weight:700;color:#fca5a5;margin-bottom:6px;">Cancel my coach subscription</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px;">Cancelling ends your coach profile at your next billing date. Athletes will no longer find you on the directory. You can resubscribe later but you'll lose your Foundation pricing.</div>
+        <button class="btn-ghost" id="cancelTierBtn" style="border-color:rgba(239,68,68,.4);color:#fca5a5;">Cancel my tier subscription</button>
+      </div>
     </div>
 
   </div>
@@ -983,6 +992,48 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
   </div>
 </div>
 
+<!-- ══ CANCELLATION MODAL (tier + spotlight) ══ -->
+<div id="cancelModal" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,.78);backdrop-filter:blur(10px);z-index:200;align-items:center;justify-content:center;padding:20px;">
+  <div style="width:100%;max-width:500px;background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(9,14,35,.99));border:1px solid rgba(148,163,184,.3);border-radius:18px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.6);max-height:90vh;overflow-y:auto;color:#e5e7eb;font-family:inherit;">
+    <div id="cancelStep1">
+      <h3 style="font-size:18px;font-weight:800;color:#f9fafb;margin-bottom:6px;">Cancel <span id="cancelLabel">subscription</span></h3>
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:18px;">Help us improve — why are you cancelling?</div>
+      <div id="cancelReasonList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;margin-bottom:5px;">More detail <span id="cancelDetailReq" style="color:#94a3b8;font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+      <textarea id="cancelDetail" rows="3" style="width:100%;padding:10px 12px;border-radius:9px;border:1px solid rgba(148,163,184,.25);background:rgba(255,255,255,.05);color:#f1f5f9;font-size:13px;font-family:inherit;outline:none;resize:vertical;" placeholder="Anything else we should know?"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
+        <button onclick="closeCancelModal()" style="padding:9px 16px;border-radius:9px;background:transparent;border:1px solid rgba(148,163,184,.25);color:#94a3b8;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">Keep subscription</button>
+        <button onclick="cancelStep1Next()" style="padding:9px 18px;border-radius:9px;background:rgba(127,29,29,.7);border:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">Continue →</button>
+      </div>
+    </div>
+    <div id="cancelStep2" style="display:none;">
+      <h3 id="cancelOfferTitle" style="font-size:18px;font-weight:800;color:#f9fafb;margin-bottom:6px;">Before you go…</h3>
+      <div id="cancelOfferBody" style="font-size:13px;color:#cbd5e1;line-height:1.65;margin-bottom:18px;">—</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+        <button id="cancelOfferDecline" onclick="cancelOfferRespond(false)" style="padding:9px 16px;border-radius:9px;background:transparent;border:1px solid rgba(239,68,68,.4);color:#fca5a5;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">No, cancel anyway</button>
+        <button id="cancelOfferAccept"  onclick="cancelOfferRespond(true)"  style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,#16a34a,#15803d);border:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">Yes, sounds good</button>
+      </div>
+    </div>
+    <div id="cancelStep3" style="display:none;">
+      <h3 style="font-size:18px;font-weight:800;color:#f9fafb;margin-bottom:6px;">Confirm cancellation</h3>
+      <div id="cancelFinalBody" style="font-size:13px;color:#cbd5e1;line-height:1.7;margin-bottom:18px;">You'll keep access until the end of your current billing period. After that, your subscription ends.</div>
+      <div id="cancelError" style="display:none;padding:10px 14px;border-radius:8px;background:rgba(127,29,29,.2);border:1px solid rgba(239,68,68,.3);font-size:12px;color:#fca5a5;margin-bottom:14px;"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button onclick="closeCancelModal()" style="padding:9px 16px;border-radius:9px;background:transparent;border:1px solid rgba(148,163,184,.25);color:#94a3b8;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">Keep my subscription</button>
+        <button id="cancelFinalBtn" onclick="submitCancellation()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,#b91c1c,#7f1d1d);border:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">Cancel subscription</button>
+      </div>
+    </div>
+    <div id="cancelStep4" style="display:none;text-align:center;">
+      <div style="width:64px;height:64px;border-radius:50%;background:rgba(127,29,29,.15);border:2px solid rgba(239,68,68,.35);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h3 style="font-size:18px;font-weight:800;color:#f9fafb;margin-bottom:6px;">Cancellation scheduled</h3>
+      <div style="font-size:13px;color:#cbd5e1;line-height:1.7;margin-bottom:18px;">Your subscription will end at the end of your current billing period.</div>
+      <button onclick="closeCancelModal();location.reload()" style="padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">Got it</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const SB_URL="https://rtaxjewvshhpdnkpojjn.supabase.co";
 const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
@@ -1012,6 +1063,8 @@ async function init(){
   currentUser=session.user;
   const {data:p}=await sb.from("profiles").select("*").eq("id",currentUser.id).maybeSingle();
   window._coachProfile = p || {};
+  // Show / hide the danger-zone cancel-tier card based on the loaded profile.
+  setTimeout(wireCancelTierVisibility, 0);
   if(p){
     if(p.role==="athlete"){window.location.href="athlete-dashboard.html";return;}
     // Coaches must finish profile-setup before landing on the dashboard.
@@ -1482,9 +1535,7 @@ function renderSpotlightPanel(){
           You're at the top of the ${escapeHTMLcd(p.sport || "your sport")} coach directory.
           ${dt ? `Auto-renews on <strong style="color:#f9fafb;">${dateStr}</strong>.` : ""}
         </div>
-        <div style="font-size:12px;color:var(--muted);">
-          Manage or cancel from Stripe via the email receipt, or contact support.
-        </div>
+        <button class="btn-ghost" style="border-color:rgba(239,68,68,.4);color:#fca5a5;" onclick="openCancelModal('spotlight','${currentUser.id}','Spotlight')">Cancel Spotlight</button>
       </div>`;
     return;
   }
@@ -2071,6 +2122,205 @@ async function saveSettings(){
 }
 
 async function handleLogout(){await sb.auth.signOut();window.location.href="index.html";}
+
+// ──────────────────────────────────────────────────────────────
+// CANCELLATION MODAL — shared flow for coach_tier and spotlight.
+// The same modal pattern lives in athlete-dashboard.html for
+// athlete_sub. All three call /.netlify/functions/cancel-subscription.
+// ──────────────────────────────────────────────────────────────
+const CANCEL_REASONS_COACH = [
+  { key:"too_expensive", label:"Too expensive" },
+  { key:"not_using",     label:"Not enough athletes / business" },
+  { key:"found_another", label:"Found another platform" },
+  { key:"taking_break",  label:"Taking a break from coaching" },
+  { key:"other",         label:"Other" }
+];
+let _cancelCtx = null;
+
+// Show the cancel-tier button if the tier subscription is currently active.
+function wireCancelTierVisibility(){
+  const card = document.getElementById("cancelTierCard");
+  if (!card || !window._coachProfile) return;
+  const p = window._coachProfile;
+  if (p.tier_status === "active" && !p.tier_cancelled_at) {
+    card.style.display = "block";
+    const btn = document.getElementById("cancelTierBtn");
+    if (btn) btn.onclick = () => openCancelModal("coach_tier", currentUser.id, "my coach tier subscription");
+  } else {
+    card.style.display = "none";
+  }
+}
+
+function openCancelModal(type, id, label){
+  _cancelCtx = { type, id, label, reason:null, detail:"", offer:"none" };
+  document.getElementById("cancelLabel").textContent = label;
+  const list = document.getElementById("cancelReasonList");
+  list.innerHTML = CANCEL_REASONS_COACH.map(r => `
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(148,163,184,.2);border-radius:9px;cursor:pointer;background:rgba(255,255,255,.03);">
+      <input type="radio" name="cancelReason" value="${r.key}" style="accent-color:#fca5a5;"/>
+      <span style="font-size:13px;color:#f1f5f9;">${r.label}</span>
+    </label>
+  `).join("");
+  list.querySelectorAll("input[name=cancelReason]").forEach(i => {
+    i.addEventListener("change", () => {
+      _cancelCtx.reason = i.value;
+      document.getElementById("cancelDetailReq").textContent =
+        i.value === "other" ? "(required)" : "(optional)";
+    });
+  });
+  document.getElementById("cancelDetail").value = "";
+  document.getElementById("cancelDetailReq").textContent = "(optional)";
+  document.getElementById("cancelStep1").style.display = "block";
+  document.getElementById("cancelStep2").style.display = "none";
+  document.getElementById("cancelStep3").style.display = "none";
+  document.getElementById("cancelStep4").style.display = "none";
+  document.getElementById("cancelError").style.display = "none";
+  // Tier cancellation gets a heavier final-step warning since the coach
+  // disappears from the directory.
+  document.getElementById("cancelFinalBody").innerHTML = (type === "coach_tier")
+    ? `<strong style="color:#fca5a5;">Your coach profile will go offline at the end of your current billing period.</strong> Athletes won't find you on the directory. You can resubscribe later but you'll lose your Foundation pricing. Continue?`
+    : `You'll keep access until the end of your current billing period. After that, your subscription ends.`;
+  document.getElementById("cancelModal").style.display = "flex";
+}
+function closeCancelModal(){
+  document.getElementById("cancelModal").style.display = "none";
+  _cancelCtx = null;
+}
+
+function cancelStep1Next(){
+  if (!_cancelCtx.reason) { alert("Pick a reason — it helps us improve."); return; }
+  const detail = document.getElementById("cancelDetail").value.trim();
+  if (_cancelCtx.reason === "other" && !detail) {
+    alert("Please tell us a bit more — required for 'Other'."); return;
+  }
+  _cancelCtx.detail = detail;
+  const offers = {
+    too_expensive: {
+      title:"Could a smaller plan work?",
+      body:"We can drop you down a tier or talk through discounted Foundation pricing. Want to explore that?",
+      accept:"Yes, help me find a fit", decline:"No, cancel anyway",
+      offerKey:"discount_offered"
+    },
+    not_using: {
+      title:"Want to pause instead?",
+      body:"Pause your subscription for up to 8 weeks — no charge, you keep your profile, easy to resume.",
+      accept:"Yes, pause it", decline:"No, cancel anyway",
+      offerKey:"pause_offered"
+    },
+    taking_break: {
+      title:"Pause instead of cancel?",
+      body:"Pause for up to 8 weeks. You keep your tier, your Foundation pricing, and you don't pay while paused.",
+      accept:"Yes, pause it", decline:"No, cancel anyway",
+      offerKey:"pause_offered"
+    },
+    found_another: {
+      title:"Sorry to hear that",
+      body:"What did the other platform offer that we didn't? Email us and we'll see if it's something we can add.",
+      accept:"Contact support", decline:"Continue cancelling",
+      offerKey:"contact_support_offered"
+    },
+    other: {
+      title:"Anything we can fix?",
+      body:"Drop us a line and we'll see what we can do — or continue to cancel.",
+      accept:"Contact support", decline:"Continue cancelling",
+      offerKey:"contact_support_offered"
+    }
+  };
+  const offer = offers[_cancelCtx.reason] || offers.other;
+  _cancelCtx._offerKey = offer.offerKey;
+  document.getElementById("cancelOfferTitle").textContent = offer.title;
+  document.getElementById("cancelOfferBody").textContent  = offer.body;
+  document.getElementById("cancelOfferAccept").textContent = offer.accept;
+  document.getElementById("cancelOfferDecline").textContent = offer.decline;
+  document.getElementById("cancelStep1").style.display = "none";
+  document.getElementById("cancelStep2").style.display = "block";
+}
+
+function cancelOfferRespond(accepted){
+  _cancelCtx.offer = _cancelCtx._offerKey + "_" + (accepted ? "accepted" : "declined");
+  if (accepted) {
+    // Record the offer choice without setting cancelled_at — they're staying.
+    // Stripe-side plumbing for pause/discount isn't wired tonight; we capture
+    // the response so support can follow up.
+    recordOfferOnly(_cancelCtx).then(() => {
+      if (_cancelCtx._offerKey === "contact_support_offered") {
+        window.location.href = "mailto:kane@coachanywhere247.com?subject=Cancellation%20feedback";
+      } else {
+        alert("Thanks — your request has been recorded. We'll be in touch within 24 hours.");
+        closeCancelModal();
+      }
+    });
+    return;
+  }
+  document.getElementById("cancelStep2").style.display = "none";
+  document.getElementById("cancelStep3").style.display = "block";
+}
+
+async function recordOfferOnly(ctx){
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    await fetch("/.netlify/functions/cancel-subscription", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        Authorization:  "Bearer " + session.access_token
+      },
+      body: JSON.stringify({
+        type:           ctx.type,
+        id:             ctx.id,
+        reason:         ctx.reason,
+        detail:         ctx.detail,
+        feedback_offer: ctx.offer
+      })
+    });
+  } catch (e) { console.warn("[cancel] record offer failed", e); }
+}
+
+async function submitCancellation(){
+  if (!_cancelCtx) return;
+  const btn = document.getElementById("cancelFinalBtn");
+  const err = document.getElementById("cancelError");
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = "Cancelling…";
+  err.style.display = "none";
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { err.textContent = "Session lost. Please log in again."; err.style.display = "block"; return; }
+    const resp = await fetch("/.netlify/functions/cancel-subscription", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        Authorization:  "Bearer " + session.access_token
+      },
+      body: JSON.stringify({
+        type:           _cancelCtx.type,
+        id:             _cancelCtx.id,
+        reason:         _cancelCtx.reason,
+        detail:         _cancelCtx.detail,
+        feedback_offer: _cancelCtx.offer
+      })
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      err.textContent = "Couldn't cancel: " + (data.error || resp.status);
+      err.style.display = "block";
+      btn.disabled = false; btn.textContent = orig;
+      return;
+    }
+    document.getElementById("cancelStep3").style.display = "none";
+    document.getElementById("cancelStep4").style.display = "block";
+  } catch (e) {
+    err.textContent = "Network error: " + (e.message || e);
+    err.style.display = "block";
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
+window.openCancelModal     = openCancelModal;
+window.closeCancelModal    = closeCancelModal;
+window.cancelStep1Next     = cancelStep1Next;
+window.cancelOfferRespond  = cancelOfferRespond;
+window.submitCancellation  = submitCancellation;
 
 // ── INACTIVITY AUTO-LOGOUT ──
 // Sign the coach out after 60 minutes with no input. Activity events
