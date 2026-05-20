@@ -42,32 +42,75 @@
     button{font-family:inherit;cursor:pointer;}
     .container{max-width:1080px;margin:0 auto;padding:0 22px;}
 
-    /* HEADER / NAV */
+    /* HEADER / NAV — restored to the standard site header treatment
+       (sticky blur, blue underline-on-hover links, outlined login pill). */
     header{position:sticky;top:0;z-index:30;backdrop-filter:blur(18px);
-      background:linear-gradient(to bottom,rgba(3,7,18,.96),rgba(3,7,18,.86));
-      border-bottom:1px solid rgba(30,64,175,.4);}
-    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;max-width:1080px;margin:0 auto;gap:18px;}
-    .nav-wordmark{font-size:17px;font-weight:800;letter-spacing:.05em;color:#fff;text-transform:uppercase;flex-shrink:0;}
+      background:linear-gradient(to bottom,rgba(3,7,18,.96),rgba(3,7,18,.88),transparent);
+      border-bottom:1px solid rgba(30,64,175,.7);}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:18px;}
+    .nav-left{display:flex;align-items:center;gap:10px;}
+    .nav-wordmark{font-size:18px;font-weight:800;letter-spacing:.04em;color:#fff;text-transform:uppercase;}
     .nav-wordmark span{color:var(--blue2);}
-    .nav-links{display:flex;align-items:center;gap:22px;}
-    .nav-links a{font-size:14px;color:var(--muted);transition:color var(--tr);white-space:nowrap;}
+    .nav-links{display:flex;align-items:center;gap:20px;font-size:14px;}
+    .nav-links a{position:relative;padding-bottom:2px;color:rgba(226,232,240,.75);transition:color var(--tr);white-space:nowrap;}
+    .nav-links a::after{content:"";position:absolute;left:0;bottom:0;width:0;height:2px;background:var(--blue);border-radius:999px;transition:width var(--tr);}
     .nav-links a:hover{color:#fff;}
+    .nav-links a:hover::after{width:18px;}
     .nav-links a.athlete{color:var(--blue2);font-weight:700;}
     .nav-links a.coach{color:var(--amber);font-weight:700;}
     .nav-links a.locker{color:#fca5a5;font-weight:700;}
-    .nav-cta{display:flex;align-items:center;gap:12px;flex-shrink:0;}
-    .nav-signin{font-size:14px;color:var(--muted);}
+    .nav-cta{display:flex;align-items:center;gap:10px;}
+    .nav-signin{font-size:14px;color:rgba(226,232,240,.75);transition:color var(--tr);white-space:nowrap;}
     .nav-signin:hover{color:#fff;}
-    .nav-wl-btn{padding:9px 16px;border-radius:999px;background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);color:#fff;font-weight:700;font-size:13px;border:none;box-shadow:0 8px 22px rgba(37,99,235,.35);}
+    .btn-login{padding:11px 26px;border-radius:999px;font-size:14px;font-weight:700;background:transparent;border:1.5px solid rgba(96,165,250,.5);color:#e2e8f0;cursor:pointer;transition:all var(--tr);font-family:inherit;white-space:nowrap;}
+    .btn-login:hover{border-color:#60a5fa;color:#fff;background:rgba(59,130,246,.18);transform:translateY(-1px);}
+    .nav-wl-btn{padding:11px 22px;border-radius:999px;background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);color:#fff;font-weight:700;font-size:14px;border:none;box-shadow:0 8px 22px rgba(37,99,235,.35);transition:transform var(--tr);white-space:nowrap;}
+    .nav-wl-btn:hover{transform:translateY(-1px);}
     .nav-toggle{display:none;background:none;border:none;color:#fff;}
     .nav-toggle svg{width:24px;height:24px;}
     @media(max-width:860px){
-      .nav-links{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:flex-start;gap:0;background:rgba(3,7,18,.99);border-bottom:1px solid var(--border);padding:8px 0;}
+      .nav-links{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:flex-start;gap:0;background:rgba(3,7,18,.99);border-bottom:1px solid var(--border);padding:8px 0;z-index:40;}
       .nav-links.open{display:flex;}
       .nav-links a{width:100%;padding:13px 24px;font-size:15px;}
+      .nav-links a::after{display:none;}
       .nav-toggle{display:block;}
       .nav-signin{display:none;}
     }
+
+    /* HERO ENTRY CARDS — condensed athlete/coach cards (from legacy hero,
+       tightened to one-line punchy entry points). */
+    .entry-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:660px;margin:0 auto;}
+    .entry-card{
+      text-align:left;border-radius:16px;padding:20px 20px;display:flex;flex-direction:column;gap:12px;
+      position:relative;overflow:hidden;backdrop-filter:blur(10px);cursor:pointer;
+      transition:transform var(--tr),border-color var(--tr),background var(--tr),box-shadow var(--tr);
+    }
+    .entry-card .bar{position:absolute;top:0;left:0;right:0;height:2px;}
+    .entry-card.athlete{background:rgba(10,16,40,.85);border:1px solid rgba(59,130,246,.2);}
+    .entry-card.athlete .bar{background:linear-gradient(90deg,transparent,#3b82f6,transparent);}
+    .entry-card.athlete:hover{border-color:rgba(59,130,246,.5);background:rgba(13,22,55,.9);transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.45);}
+    .entry-card.coach{background:rgba(18,10,0,.85);border:1px solid rgba(251,191,36,.2);}
+    .entry-card.coach .bar{background:linear-gradient(90deg,transparent,#fbbf24,transparent);}
+    .entry-card.coach:hover{border-color:rgba(251,191,36,.45);background:rgba(22,13,0,.9);transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.45);}
+    .entry-head{display:flex;align-items:center;gap:11px;}
+    .entry-ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .entry-ic svg{width:20px;height:20px;}
+    .entry-card.athlete .entry-ic{background:rgba(37,99,235,.15);color:var(--blue2);}
+    .entry-card.coach .entry-ic{background:rgba(234,179,8,.12);color:var(--amber);}
+    .entry-label{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;}
+    .entry-card.athlete .entry-label{color:var(--blue2);}
+    .entry-card.coach .entry-label{color:var(--amber);}
+    .entry-desc{font-size:14px;color:rgba(226,232,240,.78);line-height:1.55;}
+    .entry-cta{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;margin-top:auto;}
+    .entry-card.athlete .entry-cta{color:var(--blue2);}
+    .entry-card.coach .entry-cta{color:var(--amber);}
+    .entry-cta svg{width:15px;height:15px;}
+    @media(max-width:560px){.entry-cards{grid-template-columns:1fr;max-width:380px;}}
+
+    /* WHAT WE DO — one-line bridge between hero and trust row. */
+    .whatwedo{text-align:center;padding:8px 0 38px;}
+    .whatwedo .wwd-label{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+    .whatwedo p{font-size:16px;color:rgba(226,232,240,.82);max-width:640px;margin:0 auto;line-height:1.65;}
 
     /* HERO */
     .hero{text-align:center;padding:78px 0 60px;}
@@ -118,9 +161,13 @@
 
     /* PROOF POINT */
     .proof{max-width:680px;margin:0 auto;text-align:center;padding:34px 30px;border-radius:18px;
-      background:linear-gradient(135deg,rgba(37,99,235,.1),rgba(15,23,42,.5));border:1px solid rgba(59,130,246,.25);}
+      background:linear-gradient(135deg,rgba(37,99,235,.1),rgba(15,23,42,.5));
+      border:1px dashed rgba(59,130,246,.4);}
+    .proof-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;margin:0 auto 16px;display:block;border:2px solid rgba(96,165,250,.4);}
+    .proof-avatar-fallback{display:none;width:72px;height:72px;border-radius:50%;margin:0 auto 16px;align-items:center;justify-content:center;font-size:30px;background:rgba(37,99,235,.15);border:2px solid rgba(96,165,250,.4);}
     .proof-quote{font-size:19px;font-weight:600;color:#f1f5f9;line-height:1.5;margin-bottom:16px;letter-spacing:-.01em;}
-    .proof-cite{font-size:13px;color:var(--muted);}
+    .proof-cite{font-size:13px;color:var(--text);font-weight:600;}
+    .proof-sample{font-size:11px;color:var(--muted2);font-style:italic;margin-top:12px;letter-spacing:.04em;}
 
     /* FOOTER CTA */
     .footer-cta{text-align:center;padding:60px 0 30px;}
@@ -139,22 +186,25 @@
 <body>
 
 <header>
-  <div class="nav">
-    <a class="nav-wordmark" href="index.html">COACH<span>ANYWHERE</span></a>
-    <nav class="nav-links" id="navLinks">
-      <a class="athlete" href="for-athletes.html">For Athletes</a>
-      <a class="coach" href="for-coaches.html">For Coaches</a>
-      <!-- LOCKER ROOM NAV — intercepted pre-launch; opens the coming-soon modal.
-           Restore href to 'locker-room.html' + drop the onclick to re-enable. -->
-      <a class="locker" href="locker-room.html" onclick="event.preventDefault();openLockerSoon();">The Locker Room</a>
-      <a class="nav-signin" href="login.html">Sign in</a>
-    </nav>
-    <div class="nav-cta">
-      <a class="nav-signin" href="login.html">Sign in</a>
-      <a class="nav-wl-btn" href="waitlist.html">Join waitlist</a>
-      <button class="nav-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')" aria-label="Menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
+  <div class="container">
+    <div class="nav">
+      <div class="nav-left">
+        <a class="nav-wordmark" href="index.html">COACH<span>ANYWHERE</span></a>
+      </div>
+      <nav class="nav-links" id="navLinks">
+        <a class="athlete" href="for-athletes.html">For Athletes</a>
+        <a class="coach" href="for-coaches.html">For Coaches</a>
+        <!-- LOCKER ROOM NAV — intercepted pre-launch; opens the coming-soon modal.
+             Restore href to 'locker-room.html' + drop the onclick to re-enable. -->
+        <a class="locker" href="locker-room.html" onclick="event.preventDefault();openLockerSoon();">The Locker Room</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="nav-signin" href="login.html">Sign in</a>
+        <a class="nav-wl-btn" href="waitlist.html">Join waitlist</a>
+        <button class="nav-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')" aria-label="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
     </div>
   </div>
 </header>
@@ -164,20 +214,40 @@
   <div class="container">
     <h1>[HEADLINE: outcome-led, e.g. "Get better. With elite coaches. <span class="grad">Anywhere.</span>"]</h1>
     <p class="hero-sub">[SUBHEADING: one sentence — who it's for and the outcome.]</p>
-    <div class="hero-ctas">
-      <a class="hero-cta athlete" href="for-athletes.html">
-        <span class="cta-eyebrow">Athletes</span>
-        <span class="cta-main">I want to improve as an athlete
+    <!-- Hero entry cards — condensed athlete/coach cards routing to the
+         audience landing pages (router pattern). -->
+    <div class="entry-cards">
+      <div class="entry-card athlete" onclick="window.location.href='for-athletes.html'">
+        <div class="bar"></div>
+        <div class="entry-head">
+          <div class="entry-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg></div>
+          <div class="entry-label">Athletes</div>
+        </div>
+        <div class="entry-desc">Upload your footage and get a personalised breakdown from an elite coach within days.</div>
+        <div class="entry-cta">I want to improve
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </span>
-      </a>
-      <a class="hero-cta coach" href="for-coaches.html">
-        <span class="cta-eyebrow">Coaches</span>
-        <span class="cta-main">I'm a coach
+        </div>
+      </div>
+      <div class="entry-card coach" onclick="window.location.href='for-coaches.html'">
+        <div class="bar"></div>
+        <div class="entry-head">
+          <div class="entry-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="entry-label">Coaches</div>
+        </div>
+        <div class="entry-desc">Build a remote coaching business, set your own packages, and keep 80% of every sale.</div>
+        <div class="entry-cta">I'm a coach
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </span>
-      </a>
+        </div>
+      </div>
     </div>
+  </div>
+</section>
+
+<!-- WHAT WE DO — one-line "here's the whole thing" bridge. -->
+<section class="whatwedo">
+  <div class="container">
+    <div class="wwd-label">What we do</div>
+    <p>We connect athletes with elite coaches, give coaches the tools to build a remote coaching business, and pair developing coaches with mentors who've been there.</p>
   </div>
 </section>
 
@@ -222,12 +292,20 @@
   </div>
 </section>
 
-<!-- ONE PROOF POINT — single element only. -->
+<!-- ONE PROOF POINT — mock testimonial (placeholder content, final visual treatment).
+     Swap the image + copy + attribution for a real testimonial later; the styling stays. -->
 <section class="block" style="padding-top:0;">
   <div class="container">
     <div class="proof">
-      <div class="proof-quote">"[PROOF POINT PLACEHOLDER — one short testimonial, or a one-line 'how it works in 30 seconds' summary.]"</div>
-      <div class="proof-cite">[— Name, sport, level placeholder]</div>
+      <img class="proof-avatar"
+           src="https://images.unsplash.com/photo-1546519638-68e109498ffc?w=160&h=160&fit=crop"
+           alt="Basketball player (sample)"
+           loading="lazy"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+      <div class="proof-avatar-fallback" aria-hidden="true">🏀</div>
+      <div class="proof-quote">"I'd been stuck on the same finishing patterns for months. After two video reviews with my coach on CoachAnywhere, I broke down exactly where my footwork was off — three weeks later it's a different game for me."</div>
+      <div class="proof-cite">Marcus T. — Basketball, U18 representative</div>
+      <div class="proof-sample">Sample testimonial — placeholder</div>
     </div>
   </div>
 </section>
