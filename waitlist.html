@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Join the Waitlist — CoachAnywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="Elite coaching, anytime anywhere. Join the CoachAnywhere waitlist — upload a video, get expert coach feedback within 48 hours. Founding coaches and pilot athletes get reduced fees and direct input into the platform."/>
+  <meta name="theme-color" content="#0A1C4A"/>
+
+  <!-- Open Graph / social sharing (Instagram/Facebook traffic) -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:title" content="CoachAnywhere — Join the Waitlist"/>
+  <meta property="og:description" content="Elite coaching. AI enhanced. Anytime, anywhere. Be first in line — founding coaches and pilot athletes get reduced fees and a say in what we build."/>
+  <meta property="og:image" content="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#020617;--bg2:#020B24;--bg3:#0A1C4A;
+      --card:rgba(15,23,42,.7);--card2:rgba(15,23,42,.9);
+      --border:rgba(148,163,184,.18);--border2:rgba(148,163,184,.32);
+      --text:#e5e7eb;--muted:#94a3b8;--muted2:#64748b;
+      --blue:#2563eb;--blue2:#60a5fa;--amber:#fbbf24;--amber2:#d97706;
+      --green:#22c55e;--green2:#86efac;
+      --tr:160ms ease-out;
+    }
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+      background:radial-gradient(circle at 20% 0%,var(--bg3) 0%,var(--bg2) 60%,var(--bg) 100%);
+      color:var(--text);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;
+    }
+    a{color:inherit;text-decoration:none;}
+    button{font-family:inherit;cursor:pointer;}
+    .wrap{max-width:560px;margin:0 auto;padding:0 20px;}
+
+    /* HEADER */
+    header{padding:20px 0 8px;text-align:center;}
+    .wordmark{font-size:17px;font-weight:800;letter-spacing:.05em;color:#fff;text-transform:uppercase;}
+    .wordmark span{color:var(--blue2);}
+
+    /* HERO */
+    .hero{text-align:center;padding:34px 0 12px;}
+    .eyebrow{
+      display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:999px;
+      background:rgba(37,99,235,.14);border:1px solid rgba(59,130,246,.34);
+      font-size:11px;font-weight:700;color:var(--blue2);text-transform:uppercase;letter-spacing:.16em;
+      margin-bottom:18px;
+    }
+    .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);}
+    h1{font-size:clamp(30px,8vw,44px);font-weight:800;color:#f9fafb;letter-spacing:-.025em;line-height:1.08;margin-bottom:14px;}
+    h1 .grad{background:linear-gradient(120deg,#60a5fa,#fbbf24);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    .hero-sub{font-size:16px;color:rgba(226,232,240,.78);max-width:440px;margin:0 auto 26px;}
+    .cta-btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      width:100%;max-width:340px;padding:16px 28px;border-radius:999px;
+      background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);
+      color:#fff;font-weight:700;font-size:16px;border:none;
+      box-shadow:0 14px 38px rgba(37,99,235,.42);transition:transform var(--tr);
+    }
+    .cta-btn:hover{transform:translateY(-2px);}
+    .cta-btn svg{width:17px;height:17px;}
+    .hero-note{font-size:12px;color:var(--muted2);margin-top:12px;}
+
+    /* SECTION */
+    section{padding:30px 0;}
+    .sec-label{
+      font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--muted);margin-bottom:16px;text-align:center;
+    }
+
+    /* FEATURES */
+    .feature{
+      display:flex;gap:14px;align-items:flex-start;
+      background:var(--card);border:1px solid var(--border);border-radius:14px;
+      padding:16px 18px;margin-bottom:10px;
+    }
+    .feature-ic{
+      width:38px;height:38px;border-radius:10px;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .feature-ic.blue{background:rgba(37,99,235,.15);color:var(--blue2);}
+    .feature-ic.amber{background:rgba(234,179,8,.13);color:var(--amber);}
+    .feature-ic.green{background:rgba(34,197,94,.13);color:var(--green2);}
+    .feature-ic.purple{background:rgba(139,92,246,.15);color:#a78bfa;}
+    .feature-ic svg{width:19px;height:19px;}
+    .feature-title{font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:3px;}
+    .feature-desc{font-size:13px;color:rgba(226,232,240,.72);line-height:1.55;}
+
+    /* FOUNDING CALLOUT */
+    .founding{
+      border-radius:18px;padding:26px 24px;text-align:center;
+      background:linear-gradient(135deg,rgba(180,83,9,.16),rgba(251,191,36,.05),rgba(15,23,42,.5));
+      border:1px solid rgba(251,191,36,.3);position:relative;overflow:hidden;
+    }
+    .founding::before{content:'';position:absolute;top:-80px;right:-60px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(251,191,36,.12),transparent 70%);pointer-events:none;}
+    .founding-badge{
+      display:inline-block;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700;
+      letter-spacing:.12em;text-transform:uppercase;color:var(--amber);
+      background:rgba(234,179,8,.12);border:1px solid rgba(251,191,36,.35);margin-bottom:12px;
+    }
+    .founding h2{font-size:21px;font-weight:800;color:#f9fafb;margin-bottom:10px;letter-spacing:-.01em;}
+    .founding p{font-size:14px;color:rgba(226,232,240,.8);max-width:420px;margin:0 auto;}
+    .founding ul{list-style:none;display:flex;flex-direction:column;gap:8px;max-width:340px;margin:16px auto 0;text-align:left;}
+    .founding li{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:rgba(226,232,240,.85);}
+    .founding li svg{width:15px;height:15px;color:var(--amber);flex-shrink:0;margin-top:3px;}
+
+    /* FORM */
+    .form-card{
+      background:var(--card2);border:1px solid var(--border2);border-radius:18px;
+      padding:24px 22px;box-shadow:0 20px 60px rgba(0,0,0,.4);
+    }
+    .form-card h2{font-size:20px;font-weight:800;color:#f9fafb;margin-bottom:4px;text-align:center;}
+    .form-card .sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;}
+    .fg{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+    .fl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+    .fi,.fs{
+      padding:13px 14px;border-radius:11px;border:1px solid var(--border);
+      background:rgba(255,255,255,.05);color:#f1f5f9;font-size:16px;
+      font-family:inherit;outline:none;width:100%;transition:border-color var(--tr);
+    }
+    /* 16px font on inputs prevents iOS zoom-on-focus */
+    .fi:focus,.fs:focus{border-color:rgba(59,130,246,.5);}
+    .fi::placeholder{color:rgba(148,163,184,.45);}
+    .fs{background:rgba(15,23,42,.96);cursor:pointer;-webkit-appearance:none;appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2394a3b8' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:right 13px center;padding-right:38px;}
+    .fs option{background:#0d1b3e;color:#f1f5f9;}
+    .form-err{display:none;padding:10px 14px;border-radius:9px;background:rgba(127,29,29,.2);border:1px solid rgba(239,68,68,.3);font-size:13px;color:#fca5a5;margin-bottom:14px;}
+    .submit-btn{
+      width:100%;padding:15px;border-radius:999px;
+      background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);
+      color:#fff;font-weight:700;font-size:16px;border:none;margin-top:6px;
+      box-shadow:0 12px 30px rgba(37,99,235,.4);transition:transform var(--tr);
+    }
+    .submit-btn:hover{transform:translateY(-1px);}
+    .submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .form-fine{font-size:11px;color:var(--muted2);text-align:center;margin-top:12px;line-height:1.5;}
+
+    /* SUCCESS STATE */
+    .success{display:none;text-align:center;padding:30px 4px;}
+    .success-ic{
+      width:72px;height:72px;border-radius:50%;margin:0 auto 20px;
+      background:rgba(34,197,94,.14);border:2px solid rgba(34,197,94,.4);
+      display:flex;align-items:center;justify-content:center;
+    }
+    .success-ic svg{width:34px;height:34px;color:var(--green2);}
+    .success h2{font-size:24px;font-weight:800;color:#f9fafb;margin-bottom:10px;letter-spacing:-.01em;}
+    .success p{font-size:15px;color:rgba(226,232,240,.8);max-width:380px;margin:0 auto 8px;}
+    .success .next{
+      text-align:left;max-width:380px;margin:20px auto;padding:16px 18px;border-radius:13px;
+      background:var(--card);border:1px solid var(--border);
+    }
+    .success .next-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+    .success .next-step{display:flex;gap:10px;font-size:13px;color:rgba(226,232,240,.85);margin-bottom:8px;align-items:flex-start;}
+    .success .next-step b{color:var(--blue2);}
+    .share-label{font-size:12px;color:var(--muted);margin:22px 0 12px;}
+    .share-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+    .share-btn{
+      display:inline-flex;align-items:center;gap:7px;padding:11px 18px;border-radius:999px;
+      border:1px solid var(--border2);background:rgba(255,255,255,.04);
+      color:var(--text);font-size:13px;font-weight:600;transition:all var(--tr);
+    }
+    .share-btn:hover{border-color:var(--blue2);background:rgba(255,255,255,.08);}
+    .share-btn svg{width:15px;height:15px;}
+
+    /* FOOTER */
+    footer{padding:30px 0 40px;text-align:center;border-top:1px solid var(--border);margin-top:20px;}
+    .foot-tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;}
+    .foot-tag{font-size:11px;font-weight:600;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted);}
+    .foot-text{font-size:12px;color:var(--muted2);line-height:1.7;}
+    .foot-text a{color:var(--blue2);}
+
+    @media(max-width:480px){
+      .hero{padding:24px 0 8px;}
+      section{padding:24px 0;}
+      .form-card{padding:20px 16px;}
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div class="wordmark">COACH<span>ANYWHERE</span></div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="eyebrow"><span class="dot"></span>Launching soon · Australia</div>
+    <h1>Elite coaching.<br><span class="grad">Anytime, anywhere.</span></h1>
+    <p class="hero-sub">Upload a training video, get a personalised breakdown from a vetted elite coach within 48 hours. Be first in line.</p>
+    <button class="cta-btn" onclick="scrollToForm()">
+      Join the waitlist
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </button>
+    <div class="hero-note">No spam. Just a heads-up when we open the doors.</div>
+  </div>
+
+  <!-- WHAT'S COMING -->
+  <section>
+    <div class="sec-label">What's coming</div>
+
+    <div class="feature">
+      <div class="feature-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+      <div>
+        <div class="feature-title">Elite coach video reviews</div>
+        <div class="feature-desc">Upload footage of your training or game. A vetted coach reviews it and sends back written feedback, key takeaways and drills — usually within 48 hours.</div>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-ic amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+      <div>
+        <div class="feature-title">Coach-to-coach mentorship</div>
+        <div class="feature-desc">Developing coaches learn from elite mentors through guided 1-on-1 sessions — building the next generation of coaching talent, not just athletes.</div>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-ic purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+      <div>
+        <div class="feature-title">AI-assisted matching &amp; analysis</div>
+        <div class="feature-desc">Smart coach matching pairs you with the right specialist for your sport and level, with AI-guided tools helping coaches give sharper, faster feedback.</div>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
+      <div>
+        <div class="feature-title">All sports, Australia-wide</div>
+        <div class="feature-desc">Basketball, AFL, soccer, tennis, cricket, netball and more — coaching that isn't limited by which city you happen to live in.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOUNDING CALLOUT -->
+  <section>
+    <div class="founding">
+      <div class="founding-badge">Founding cohort</div>
+      <h2>Be one of the first in.</h2>
+      <p>Our founding coaches and pilot athletes shape what CoachAnywhere becomes — and lock in benefits the rest won't get.</p>
+      <ul>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Reduced founding-member fees, locked in</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Founding-member status on your profile</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Direct input into the features we build next</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- FORM -->
+  <section id="formSection">
+    <div class="form-card" id="formCard">
+      <h2>Join the waitlist</h2>
+      <div class="sub">Takes 20 seconds. We'll be in touch before launch.</div>
+      <div class="form-err" id="formErr"></div>
+
+      <form id="waitlistForm" novalidate>
+        <div class="fg">
+          <label class="fl" for="wlFirst">First name</label>
+          <input class="fi" type="text" id="wlFirst" autocomplete="given-name" placeholder="Your first name"/>
+        </div>
+        <div class="fg">
+          <label class="fl" for="wlEmail">Email</label>
+          <input class="fi" type="email" id="wlEmail" autocomplete="email" inputmode="email" placeholder="you@email.com"/>
+        </div>
+        <div class="fg">
+          <label class="fl" for="wlRole">I'm a…</label>
+          <select class="fs" id="wlRole">
+            <option value="" disabled selected>Select one</option>
+            <option value="coach">Coach</option>
+            <option value="athlete">Athlete</option>
+            <option value="both">Both — coach &amp; athlete</option>
+            <option value="parent">Parent of an athlete</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl" for="wlSport">Primary sport</label>
+          <select class="fs" id="wlSport">
+            <option value="" disabled selected>Select your sport</option>
+            <option>Basketball</option><option>AFL</option><option>Soccer</option>
+            <option>Tennis</option><option>Cricket</option><option>Netball</option>
+            <option>Volleyball</option><option>Rugby / League</option><option>Golf</option>
+            <option>Gymnastics</option><option>Athletics</option><option>Swimming</option>
+            <option>Strength &amp; Conditioning</option><option>Lacrosse</option>
+            <option>Pickleball</option><option>Other</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl" for="wlCountry">Country</label>
+          <select class="fs" id="wlCountry">
+            <option value="" disabled selected>Select</option>
+            <option value="AU">Australia</option>
+            <option value="USA">United States</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <!-- Branching qualifier — hidden until role chosen -->
+        <div class="fg" id="wlLevelGroup" style="display:none;">
+          <label class="fl" for="wlLevel" id="wlLevelLabel">What level?</label>
+          <select class="fs" id="wlLevel">
+            <option value="" disabled selected>Select level</option>
+            <option>Junior club</option>
+            <option>Senior club</option>
+            <option>Representative / State</option>
+            <option>University / College</option>
+            <option>Professional / Elite</option>
+          </select>
+        </div>
+
+        <div class="fg">
+          <label class="fl" for="wlNotes">Anything you want us to know? <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted2);">(optional)</span></label>
+          <input class="fi" type="text" id="wlNotes" maxlength="160" placeholder="One line is plenty"/>
+        </div>
+
+        <button type="submit" class="submit-btn" id="wlSubmit">Join the waitlist →</button>
+        <div class="form-fine">We'll only email you about CoachAnywhere. No spam, unsubscribe anytime.</div>
+      </form>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="form-card success" id="successCard">
+      <div class="success-ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2 id="successTitle">You're on the list!</h2>
+      <p id="successMsg">Welcome to the founding cohort. We'll email you the moment we open the doors.</p>
+      <div class="next">
+        <div class="next-title">What happens next</div>
+        <div class="next-step"><b>1.</b><span>We're onboarding founding coaches and pilot athletes in waves.</span></div>
+        <div class="next-step"><b>2.</b><span>You'll get an early-access invite by email before public launch.</span></div>
+        <div class="next-step"><b>3.</b><span>Founding-member pricing &amp; status are locked in when you join.</span></div>
+      </div>
+      <div class="share-label">Know someone who'd want in? Send them the list.</div>
+      <div class="share-row">
+        <button class="share-btn" onclick="shareNative()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </button>
+        <a class="share-btn" id="shareWhatsApp" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A8 8 0 003.9 13.5L3 17.5l4.1-1a8 8 0 0010.5-10.2zM12 18.3a6.5 6.5 0 01-3.3-.9l-.24-.14-2.43.6.65-2.37-.16-.25A6.5 6.5 0 1112 18.3zm3.6-4.87c-.2-.1-1.17-.58-1.35-.64s-.31-.1-.44.1-.51.64-.62.77-.23.15-.43.05a5.3 5.3 0 01-1.56-.96 5.86 5.86 0 01-1.08-1.35c-.11-.2 0-.3.09-.4l.3-.35c.1-.12.13-.2.2-.34s0-.25 0-.35-.44-1.06-.6-1.45-.32-.33-.44-.34h-.38a.73.73 0 00-.53.25 2.23 2.23 0 00-.69 1.65 3.86 3.86 0 00.81 2.05 8.86 8.86 0 003.39 3c.47.2.84.32 1.13.42a2.72 2.72 0 001.25.08 2.04 2.04 0 001.34-.95 1.66 1.66 0 00.12-.94c-.05-.09-.18-.14-.38-.24z"/></svg>
+          WhatsApp
+        </a>
+        <button class="share-btn" onclick="copyLink(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          Copy link
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="foot-tags">
+      <span class="foot-tag">🏀 All sports</span>
+      <span class="foot-tag">📍 Australia-wide</span>
+      <span class="foot-tag">⚡ Remote coaching</span>
+    </div>
+    <div class="foot-text">
+      CoachAnywhere — elite coaching, anytime anywhere.<br>
+      Questions? <a href="mailto:kane@coachanywhere247.com">kane@coachanywhere247.com</a>
+    </div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SB_URL = "https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession:false } });
+
+  // Source tracking — ?src=instagram etc. Defaults to 'direct'.
+  const SRC = new URLSearchParams(location.search).get("src") || "direct";
+
+  function scrollToForm(){
+    document.getElementById("formSection").scrollIntoView({ behavior:"smooth", block:"start" });
+    setTimeout(() => document.getElementById("wlFirst").focus(), 400);
+  }
+
+  // Branching qualifier — show + relabel the level question by role.
+  const roleSel = document.getElementById("wlRole");
+  roleSel.addEventListener("change", () => {
+    const r = roleSel.value;
+    const group = document.getElementById("wlLevelGroup");
+    const label = document.getElementById("wlLevelLabel");
+    if (r === "coach") {
+      label.textContent = "What level do you currently coach?";
+      group.style.display = "flex";
+    } else if (r === "athlete" || r === "both") {
+      label.textContent = "What level do you compete at?";
+      group.style.display = "flex";
+    } else {
+      // parent / other → no level question
+      group.style.display = "none";
+      document.getElementById("wlLevel").value = "";
+    }
+  });
+
+  function showErr(msg){
+    const e = document.getElementById("formErr");
+    e.textContent = msg; e.style.display = "block";
+    e.scrollIntoView({ behavior:"smooth", block:"center" });
+  }
+
+  document.getElementById("waitlistForm").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const btn = document.getElementById("wlSubmit");
+    document.getElementById("formErr").style.display = "none";
+
+    const first   = document.getElementById("wlFirst").value.trim();
+    const email   = document.getElementById("wlEmail").value.trim();
+    const role    = document.getElementById("wlRole").value;
+    const sport   = document.getElementById("wlSport").value;
+    const country = document.getElementById("wlCountry").value;
+    const levelEl = document.getElementById("wlLevelGroup");
+    const level   = levelEl.style.display !== "none" ? document.getElementById("wlLevel").value : null;
+    const notes   = document.getElementById("wlNotes").value.trim();
+
+    // Minimal validation — keep friction low
+    if (!first) return showErr("Pop your first name in.");
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showErr("That email doesn't look right.");
+    if (!role)    return showErr("Tell us which one you are.");
+    if (!sport)   return showErr("Pick your primary sport.");
+    if (!country) return showErr("Choose your country.");
+
+    btn.disabled = true; btn.textContent = "Joining…";
+
+    const { error } = await sb.from("waitlist").insert({
+      first_name: first,
+      email:      email,
+      role:       role,
+      sport:      sport,
+      country:    country,
+      level:      level || null,
+      notes:      notes || null,
+      source:     SRC
+    });
+
+    if (error) {
+      // Unique-violation on email → they're already on the list. Treat as success.
+      if (error.code === "23505" || /duplicate|unique/i.test(error.message || "")) {
+        document.getElementById("successTitle").textContent = "You're already on the list!";
+        document.getElementById("successMsg").textContent =
+          "Looks like you've already signed up — you're all set. We'll be in touch before launch.";
+        return showSuccess();
+      }
+      btn.disabled = false; btn.textContent = "Join the waitlist →";
+      return showErr("Something went wrong — please try again. (" + (error.message || "unknown") + ")");
+    }
+
+    showSuccess();
+  });
+
+  function showSuccess(){
+    document.getElementById("formCard").style.display = "none";
+    const card = document.getElementById("successCard");
+    card.style.display = "block";
+    // Build share links now that we know the page URL
+    const shareUrl = location.origin + location.pathname;
+    const text = encodeURIComponent("I just joined the CoachAnywhere waitlist — elite coaching, anytime anywhere. Get in early:");
+    document.getElementById("shareWhatsApp").href = "https://wa.me/?text=" + text + "%20" + encodeURIComponent(shareUrl);
+    card.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
+
+  function shareNative(){
+    const shareUrl = location.origin + location.pathname;
+    if (navigator.share) {
+      navigator.share({
+        title: "CoachAnywhere — Join the Waitlist",
+        text:  "Elite coaching, anytime anywhere. Get in early:",
+        url:   shareUrl
+      }).catch(()=>{});
+    } else {
+      copyLink();
+    }
+  }
+
+  function copyLink(btnEl){
+    const shareUrl = location.origin + location.pathname;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      if (btnEl) { const o = btnEl.innerHTML; btnEl.innerHTML = "✓ Copied"; setTimeout(()=>btnEl.innerHTML=o, 1800); }
+    }).catch(() => prompt("Copy this link:", shareUrl));
+  }
+  window.scrollToForm = scrollToForm;
+  window.shareNative  = shareNative;
+  window.copyLink     = copyLink;
+</script>
+
+</body>
+</html>
