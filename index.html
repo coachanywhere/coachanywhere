@@ -637,7 +637,10 @@
             <a href="#how-it-works">Why CoachAnywhere</a>
             <a href="athlete-signup.html" target="_top" style="color:#60a5fa;font-weight:700;">Athlete Sign Up</a>
             <a href="coach-signup.html" target="_top" style="color:#fbbf24;font-weight:700;">Coach Sign Up</a>
-            <a href="locker-room.html" style="color:#ef4444;font-weight:700;">The Locker Room</a>
+            <!-- LOCKER ROOM NAV — link kept visible but intercepted pre-launch; opens the
+                 "coming soon" modal instead of navigating to locker-room.html. Restore the
+                 href to 'locker-room.html' and drop the onclick to re-enable. -->
+            <a href="locker-room.html" style="color:#ef4444;font-weight:700;" onclick="event.preventDefault();openLockerSoon();">The Locker Room</a>
             <a href="#faq">FAQ</a>
             <a href="#contact">Contact</a>
           </nav>
@@ -681,7 +684,10 @@
             </div>
 
             <!-- THREE CARDS -->
-            <div id="heroCards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:1100px;margin:0 auto 20px;">
+            <!-- heroCards: 2-up while The Locker Room card is hidden pre-launch.
+                 Re-enable the 3rd card below and switch back to repeat(3,1fr)
+                 / max-width:1100px when shipping live sessions. -->
+            <div id="heroCards" style="display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:760px;margin:0 auto 20px;">
 
               <!-- ATHLETE -->
               <div style="background:rgba(10,16,40,.85);border:1px solid rgba(59,130,246,.2);border-radius:22px;padding:30px 26px;display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden;backdrop-filter:blur(10px);transition:all 180ms ease-out;cursor:pointer;" onclick="window.top.location.href='athlete-signup.html'" onmouseover="this.style.borderColor='rgba(59,130,246,.5)';this.style.background='rgba(13,22,55,.9)';this.style.transform='translateY(-5px)';this.style.boxShadow='0 24px 60px rgba(0,0,0,.5),0 0 0 1px rgba(59,130,246,.15)'" onmouseout="this.style.borderColor='rgba(59,130,246,.2)';this.style.background='rgba(10,16,40,.85)';this.style.transform='';this.style.boxShadow=''">
@@ -721,7 +727,8 @@
                 <div style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:#fbbf24;margin-top:auto;">Sign up as Coach <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
               </div>
 
-              <!-- LOCKER ROOM -->
+              <!-- LOCKER ROOM HERO — hidden pre-launch, re-enable when ready to ship live sessions.
+                   Also revert #heroCards above to repeat(3,1fr) / max-width:1100px when re-enabling.
               <div style="background:rgba(12,4,4,.85);border:1px solid rgba(239,68,68,.18);border-radius:22px;padding:30px 26px;display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden;backdrop-filter:blur(10px);transition:all 180ms ease-out;cursor:pointer;" onclick="window.top.location.href='locker-room.html'" onmouseover="this.style.borderColor='rgba(239,68,68,.4)';this.style.background='rgba(16,5,5,.9)';this.style.transform='translateY(-5px)';this.style.boxShadow='0 24px 60px rgba(0,0,0,.5),0 0 0 1px rgba(239,68,68,.1)'" onmouseout="this.style.borderColor='rgba(239,68,68,.18)';this.style.background='rgba(12,4,4,.85)';this.style.transform='';this.style.boxShadow=''">
                 <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#ef4444,#fbbf24,transparent);"></div>
                 <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -739,6 +746,7 @@
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:#fca5a5;margin-top:auto;">Enter The Locker Room <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
               </div>
+              LOCKER ROOM HERO — end hidden block -->
 
             </div>
             <style>
@@ -1404,6 +1412,33 @@
       }
       pulseMfNode();
       setInterval(pulseMfNode, 1800);
+    });
+  </script>
+
+  <!-- LOCKER ROOM "COMING SOON" MODAL — shown when the nav link is clicked pre-launch.
+       Matches the dark navy modal styling used across the app's other modals. -->
+  <div id="lockerSoonModal" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,.78);backdrop-filter:blur(10px);z-index:300;align-items:center;justify-content:center;padding:20px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+    <div style="width:100%;max-width:460px;background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(9,14,35,.99));border:1px solid rgba(148,163,184,.3);border-radius:18px;padding:30px 28px;box-shadow:0 30px 80px rgba(0,0,0,.6);text-align:center;">
+      <div style="width:56px;height:56px;border-radius:14px;background:rgba(220,38,38,.12);border:1px solid rgba(239,68,68,.3);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+      </div>
+      <h3 style="font-size:21px;font-weight:800;color:#f9fafb;letter-spacing:-.01em;margin-bottom:10px;">The Locker Room is coming soon</h3>
+      <p style="font-size:14px;line-height:1.65;color:rgba(226,232,240,.78);margin:0 auto 22px;max-width:360px;">Live tactical sessions with elite coaches — launching after our public launch. Join the waitlist and be the first to know when the first session drops.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <a href="waitlist.html" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 24px;border-radius:999px;background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);color:#fff;font-weight:700;font-size:15px;text-decoration:none;box-shadow:0 12px 30px rgba(37,99,235,.4);">
+          Join the waitlist
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <button onclick="closeLockerSoon()" style="width:100%;padding:13px 24px;border-radius:999px;background:transparent;border:1px solid rgba(148,163,184,.25);color:#94a3b8;font-weight:600;font-size:14px;font-family:inherit;cursor:pointer;">Close</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    function openLockerSoon(){ document.getElementById("lockerSoonModal").style.display = "flex"; }
+    function closeLockerSoon(){ document.getElementById("lockerSoonModal").style.display = "none"; }
+    // Click the backdrop (outside the card) to dismiss.
+    document.getElementById("lockerSoonModal").addEventListener("click", function(e){
+      if (e.target === this) closeLockerSoon();
     });
   </script>
 </body>

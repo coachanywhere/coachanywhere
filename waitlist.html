@@ -317,6 +317,11 @@
           <input class="fi" type="text" id="wlNotes" maxlength="160" placeholder="One line is plenty"/>
         </div>
 
+        <label for="wlLocker" style="display:flex;align-items:flex-start;gap:11px;padding:13px 14px;border:1px solid var(--border);border-radius:11px;background:rgba(255,255,255,.03);cursor:pointer;margin-bottom:6px;">
+          <input type="checkbox" id="wlLocker" style="width:18px;height:18px;margin-top:1px;accent-color:#60a5fa;flex-shrink:0;"/>
+          <span style="font-size:13px;color:rgba(226,232,240,.85);line-height:1.5;">I'm interested in <strong style="color:#fca5a5;">The Locker Room</strong> — live tactical sessions with elite coaches</span>
+        </label>
+
         <button type="submit" class="submit-btn" id="wlSubmit">Join the waitlist →</button>
         <div class="form-fine">We'll only email you about CoachAnywhere. No spam, unsubscribe anytime.</div>
       </form>
@@ -420,6 +425,7 @@
     const levelEl = document.getElementById("wlLevelGroup");
     const level   = levelEl.style.display !== "none" ? document.getElementById("wlLevel").value : null;
     const notes   = document.getElementById("wlNotes").value.trim();
+    const lockerInterest = document.getElementById("wlLocker").checked;
 
     // Minimal validation — keep friction low
     if (!first) return showErr("Pop your first name in.");
@@ -438,7 +444,8 @@
       country:    country,
       level:      level || null,
       notes:      notes || null,
-      source:     SRC
+      source:     SRC,
+      interested_in_locker_room: lockerInterest
     });
 
     if (error) {
