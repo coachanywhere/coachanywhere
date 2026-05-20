@@ -389,7 +389,7 @@
 
   // Branching qualifier — show + relabel the level question by role.
   const roleSel = document.getElementById("wlRole");
-  roleSel.addEventListener("change", () => {
+  function applyRoleUI(){
     const r = roleSel.value;
     const group = document.getElementById("wlLevelGroup");
     const label = document.getElementById("wlLevelLabel");
@@ -404,7 +404,18 @@
       group.style.display = "none";
       document.getElementById("wlLevel").value = "";
     }
-  });
+  }
+  roleSel.addEventListener("change", applyRoleUI);
+
+  // Pre-fill the role from ?role=athlete|coach (set by the for-athletes /
+  // for-coaches landing-page CTAs). Not locked — the user can still change it.
+  (function prefillRole(){
+    const r = (new URLSearchParams(location.search).get("role") || "").toLowerCase();
+    if (r === "athlete" || r === "coach") {
+      roleSel.value = r;
+      applyRoleUI();  // reveal + relabel the level question to match
+    }
+  })();
 
   function showErr(msg){
     const e = document.getElementById("formErr");
