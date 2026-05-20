@@ -453,6 +453,15 @@
       return showErr("Something went wrong — please try again. (" + (error.message || "unknown") + ")");
     }
 
+    // Fire the welcome email (fire-and-forget — don't block the success
+    // state on email delivery). The function no-ops gracefully if the
+    // Resend provider isn't configured.
+    fetch("/.netlify/functions/waitlist-welcome", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, first_name: first })
+    }).catch(() => {});
+
     showSuccess();
   });
 
