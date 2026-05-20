@@ -978,7 +978,9 @@
                   <div>All Access Pass $49/month — or single tickets from $29 per session.</div>
                 </div>
               </div>
-              <button class="portal-cta-btn locker-btn" onclick="window.top.location.href='locker-room.html'">
+              <!-- Intercepted pre-launch — opens the coming-soon modal instead of navigating.
+                   Restore onclick to window.top.location.href='locker-room.html' to re-enable. -->
+              <button class="portal-cta-btn locker-btn" onclick="openLockerSoon()">
                 Enter The Locker Room →
               </button>
               <div class="portal-glow" style="background:radial-gradient(circle,rgba(239,68,68,.18),transparent 70%);"></div>
