@@ -117,7 +117,11 @@
     .coach-sport{font-size:12px;color:var(--muted);margin-bottom:9px;}
     .coach-level{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:rgba(37,99,235,.16);color:var(--blue2);border:1px solid rgba(59,130,246,.3);margin-bottom:10px;}
     .coach-tag{font-size:11px;color:rgba(226,232,240,.7);line-height:1.5;}
-    /* testimonial tile */
+    /* testimonial tiles — static grid (no carousel) */
+    .tmn-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px;}
+    .tmn-grid .tmn-tile{width:auto;cursor:default;}
+    @media(max-width:720px){.tmn-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:480px){.tmn-grid{grid-template-columns:1fr;}}
     .tmn-tile{width:300px;flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:transform var(--tr),border-color var(--tr),box-shadow var(--tr);}
     .tmn-tile:hover{transform:translateY(-4px);border-color:rgba(59,130,246,.55);box-shadow:0 16px 40px rgba(0,0,0,.45);}
     .tmn-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
@@ -337,14 +341,12 @@
   </div>
 </section>
 
-<!-- TESTIMONIALS — 6-testimonial auto-scroll carousel (same mechanics as the
-     coach carousel). PLACEHOLDER quotes — swap for real ones when available. -->
+<!-- TESTIMONIALS — static 6-tile grid (reverted from carousel).
+     PLACEHOLDER quotes — swap for real ones when available. -->
 <section class="block">
   <div class="container">
     <div class="block-label">What athletes say</div>
-  </div>
-  <div class="carousel" id="tmnCarousel">
-    <div class="carousel-track scroll" id="tmnTrack" style="--dur:48s;"></div>
+    <div class="tmn-grid" id="tmnGrid"></div>
   </div>
 </section>
 
@@ -518,14 +520,15 @@
     function modal(t){
       return `${avatarHTML(Object.assign({name:t.meta},t))}<div class="tmn-meta" style="margin-bottom:10px;">${t.meta}</div><div class="tmn-quote">&ldquo;${t.quote}&rdquo;</div>`;
     }
-    const track = document.getElementById("tmnTrack");
-    if(!track) return;
-    const tiles = TMN.map((t,i)=>`<div class="tmn-tile" data-idx="${i}" role="button" tabindex="0">${tile(t)}</div>`).join("");
-    track.innerHTML = tiles + tiles;  // duplicate for a seamless loop
-    track.addEventListener("click", function(e){
-      const el = e.target.closest(".tmn-tile"); if(!el) return;
-      openShowModal(modal(TMN[+el.dataset.idx]));
-    });
+    const grid = document.getElementById("tmnGrid");
+    if(!grid) return;
+    grid.innerHTML = TMN.map((t,i)=>`<div class="tmn-tile" data-idx="${i}">${tile(t)}</div>`).join("");
+    // Static grid now — popup handler retired (the tile shows the full quote).
+    // Re-enable by uncommenting to restore click-for-detail:
+    // grid.addEventListener("click", function(e){
+    //   const el = e.target.closest(".tmn-tile"); if(!el) return;
+    //   openShowModal(modal(TMN[+el.dataset.idx]));
+    // });
   })();
 </script>
 
