@@ -1412,16 +1412,52 @@
     const c=document.getElementById("feedbackList");
     if(!items.length){c.innerHTML=`<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div class="empty-title">No feedback yet</div><div class="empty-sub">Upload a video to start receiving feedback.</div></div>`;return;}
     const ci=currentCoach?(currentCoach.first_name?.[0]||"C")+(currentCoach.last_name?.[0]||""):"C";
-    c.innerHTML=items.map((f,i)=>`
+    c.innerHTML=items.map((f,i)=>{
+      const drills = f.drill_recommendations
+        ? `<div class="fbi-section"><div class="fbi-section-lbl">Drills to work on</div><div class="fbi-section-txt">${f.drill_recommendations}</div></div>` : "";
+      const voice = (Array.isArray(f.voice_clips)&&f.voice_clips.length)
+        ? `<div class="fbi-section"><div class="fbi-section-lbl">Voice notes</div>${f.voice_clips.map(v=>`
+            <div style="display:flex;align-items:center;gap:10px;margin:8px 0;">
+              <span style="font-size:12px;font-weight:600;color:#6366f1;white-space:nowrap;">🎙 ${fmtClipTime(v.video_time)}</span>
+              <audio controls preload="none" src="${v.url}" style="flex:1;height:36px;"></audio>
+            </div>`).join("")}</div>` : "";
+      const shots = (Array.isArray(f.annotations)&&f.annotations.length)
+        ? `<div class="fbi-section"><div class="fbi-section-lbl">Marked-up frames</div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;">${f.annotations.map(a=>`
+              <figure style="margin:0;width:140px;cursor:pointer;" onclick="openShot('${a.url}')">
+                <img src="${a.url}" alt="Marked-up frame" loading="lazy" style="width:140px;height:90px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;"/>
+                <figcaption style="font-size:11px;color:#9ca3af;text-align:center;margin-top:3px;">${fmtClipTime(a.video_time)}</figcaption>
+              </figure>`).join("")}</div></div>` : "";
+      return `
       <div class="fbi" id="fbi${i}">
         <div class="fbi-hdr" onclick="this.closest('.fbi').classList.toggle('open')">
           <div class="fbi-av">${ci}</div>
           <div style="flex:1;"><div class="fbi-coach">Coach ${currentCoach?.first_name||"Coach"} feedback</div><div class="fbi-date">${new Date(f.created_at).toLocaleDateString("en-AU",{day:"numeric",month:"long",year:"numeric"})}</div></div>
           <svg class="fbi-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
-        <div class="fbi-body"><div class="fbi-text">${f.written_feedback||""}</div>${f.key_takeaways?`<div class="fbi-section"><div class="fbi-section-lbl">Key takeaways</div><div class="fbi-section-txt">${f.key_takeaways}</div></div>`:""}</div>
-      </div>
-    `).join("");
+        <div class="fbi-body"><div class="fbi-text">${f.written_feedback||""}</div>${f.key_takeaways?`<div class="fbi-section"><div class="fbi-section-lbl">Key takeaways</div><div class="fbi-section-txt">${f.key_takeaways}</div></div>`:""}${drills}${voice}${shots}</div>
+      </div>`;
+    }).join("");
+  }
+
+  function fmtClipTime(s){
+    s = Math.max(0, Math.round(s||0));
+    return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+  }
+
+  // Lightbox for marked-up annotation frames
+  function openShot(url){
+    let lb=document.getElementById("shotLightbox");
+    if(!lb){
+      lb=document.createElement("div");
+      lb.id="shotLightbox";
+      lb.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:10000;padding:24px;cursor:zoom-out;";
+      lb.onclick=()=>{lb.style.display="none";};
+      lb.innerHTML='<img id="shotLightboxImg" style="max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.5);"/>';
+      document.body.appendChild(lb);
+    }
+    document.getElementById("shotLightboxImg").src=url;
+    lb.style.display="flex";
   }
 
   function buildMiniChart(subs){
