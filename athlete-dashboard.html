@@ -1028,12 +1028,13 @@
   // athlete is prompted to paste a YouTube/Vimeo link instead.
   // Reference: at 1080p H.264 a phone produces ~10–20 MB per minute,
   // so 100 MB comfortably fits a 5–8 minute clip.
-  // Changing this number alone updates the limit everywhere — the
-  // banner hint and the error message both read from it at runtime.
-  const MAX_UPLOAD_MB = 100;
+  // Changing these numbers alone updates the limit everywhere — the
+  // banner hint and the error message both read from them at runtime.
+  const MAX_UPLOAD_MB  = 100;
+  const MAX_DURATION_SEC = 90;   // technique-review cap: short, single-play clips
   {
     const el = document.getElementById("uploadLimitMB");
-    if(el) el.textContent = `${MAX_UPLOAD_MB} MB`;
+    if(el) el.textContent = `under ${MAX_DURATION_SEC}s · max ${MAX_UPLOAD_MB} MB`;
   }
 
   // ── Coach service packages ─────────────────────────────────────
@@ -1471,14 +1472,51 @@
       sendRow.style.display = "none";
       return;
     }
-    selectedFile = f;
-    nameEl.style.color = "var(--green)";
-    nameEl.textContent = `✓ ${f.name} · ${sizeMB.toFixed(1)} MB`;
-    // Local preview (blob URL — no upload yet).
+    // Size OK — now enforce the 90-second cap before accepting. We read
+    // duration from the preview element's metadata. Some browsers report
+    // Infinity/NaN for duration until a seek forces computation (notably
+    // iOS Safari and certain MP4s), so we handle that case explicitly.
+    const blobUrl = URL.createObjectURL(f);
     if(previewEl.src) URL.revokeObjectURL(previewEl.src);
-    previewEl.src = URL.createObjectURL(f);
-    previewWrap.style.display = "block";
-    sendRow.style.display = "flex";
+    previewEl.src = blobUrl;
+    nameEl.style.color = "var(--muted)";
+    nameEl.textContent = `Checking ${f.name}…`;
+    previewWrap.style.display = "none";
+    sendRow.style.display = "none";
+
+    const acceptClip = () => {
+      selectedFile = f;
+      nameEl.style.color = "var(--green)";
+      nameEl.textContent = `✓ ${f.name} · ${sizeMB.toFixed(1)} MB`;
+      previewWrap.style.display = "block";
+      sendRow.style.display = "flex";
+    };
+    const rejectTooLong = () => {
+      selectedFile = null;
+      input.value = "";
+      URL.revokeObjectURL(blobUrl);
+      previewEl.removeAttribute("src"); previewEl.load();
+      nameEl.style.color = "#ef4444";
+      nameEl.textContent = "Clips need to be under 90 seconds for technique review. Pick the play you want feedback on and try again.";
+      previewWrap.style.display = "none";
+      sendRow.style.display = "none";
+    };
+    const evaluateDuration = () => {
+      const d = previewEl.duration;
+      if(d === Infinity || isNaN(d)){
+        // Force duration computation by seeking to the end, then reset.
+        previewEl.currentTime = 1e7;
+        previewEl.addEventListener("timeupdate", function onSeek(){
+          previewEl.removeEventListener("timeupdate", onSeek);
+          const real = previewEl.duration;
+          previewEl.currentTime = 0;
+          (isFinite(real) && real > MAX_DURATION_SEC) ? rejectTooLong() : acceptClip();
+        }, { once:true });
+        return;
+      }
+      (d > MAX_DURATION_SEC) ? rejectTooLong() : acceptClip();
+    };
+    previewEl.addEventListener("loadedmetadata", evaluateDuration, { once:true });
   }
 
   // Resets the upload area to its empty state. Called from the Cancel button
