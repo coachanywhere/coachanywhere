@@ -99,6 +99,45 @@
     .price-card .pdesc{font-size:11px;color:var(--muted);line-height:1.5;}
     .price-note{font-size:12px;color:var(--muted2);margin-top:14px;}
 
+    /* SHOWCASE CAROUSELS (coach + testimonial) — CSS marquee, pause on hover. */
+    .showcase-lead{text-align:center;font-size:clamp(17px,2.4vw,21px);font-weight:600;color:#e2e8f0;max-width:660px;margin:0 auto 28px;line-height:1.5;}
+    .carousel{position:relative;overflow:hidden;-webkit-mask-image:linear-gradient(to right,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(to right,transparent,#000 7%,#000 93%,transparent);}
+    .carousel-track{display:flex;gap:14px;width:max-content;padding:8px 0;}
+    .carousel-track.scroll{animation:scrollX var(--dur,55s) linear infinite;}
+    .carousel:hover .carousel-track{animation-play-state:paused;}
+    @keyframes scrollX{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+    @media(prefers-reduced-motion:reduce){.carousel-track.scroll{animation:none;}}
+    /* coach tile — width matched to the price package tiles (~180px) */
+    .coach-tile{width:184px;flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 16px;text-align:center;cursor:pointer;transition:transform var(--tr),border-color var(--tr),box-shadow var(--tr);}
+    .coach-tile:hover{transform:translateY(-4px);border-color:rgba(59,130,246,.55);box-shadow:0 16px 40px rgba(0,0,0,.45);}
+    .av-wrap{position:relative;width:64px;height:64px;margin:0 auto 12px;}
+    .av-wrap img{width:100%;height:100%;border-radius:50%;object-fit:cover;border:2px solid rgba(96,165,250,.4);display:block;}
+    .av-fallback{display:none;width:64px;height:64px;border-radius:50%;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#93c5fd;background:linear-gradient(135deg,#1e3a5f,#0d2a6e);border:2px solid rgba(96,165,250,.4);}
+    .coach-name{font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:2px;}
+    .coach-sport{font-size:12px;color:var(--muted);margin-bottom:9px;}
+    .coach-level{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:rgba(37,99,235,.16);color:var(--blue2);border:1px solid rgba(59,130,246,.3);margin-bottom:10px;}
+    .coach-tag{font-size:11px;color:rgba(226,232,240,.7);line-height:1.5;}
+    /* testimonial tile */
+    .tmn-tile{width:300px;flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:transform var(--tr),border-color var(--tr),box-shadow var(--tr);}
+    .tmn-tile:hover{transform:translateY(-4px);border-color:rgba(59,130,246,.55);box-shadow:0 16px 40px rgba(0,0,0,.45);}
+    .tmn-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .tmn-head .av-wrap{width:40px;height:40px;margin:0;}
+    .tmn-head .av-fallback{width:40px;height:40px;font-size:13px;}
+    .tmn-meta{font-size:13px;font-weight:700;color:#f1f5f9;line-height:1.3;}
+    .tmn-quote{font-size:14px;color:rgba(226,232,240,.85);line-height:1.6;font-style:italic;}
+    /* showcase popup modal (shared by coach + testimonial) */
+    .show-modal{display:none;position:fixed;inset:0;background:rgba(2,6,23,.8);backdrop-filter:blur(8px);z-index:320;align-items:center;justify-content:center;padding:20px;}
+    .show-modal.open{display:flex;}
+    .show-modal-card{width:100%;max-width:380px;background:linear-gradient(145deg,rgba(15,23,42,.98),rgba(9,14,35,.99));border:1px solid var(--border2);border-radius:20px;padding:36px 30px;text-align:center;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.6);}
+    .show-modal-close{position:absolute;top:12px;right:14px;background:none;border:none;color:#94a3b8;font-size:28px;line-height:1;cursor:pointer;}
+    .show-modal-card .av-wrap{width:104px;height:104px;margin:0 auto 18px;}
+    .show-modal-card .av-fallback{width:104px;height:104px;font-size:30px;}
+    .show-modal-card .coach-name{font-size:20px;}
+    .show-modal-card .coach-sport{font-size:14px;}
+    .show-modal-card .coach-tag{font-size:13px;margin-top:4px;}
+    .show-modal-card .tmn-meta{font-size:15px;margin-bottom:12px;}
+    .show-modal-card .tmn-quote{font-size:16px;}
+
     /* TESTIMONIALS */
     .quotes{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
     .quote{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;}
@@ -239,7 +278,7 @@
   </div>
 </section>
 
-<!-- WHO THE COACHES ARE -->
+<!-- FOUNDING TRUST STRIP — replaced by coach showcase carousel
 <section class="block">
   <div class="container">
     <div class="block-label">Who reviews your footage</div>
@@ -248,6 +287,18 @@
       <div class="coach-av">FC</div><div class="coach-av">FC</div>
     </div>
     <p class="lead">[FOUNDING COACHES PLACEHOLDER] Every coach is vetted before they join. They range from experienced club and representative coaches through to state, national-pathway and professional-level specialists — and each profile shows their level, sport and credentials before you choose.</p>
+  </div>
+</section>
+-->
+
+<!-- COACH SHOWCASE CAROUSEL — auto-scrolling mock coaches; click a tile for a
+     popup (no link to select-coach.html pre-launch). Coaches are placeholders. -->
+<section class="block">
+  <div class="container">
+    <p class="showcase-lead">Choose from a variety of coaches all with different skill sets ready to help you achieve your goal.</p>
+  </div>
+  <div class="carousel" id="coachCarousel">
+    <div class="carousel-track scroll" id="coachTrack" style="--dur:60s;"></div>
   </div>
 </section>
 
@@ -359,6 +410,14 @@
   </div>
 </div>
 
+<!-- SHOWCASE POPUP — shared by coach + testimonial carousels -->
+<div class="show-modal" id="showModal">
+  <div class="show-modal-card">
+    <button class="show-modal-close" onclick="closeShowModal()" aria-label="Close">&times;</button>
+    <div id="showModalBody"></div>
+  </div>
+</div>
+
 <script>
   function toggleFaq(btn){
     const a = btn.nextElementSibling;
@@ -403,6 +462,51 @@
       document.removeEventListener("keydown",onKey);
       if(lastFocus&&lastFocus.focus)lastFocus.focus();
     };
+  })();
+
+  // ── SHOWCASE POPUP (shared by coach + testimonial carousels) ──
+  function openShowModal(html){
+    document.getElementById("showModalBody").innerHTML = html;
+    document.getElementById("showModal").classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeShowModal(){
+    document.getElementById("showModal").classList.remove("open");
+    document.body.style.overflow = "";
+  }
+  document.getElementById("showModal").addEventListener("click", function(e){ if (e.target === this) closeShowModal(); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeShowModal(); });
+
+  function avatarHTML(item){
+    return `<div class="av-wrap"><img src="${item.img}" alt="${item.name||item.meta||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/><div class="av-fallback">${item.initials}</div></div>`;
+  }
+
+  // ── COACH SHOWCASE CAROUSEL ──
+  // PLACEHOLDER coaches — mock data for pre-launch; swap for real profiles later.
+  (function(){
+    const COACHES = [
+      { name:"Sarah K.",  sport:"Basketball", level:"Level 4", tag:"Former WNBL guard · U18 development",   initials:"SK", img:"https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Jack O.",   sport:"AFL",        level:"Level 4", tag:"AFLW assistant 2022–24",                initials:"JO", img:"https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Marco B.",  sport:"Soccer",     level:"Level 3", tag:"A-League academy · first touch",         initials:"MB", img:"https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Priya N.",  sport:"Tennis",     level:"Level 4", tag:"ITF-certified · serve & return",         initials:"PN", img:"https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Aryan P.",  sport:"Cricket",    level:"Level 3", tag:"Batting technique · 15+ years",          initials:"AP", img:"https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Chloe M.",  sport:"Netball",    level:"Level 4", tag:"Ex-ANL defender · footwork & vision",    initials:"CM", img:"https://images.unsplash.com/photo-1499996860823-5214fcc65f8f?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Ethan R.",  sport:"Rugby",      level:"Level 2", tag:"Junior development · contact skills",    initials:"ER", img:"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Hannah L.", sport:"Swimming",   level:"Level 4", tag:"National-pathway · stroke mechanics",    initials:"HL", img:"https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Dylan F.",  sport:"Athletics",  level:"Level 3", tag:"Sprint mechanics · state coach",         initials:"DF", img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Mia C.",    sport:"Hockey",     level:"Level 3", tag:"Drag-flick & penalty corners",           initials:"MC", img:"https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=200&h=200&fit=crop&crop=faces" }
+    ];
+    function inner(c){
+      return `${avatarHTML(c)}<div class="coach-name">${c.name}</div><div class="coach-sport">${c.sport}</div><div class="coach-level">${c.level}</div><div class="coach-tag">${c.tag}</div>`;
+    }
+    const track = document.getElementById("coachTrack");
+    if(!track) return;
+    const tiles = COACHES.map((c,i)=>`<div class="coach-tile" data-idx="${i}" role="button" tabindex="0">${inner(c)}</div>`).join("");
+    track.innerHTML = tiles + tiles;  // duplicate for a seamless loop
+    track.addEventListener("click", function(e){
+      const t = e.target.closest(".coach-tile"); if(!t) return;
+      openShowModal(inner(COACHES[+t.dataset.idx]));
+    });
   })();
 </script>
 
