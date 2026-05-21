@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>CoachAnywhere — Frequently asked questions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="Answers about CoachAnywhere for athletes, coaches and The Locker Room — sports supported, pricing, video reviews, earnings and more."/>
+  <meta name="theme-color" content="#0A1C4A"/>
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#020617;--bg2:#020B24;--bg3:#0A1C4A;
+      --card:rgba(15,23,42,.7);--border:rgba(148,163,184,.18);--border2:rgba(148,163,184,.32);
+      --text:#e5e7eb;--muted:#94a3b8;--muted2:#64748b;
+      --blue:#2563eb;--blue2:#60a5fa;--amber:#fbbf24;--green:#22c55e;
+      --tr:160ms ease-out;
+    }
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+      background:radial-gradient(circle at 20% 0%,var(--bg3) 0%,var(--bg2) 60%,var(--bg) 100%);
+      color:var(--text);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;
+    }
+    a{color:inherit;text-decoration:none;}
+    button{font-family:inherit;cursor:pointer;}
+    .container{max-width:1080px;margin:0 auto;padding:0 22px;}
+
+    /* HEADER / NAV — shared site treatment. */
+    header{position:sticky;top:0;z-index:30;backdrop-filter:blur(18px);
+      background:linear-gradient(to bottom,rgba(3,7,18,.96),rgba(3,7,18,.88),transparent);
+      border-bottom:1px solid rgba(30,64,175,.7);}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:18px;}
+    .nav-left{display:flex;align-items:center;gap:10px;}
+    .nav-wordmark{font-size:18px;font-weight:800;letter-spacing:.04em;color:#fff;text-transform:uppercase;}
+    .nav-wordmark span{color:var(--blue2);}
+    .nav-links{display:flex;align-items:center;gap:20px;font-size:14px;}
+    .nav-links a{position:relative;padding-bottom:2px;color:rgba(226,232,240,.75);transition:color var(--tr);white-space:nowrap;}
+    .nav-links a::after{content:"";position:absolute;left:0;bottom:0;width:0;height:2px;background:var(--blue);border-radius:999px;transition:width var(--tr);}
+    .nav-links a:hover{color:#fff;}
+    .nav-links a:hover::after{width:18px;}
+    .nav-links a.athlete{color:var(--blue2);font-weight:700;}
+    .nav-links a.coach{color:var(--amber);font-weight:700;}
+    .nav-links a.locker{color:#fca5a5;font-weight:700;}
+    .nav-links a.nav-signin-mobile{display:none;}
+    .nav-cta{display:flex;align-items:center;gap:10px;}
+    .nav-signin{font-size:14px;color:rgba(226,232,240,.75);transition:color var(--tr);white-space:nowrap;}
+    .nav-signin:hover{color:#fff;}
+    .nav-wl-btn{padding:11px 22px;border-radius:999px;background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);color:#fff;font-weight:700;font-size:14px;border:none;box-shadow:0 8px 22px rgba(37,99,235,.35);transition:transform var(--tr);white-space:nowrap;}
+    .nav-wl-btn:hover{transform:translateY(-1px);}
+    .nav-toggle{display:none;background:none;border:none;color:#fff;}
+    .nav-toggle svg{width:24px;height:24px;}
+    @media(max-width:860px){
+      .nav-links{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:flex-start;gap:0;background:rgba(3,7,18,.99);border-bottom:1px solid var(--border);padding:8px 0;z-index:40;}
+      .nav-links.open{display:flex;}
+      .nav-links a{width:100%;padding:13px 24px;font-size:15px;}
+      .nav-links a::after{display:none;}
+      .nav-links a.nav-signin-mobile{display:block;}
+      .nav-toggle{display:block;}
+      .nav-signin{display:none;}
+    }
+
+    /* PAGE HEAD */
+    .faq-hero{text-align:center;padding:60px 0 30px;}
+    .faq-hero h1{font-size:clamp(30px,5vw,46px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:12px;}
+    .faq-hero p{font-size:16px;color:rgba(226,232,240,.7);max-width:540px;margin:0 auto;}
+
+    /* FAQ GRID + ITEMS (from legacy) */
+    .faq-wrap{padding:20px 0 60px;}
+    .faq-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;align-items:start;}
+    .faq-col-head{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:12px;}
+    .faq-col-head .lbl{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;}
+    .faq-item{border-bottom:1px solid rgba(148,163,184,.1);overflow:hidden;}
+    .faq-q{width:100%;background:transparent;border:none;color:#f1f5f9;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;padding:18px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;}
+    .faq-q span{flex:1;}
+    .faq-chevron{width:18px;height:18px;flex-shrink:0;color:var(--muted);transition:transform 200ms ease-out;}
+    .faq-q.open .faq-chevron{transform:rotate(180deg);}
+    .faq-a{display:none;padding:0 0 18px;}
+    .faq-a.open{display:block;}
+    .faq-a p{font-size:14px;color:rgba(226,232,240,.75);line-height:1.75;}
+    @media(max-width:768px){.faq-grid{grid-template-columns:1fr;gap:8px;}}
+
+    /* FINAL CTA */
+    .faq-cta{text-align:center;padding:20px 0 70px;}
+    .faq-cta h2{font-size:clamp(22px,4vw,30px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:20px;}
+    .faq-cta-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:999px;background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);color:#fff;font-weight:700;font-size:15px;box-shadow:0 12px 30px rgba(37,99,235,.4);transition:transform var(--tr);}
+    .faq-cta-btn:hover{transform:translateY(-2px);}
+    .faq-cta-btn svg{width:16px;height:16px;}
+
+    footer{border-top:1px solid var(--border);padding:26px 0 40px;text-align:center;}
+    .foot-text{font-size:12px;color:var(--muted2);line-height:1.7;}
+    .foot-text a{color:var(--blue2);}
+
+    #lockerSoonModal{display:none;position:fixed;inset:0;background:rgba(2,6,23,.78);backdrop-filter:blur(10px);z-index:300;align-items:center;justify-content:center;padding:20px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="nav">
+      <div class="nav-left">
+        <a class="nav-wordmark" href="index.html">COACH<span>ANYWHERE</span></a>
+      </div>
+      <nav class="nav-links" id="navLinks">
+        <a class="athlete" href="for-athletes.html">For Athletes</a>
+        <a class="coach" href="for-coaches.html">For Coaches</a>
+        <a class="locker" href="locker-room.html" onclick="event.preventDefault();openLockerSoon();">The Locker Room</a>
+        <a href="faq.html">FAQ</a>
+        <a class="nav-signin-mobile" href="login.html">Sign in</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="nav-signin" href="login.html">Sign in</a>
+        <a class="nav-wl-btn" href="waitlist.html">Join waitlist</a>
+        <button class="nav-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')" aria-label="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="faq-hero">
+  <div class="container">
+    <h1>Frequently asked questions</h1>
+    <p>Everything athletes, coaches and members ask before getting started. Still stuck? We're an email away.</p>
+  </div>
+</section>
+
+<section class="faq-wrap">
+  <div class="container">
+    <div class="faq-grid">
+
+      <!-- ATHLETES COLUMN -->
+      <div>
+        <div class="faq-col-head" style="border-bottom:2px solid rgba(59,130,246,.3);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
+          <div class="lbl" style="color:#60a5fa;">Athletes</div>
+        </div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>What sports does CoachAnywhere support?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>Basketball, AFL, Soccer, Tennis, Cricket, Netball, Volleyball, Rugby/League, Golf, Gymnastics, Athletics, Swimming, Strength &amp; Conditioning and more. If your sport isn't listed, contact us — we're adding new sports regularly.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>How do I upload a video?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>Log into your athlete dashboard, tap the + button, select your video file (MP4, MOV or AVI), choose the skill category and add notes for your coach. Your coach is notified immediately.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>How long until I get feedback?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>Most coaches respond within 48 hours. Each coach's turnaround time is displayed on their profile so you know what to expect before you subscribe.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>How much does coaching cost?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>Packages start from $15 for a single skill clip review. Each coach offers Starter ($15), Standard ($35), Pro ($75), Elite ($120) and Premium ($199) packages. You choose what suits your budget.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>Can I change coaches anytime?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>Yes. No lock-in contracts. Browse coaches, subscribe to a new one or cancel anytime from your athlete dashboard.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>What if my sport isn't listed?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>Contact us at kane@coachanywhere247.com and we'll work to find a coach for your sport or add it to the platform.</p></div></div>
+      </div>
+
+      <!-- COACHES COLUMN -->
+      <div>
+        <div class="faq-col-head" style="border-bottom:2px solid rgba(251,191,36,.3);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <div class="lbl" style="color:#fbbf24;">Coaches</div>
+        </div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>How much can I earn?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>You keep 80% of every package sold. A coach with 10 athletes across standard packages can earn $280–$1,590/month. Your earnings grow as your athlete base grows.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>How do I set up my profile?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>Sign up, complete your profile — bio, qualifications, coaching style — let our AI recommend your tier, select your packages and go live. Takes about 10 minutes.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>How does the video review tool work?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>Open the athlete's video in our review tool. Draw annotations on the video, record a voiceover, adjust playback speed (0.5x–2x), go frame by frame and write detailed feedback. Everything is sent back to the athlete.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>Can I pause new requests if I'm busy?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>Yes. Pause new athlete requests anytime from your dashboard — for a holiday, busy period or any reason. Existing athletes are unaffected.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>What is Spotlight?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>An optional monthly add-on that places your profile at the top of the Find a Coach page with a gold badge. L1 $29/mo · L2 $49/mo · L3 $79/mo · L4 free.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>Can I become a Coach Mentor?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>Level 3 and Level 4 coaches can apply to become a Coach Mentor — offering 1-on-1 session reviews to other coaches and hosting weekly group Zoom sessions. Apply from your dashboard.</p></div></div>
+      </div>
+
+      <!-- LOCKER ROOM COLUMN -->
+      <div>
+        <div class="faq-col-head" style="border-bottom:2px solid rgba(239,68,68,.3);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          <div class="lbl" style="color:#fca5a5;">Locker Room</div>
+        </div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>What is The Locker Room?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>CoachAnywhere's live session platform. Elite coaches and athletes present sessions on coaching philosophy, game tape analysis, athlete journeys and performance science — the knowledge you can't get from a certificate.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>Who presents the sessions?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>Elite coaches and athletes — NBL coaches, A-League academy directors, state representatives, Olympic pathway staff and high performance specialists selected by CoachAnywhere.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>What's in the All Access Pass?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>$49/month gives you unlimited access to all live sessions across both streams, the full recordings library and the ability to ask questions live during sessions.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>Can I watch if I miss a session?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>Yes. All sessions are recorded and added to the on-demand library. Pass holders can watch any recording anytime. Single ticket holders get access for 30 days after purchase.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>How do I become a presenter?</span><svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>Reach out at kane@coachanywhere247.com. We handle promotion, registration and pay a presenter fee from ticket revenue.</p></div></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="faq-cta">
+  <div class="container">
+    <h2>Still got questions?</h2>
+    <a class="faq-cta-btn" href="waitlist.html">
+      Join the waitlist
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-text">
+      CoachAnywhere — elite coaching, anytime anywhere. Australia-wide.<br>
+      <a href="mailto:kane@coachanywhere247.com">kane@coachanywhere247.com</a>
+    </div>
+  </div>
+</footer>
+
+<!-- LOCKER ROOM "COMING SOON" MODAL — shared with the nav interception. -->
+<div id="lockerSoonModal">
+  <div style="width:100%;max-width:460px;background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(9,14,35,.99));border:1px solid rgba(148,163,184,.3);border-radius:18px;padding:30px 28px;box-shadow:0 30px 80px rgba(0,0,0,.6);text-align:center;">
+    <div style="width:56px;height:56px;border-radius:14px;background:rgba(220,38,38,.12);border:1px solid rgba(239,68,68,.3);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+    </div>
+    <h3 style="font-size:21px;font-weight:800;color:#f9fafb;letter-spacing:-.01em;margin-bottom:10px;">The Locker Room is coming soon</h3>
+    <p style="font-size:14px;line-height:1.65;color:rgba(226,232,240,.78);margin:0 auto 22px;max-width:360px;">Live tactical sessions with elite coaches — launching after our public launch. Join the waitlist and be the first to know when the first session drops.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <a href="waitlist.html" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 24px;border-radius:999px;background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);color:#fff;font-weight:700;font-size:15px;text-decoration:none;box-shadow:0 12px 30px rgba(37,99,235,.4);">
+        Join the waitlist
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+      <button onclick="closeLockerSoon()" style="width:100%;padding:13px 24px;border-radius:999px;background:transparent;border:1px solid rgba(148,163,184,.25);color:#94a3b8;font-weight:600;font-size:14px;font-family:inherit;cursor:pointer;">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleFaq(btn){
+    const answer=btn.nextElementSibling;
+    const isOpen=answer.classList.contains('open');
+    btn.classList.toggle('open',!isOpen);
+    answer.classList.toggle('open',!isOpen);
+  }
+  function openLockerSoon(){ document.getElementById("lockerSoonModal").style.display = "flex"; }
+  function closeLockerSoon(){ document.getElementById("lockerSoonModal").style.display = "none"; }
+  document.getElementById("lockerSoonModal").addEventListener("click", function(e){ if (e.target === this) closeLockerSoon(); });
+</script>
+
+</body>
+</html>
