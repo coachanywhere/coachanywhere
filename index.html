@@ -67,17 +67,6 @@
     .btn-login:hover{border-color:#60a5fa;color:#fff;background:rgba(59,130,246,.18);transform:translateY(-1px);}
     .nav-wl-btn{padding:11px 22px;border-radius:999px;background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);color:#fff;font-weight:700;font-size:14px;border:none;box-shadow:0 8px 22px rgba(37,99,235,.35);transition:transform var(--tr);white-space:nowrap;}
     .nav-wl-btn:hover{transform:translateY(-1px);}
-    .nav-toggle{display:none;background:none;border:none;color:#fff;}
-    .nav-toggle svg{width:24px;height:24px;}
-    @media(max-width:860px){
-      .nav-links{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:flex-start;gap:0;background:rgba(3,7,18,.99);border-bottom:1px solid var(--border);padding:8px 0;z-index:40;}
-      .nav-links.open{display:flex;}
-      .nav-links a{width:100%;padding:13px 24px;font-size:15px;}
-      .nav-links a::after{display:none;}
-      .nav-links a.nav-signin-mobile{display:block;}
-      .nav-toggle{display:block;}
-      .nav-signin{display:none;}
-    }
 
     /* HERO — legacy treatment: big COACHANYWHERE wordmark + dark gradient + ambient glow. */
     .hero{background:linear-gradient(180deg,#0A2A78 0%,#031026 100%);position:relative;overflow:hidden;}
@@ -195,6 +184,27 @@
 
     /* LOCKER MODAL */
     #lockerSoonModal{display:none;position:fixed;inset:0;background:rgba(2,6,23,.78);backdrop-filter:blur(10px);z-index:300;align-items:center;justify-content:center;padding:20px;}
+
+    /* SLIDE-OUT MENU */
+    .hamburger{display:inline-flex;align-items:center;justify-content:center;background:none;border:none;color:#fff;padding:6px;cursor:pointer;border-radius:8px;transition:background var(--tr);flex-shrink:0;}
+    .hamburger:hover{background:rgba(148,163,184,.14);}
+    .hamburger svg{width:24px;height:24px;}
+    .nav-spacer{flex:1 1 auto;}
+    .drawer-backdrop{position:fixed;inset:0;background:rgba(2,6,23,.62);backdrop-filter:blur(2px);opacity:0;visibility:hidden;transition:opacity 260ms ease;z-index:200;}
+    .drawer-backdrop.open{opacity:1;visibility:visible;}
+    .drawer{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:84vw;background:linear-gradient(160deg,#0b1430,#070d22);border-right:1px solid rgba(148,163,184,.18);transform:translateX(-100%);transition:transform 280ms cubic-bezier(.4,0,.2,1);z-index:210;display:flex;flex-direction:column;box-shadow:0 0 60px rgba(0,0,0,.55);}
+    .drawer.open{transform:translateX(0);}
+    .drawer-head{display:flex;align-items:center;justify-content:space-between;padding:16px 12px 14px 22px;border-bottom:1px solid rgba(148,163,184,.12);}
+    .drawer-title{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#94a3b8;}
+    .drawer-close{background:none;border:none;color:#e2e8f0;font-size:26px;line-height:1;cursor:pointer;width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:9px;transition:background var(--tr),color var(--tr);}
+    .drawer-close:hover{background:rgba(148,163,184,.16);color:#fff;}
+    .drawer-nav{display:flex;flex-direction:column;padding:8px 0;overflow-y:auto;}
+    .drawer-nav a{display:flex;align-items:center;min-height:50px;padding:12px 22px;font-size:16px;font-weight:600;color:#e2e8f0;border-left:3px solid transparent;transition:background var(--tr),color var(--tr),border-color var(--tr);}
+    .drawer-nav a:hover,.drawer-nav a:focus-visible{background:rgba(59,130,246,.12);color:#fff;border-left-color:#60a5fa;outline:none;}
+    .drawer-divider{height:1px;background:rgba(148,163,184,.14);margin:10px 22px;}
+    .drawer-nav a.drawer-secondary{font-size:14px;font-weight:600;color:#94a3b8;min-height:46px;}
+    .drawer-nav a.drawer-secondary:hover,.drawer-nav a.drawer-secondary:focus-visible{color:#fff;}
+    @media(max-width:520px){.nav-wordmark{font-size:15px;}.nav-signin{font-size:13px;}}
   </style>
 </head>
 <body>
@@ -202,29 +212,36 @@
 <header>
   <div class="container">
     <div class="nav">
-      <div class="nav-left">
-        <a class="nav-wordmark" href="index.html">COACH<span>ANYWHERE</span></a>
-      </div>
-      <nav class="nav-links" id="navLinks">
-        <a class="athlete" href="for-athletes.html">For Athletes</a>
-        <a class="coach" href="for-coaches.html">For Coaches</a>
-        <a class="mentor" href="for-mentors.html">For Mentors</a>
-        <!-- LOCKER ROOM NAV — intercepted pre-launch; opens the coming-soon modal.
-             Restore href to 'locker-room.html' + drop the onclick to re-enable. -->
-        <a class="locker" href="locker-room.html" onclick="event.preventDefault();openLockerSoon();">The Locker Room</a>
-        <a href="faq.html">FAQ</a>
-        <a class="nav-signin-mobile" href="login.html">Sign in</a>
-      </nav>
-      <div class="nav-cta">
-        <a class="nav-signin" href="login.html">Sign in</a>
-        <a class="nav-wl-btn" href="waitlist.html">Join waitlist</a>
-        <button class="nav-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')" aria-label="Menu">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
-      </div>
+      <button class="hamburger" id="hamburger" onclick="openMenu()" aria-label="Open menu" aria-haspopup="true" aria-expanded="false" aria-controls="drawer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <a class="nav-wordmark" href="index.html">COACH<span>ANYWHERE</span></a>
+      <div class="nav-spacer"></div>
+      <a class="nav-signin" href="login.html">Sign in</a>
+      <a class="nav-wl-btn" href="waitlist.html">Join waitlist</a>
     </div>
   </div>
 </header>
+
+<!-- SLIDE-OUT MENU -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeMenu()"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Site menu" aria-hidden="true">
+  <div class="drawer-head">
+    <span class="drawer-title">Menu</span>
+    <button class="drawer-close" id="drawerClose" onclick="closeMenu()" aria-label="Close menu">&times;</button>
+  </div>
+  <nav class="drawer-nav">
+    <a href="for-athletes.html">For Athletes</a>
+    <a href="for-coaches.html">For Coaches</a>
+    <a href="for-mentors.html">For Mentors</a>
+    <!-- LOCKER ROOM — intercepted pre-launch; closes the menu then opens the coming-soon modal. -->
+    <a href="locker-room.html" onclick="event.preventDefault();closeMenu();openLockerSoon();">The Locker Room</a>
+    <a href="faq.html">FAQ</a>
+    <div class="drawer-divider"></div>
+    <a class="drawer-secondary" href="login.html">Sign in</a>
+    <a class="drawer-secondary" href="waitlist.html">Join waitlist</a>
+  </nav>
+</aside>
 
 <!-- HERO — big wordmark (legacy) + segment/route entry cards (router). -->
 <section class="hero">
@@ -387,6 +404,42 @@
   function openLockerSoon(){ document.getElementById("lockerSoonModal").style.display = "flex"; }
   function closeLockerSoon(){ document.getElementById("lockerSoonModal").style.display = "none"; }
   document.getElementById("lockerSoonModal").addEventListener("click", function(e){ if (e.target === this) closeLockerSoon(); });
+
+  // ── SLIDE-OUT MENU ──
+  (function(){
+    const drawer=document.getElementById("drawer");
+    const backdrop=document.getElementById("drawerBackdrop");
+    const ham=document.getElementById("hamburger");
+    if(!drawer||!ham) return;
+    let lastFocus=null;
+    function focusables(){return Array.from(drawer.querySelectorAll('a[href],button:not([disabled])'));}
+    function onKey(e){
+      if(e.key==="Escape"){closeMenu();return;}
+      if(e.key==="Tab"){
+        const f=focusables();if(!f.length)return;
+        const first=f[0],last=f[f.length-1];
+        if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+        else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+      }
+    }
+    window.openMenu=function(){
+      lastFocus=document.activeElement;
+      drawer.classList.add("open");backdrop.classList.add("open");
+      drawer.setAttribute("aria-hidden","false");
+      ham.setAttribute("aria-label","Close menu");ham.setAttribute("aria-expanded","true");
+      document.body.style.overflow="hidden";
+      const f=focusables();if(f.length)f[0].focus();
+      document.addEventListener("keydown",onKey);
+    };
+    window.closeMenu=function(){
+      drawer.classList.remove("open");backdrop.classList.remove("open");
+      drawer.setAttribute("aria-hidden","true");
+      ham.setAttribute("aria-label","Open menu");ham.setAttribute("aria-expanded","false");
+      document.body.style.overflow="";
+      document.removeEventListener("keydown",onKey);
+      if(lastFocus&&lastFocus.focus)lastFocus.focus();
+    };
+  })();
 
   // ── TESTIMONIAL CAROUSEL ──
   // PLACEHOLDER testimonials — clearly mock content, swap for real ones before/after launch.
