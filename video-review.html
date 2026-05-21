@@ -389,6 +389,9 @@
     <button class="tool-btn" onclick="clearCanvas()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>Clear
     </button>
+    <button class="tool-btn" id="captureBtn" onclick="captureAnnotatedFrame()" title="Capture this marked-up frame for the athlete">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Capture<span id="captureCount" style="margin-left:4px;font-weight:700;"></span>
+    </button>
   </div>
 
   <!-- COMPARE (coming soon) -->
@@ -567,7 +570,7 @@
     </div>
     <div class="modal-body">
       <div class="attach-summary" id="attachSummary">
-        <div class="attach-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/></svg></div>Annotations on canvas <span class="cnt" id="cntAnnot">0</span></div>
+        <div class="attach-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/></svg></div>Marked-up frames <span class="cnt" id="cntAnnot">0</span></div>
         <div class="attach-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></div>Voice clips <span class="cnt" id="cntVoice">0</span></div>
         <div class="attach-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>Timer splits <span class="cnt" id="cntSplits">0</span></div>
       </div>
@@ -607,6 +610,7 @@
   let currentColour = "#ef4444";
   let strokeSize = 3;
   let drawHistory = [];
+  let capturedSnapshots = [];  // [{blob, video_time}] — marked-up frames sent to the athlete
   let isDrawing = false;
   let startX = 0, startY = 0;
   let snapshot = null;
@@ -793,6 +797,50 @@
   function commitState(){
     drawHistory.push(ctx.getImageData(0,0,canvas.width,canvas.height));
     if(drawHistory.length>40) drawHistory.shift();
+  }
+
+  let _toastTimer = null;
+  function toast(msg){
+    let el = document.getElementById("vrToast");
+    if(!el){
+      el = document.createElement("div");
+      el.id = "vrToast";
+      el.style.cssText = "position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:rgba(17,24,39,.95);color:#f9fafb;padding:10px 18px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.35);opacity:0;transition:opacity .2s;pointer-events:none;";
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.style.opacity = "1";
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(()=>{ el.style.opacity = "0"; }, 1800);
+  }
+
+  // ── CAPTURE: composite video frame + annotations into a still the athlete keeps ──
+  function captureAnnotatedFrame(){
+    const video = document.getElementById("athleteVideo");
+    if(!video || !video.videoWidth){ toast("Let the video load first."); return; }
+    // Snapshot at the video's native resolution; overlays are scaled to match.
+    const out = document.createElement("canvas");
+    out.width  = video.videoWidth;
+    out.height = video.videoHeight;
+    const octx = out.getContext("2d");
+    try {
+      octx.drawImage(video, 0, 0, out.width, out.height);
+      const ai = document.getElementById("aiSkeletonCanvas");
+      if(ai && ai.width) octx.drawImage(ai, 0, 0, out.width, out.height);
+      octx.drawImage(canvas, 0, 0, out.width, out.height);
+    } catch(err){
+      // A cross-origin/tainted canvas makes toBlob throw — fail loud, don't ship a blank.
+      console.error("capture composite failed", err);
+      toast("Couldn't capture this frame (video source blocked it).");
+      return;
+    }
+    out.toBlob(function(blob){
+      if(!blob){ toast("Capture failed — try again."); return; }
+      capturedSnapshots.push({ blob: blob, video_time: video.currentTime || 0 });
+      const badge = document.getElementById("captureCount");
+      if(badge) badge.textContent = capturedSnapshots.length;
+      toast("Frame captured ✓");
+    }, "image/jpeg", 0.85);
   }
 
   function canvasPoint(e){
@@ -1241,7 +1289,7 @@
 
   // ── SEND REVIEW MODAL ──
   function openSendModal(){
-    document.getElementById("cntAnnot").textContent = drawHistory.length;
+    document.getElementById("cntAnnot").textContent = capturedSnapshots.length;
     document.getElementById("cntVoice").textContent = voiceBlobs.length;
     document.getElementById("cntSplits").textContent = timerSplits.length;
     document.getElementById("sendModal").classList.add("open");
@@ -1249,6 +1297,28 @@
   function closeSendModal(){document.getElementById("sendModal").classList.remove("open");}
 
   const VOICE_BUCKET = "voice-feedback";
+  const ANNOT_BUCKET = "review-annotations";
+
+  async function uploadSnapshots(btn){
+    const uploaded = [];
+    for(let i = 0; i < capturedSnapshots.length; i++){
+      btn.innerHTML = `Uploading frame ${i+1}/${capturedSnapshots.length}...`;
+      const s = capturedSnapshots[i];
+      const id = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+"-"+i);
+      const path = `${currentUser.id}/${submission.id}/${id}.jpg`;
+      const {error: upErr} = await supabase.storage
+        .from(ANNOT_BUCKET)
+        .upload(path, s.blob, {contentType:"image/jpeg", upsert:false});
+      if(upErr) throw new Error(upErr.message);
+      const {data: pub} = supabase.storage.from(ANNOT_BUCKET).getPublicUrl(path);
+      uploaded.push({
+        url: pub.publicUrl,
+        path: path,
+        video_time: Math.round((s.video_time||0)*100)/100
+      });
+    }
+    return uploaded;
+  }
 
   async function uploadVoiceClips(btn){
     const uploaded = [];
@@ -1299,15 +1369,27 @@
       }
     }
 
+    // 2. Upload captured annotation frames (if any)
+    let snapshots = [];
+    if(capturedSnapshots.length){
+      try{
+        snapshots = await uploadSnapshots(btn);
+      }catch(err){
+        alert("Annotation frame upload failed.\n\n"+err.message+"\n\nMake sure a public Storage bucket named '"+ANNOT_BUCKET+"' exists (run migration_review_annotations.sql).");
+        resetSendBtn(btn);
+        return;
+      }
+    }
+
     btn.innerHTML = "Saving review...";
 
     const splitNote = timerSplits.length ? `${timerSplits.length} timer split(s) captured.` : "";
-    const annotNote = drawHistory.length ? `${drawHistory.length} annotation step(s) on canvas.` : "";
+    const annotNote = snapshots.length ? `${snapshots.length} marked-up frame(s) attached.` : "";
     const voiceNote = voiceClips.length ? `${voiceClips.length} voice clip(s) attached.` : "";
     const meta = [annotNote, voiceNote, splitNote].filter(Boolean).join(" ");
     const fullFeedback = [feedback, meta?"\n\n"+meta:""].join("");
 
-    // 2. Insert feedback row with voice_clips JSON
+    // 3. Insert feedback row with voice_clips + annotations JSON
     const {error} = await supabase.from("feedback").insert({
       submission_id: submission.id,
       coach_id: currentUser.id,
@@ -1315,7 +1397,8 @@
       written_feedback: fullFeedback,
       key_takeaways: takeaways,
       drill_recommendations: drills,
-      voice_clips: voiceClips.length ? voiceClips : null
+      voice_clips: voiceClips.length ? voiceClips : null,
+      annotations: snapshots.length ? snapshots : null
     });
 
     if(error){
