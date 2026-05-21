@@ -107,9 +107,9 @@
     .entry-head{display:flex;align-items:center;gap:11px;}
     .entry-ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .entry-ic svg{width:20px;height:20px;}
-    .entry-card.athlete .entry-ic{background:rgba(37,99,235,.15);color:var(--blue2);}
-    .entry-card.coach .entry-ic{background:rgba(234,179,8,.12);color:var(--amber);}
-    .entry-card.mentor .entry-ic{background:rgba(139,92,246,.15);color:#a78bfa;}
+    .entry-card.athlete .entry-ic,.journey.athlete .entry-ic{background:rgba(37,99,235,.15);color:var(--blue2);}
+    .entry-card.coach .entry-ic,.journey.coach .entry-ic{background:rgba(234,179,8,.12);color:var(--amber);}
+    .entry-card.mentor .entry-ic,.journey.mentor .entry-ic{background:rgba(139,92,246,.15);color:#a78bfa;}
     .entry-label{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;}
     .entry-card.athlete .entry-label{color:var(--blue2);}
     .entry-card.coach .entry-label{color:var(--amber);}
@@ -156,12 +156,9 @@
     .journey.athlete{border-color:#3b82f6;background:linear-gradient(135deg,rgba(59,130,246,.18) 0%,rgba(59,130,246,.08) 100%);}
     .journey.coach{border-color:#fbbf24;background:linear-gradient(135deg,rgba(251,191,36,.18) 0%,rgba(251,191,36,.08) 100%);}
     .journey.mentor{border-color:#8b5cf6;background:linear-gradient(135deg,rgba(139,92,246,.18) 0%,rgba(139,92,246,.08) 100%);}
-    .journey-head{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;margin-bottom:14px;}
-    .journey-label{font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
-    .journey.athlete .journey-label{color:var(--blue2);}
-    .journey.coach .journey-label{color:var(--amber);}
-    .journey.mentor .journey-label{color:#a78bfa;}
-    .journey-title{font-size:clamp(19px,2.6vw,25px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;line-height:1.2;}
+    .journey-head{display:flex;flex-direction:row;align-items:center;gap:14px;margin-bottom:14px;}
+    .journey-title{font-size:clamp(18px,2.3vw,21px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;line-height:1.2;white-space:nowrap;}
+    @media(max-width:720px){.journey-head{flex-direction:column;align-items:flex-start;}.journey-title{white-space:normal;}}
     .journey-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:14px;}
     .journey-step{display:flex;flex-direction:column;gap:5px;}
     .journey-step .jstep-label{font-size:11px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;line-height:1.3;}
@@ -380,7 +377,7 @@
 
       <div class="journey athlete">
         <div class="journey-head">
-          <div class="journey-label">For athletes</div>
+          <div class="entry-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg></div>
           <div class="journey-title">From your phone to your next breakthrough</div>
         </div>
         <div class="journey-steps">
@@ -394,7 +391,7 @@
 
       <div class="journey coach">
         <div class="journey-head">
-          <div class="journey-label">For coaches</div>
+          <div class="entry-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
           <div class="journey-title">Build a remote business that works around your life</div>
         </div>
         <div class="journey-steps">
@@ -408,7 +405,7 @@
 
       <div class="journey mentor">
         <div class="journey-head">
-          <div class="journey-label">For mentors</div>
+          <div class="entry-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
           <div class="journey-title">Pass on what only experience can teach</div>
         </div>
         <div class="journey-steps">
