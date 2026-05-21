@@ -122,8 +122,12 @@
     .drawer-close{background:none;border:none;color:#e2e8f0;font-size:26px;line-height:1;cursor:pointer;width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:9px;transition:background var(--tr),color var(--tr);}
     .drawer-close:hover{background:rgba(148,163,184,.16);color:#fff;}
     .drawer-nav{display:flex;flex-direction:column;padding:8px 0;overflow-y:auto;}
-    .drawer-nav a{display:flex;align-items:center;min-height:50px;padding:12px 22px;font-size:16px;font-weight:600;color:#e2e8f0;border-left:3px solid transparent;transition:background var(--tr),color var(--tr),border-color var(--tr);}
-    .drawer-nav a:hover,.drawer-nav a:focus-visible{background:rgba(59,130,246,.12);color:#fff;border-left-color:#60a5fa;outline:none;}
+    .drawer-nav a{display:flex;align-items:center;min-height:50px;padding:12px 22px;font-size:16px;font-weight:600;color:#e2e8f0;border-left:4px solid transparent;transition:background var(--tr),color var(--tr);}
+    .drawer-nav a:hover,.drawer-nav a:focus-visible{background:rgba(148,163,184,.10);color:#fff;outline:none;}
+    .drawer-nav a.acc-athlete{border-left-color:#3b82f6;}
+    .drawer-nav a.acc-coach{border-left-color:#fbbf24;}
+    .drawer-nav a.acc-mentor{border-left-color:#8b5cf6;}
+    .drawer-nav a.acc-locker{border-left-color:#b91c1c;}
     .drawer-divider{height:1px;background:rgba(148,163,184,.14);margin:10px 22px;}
     .drawer-nav a.drawer-secondary{font-size:14px;font-weight:600;color:#94a3b8;min-height:46px;}
     .drawer-nav a.drawer-secondary:hover,.drawer-nav a.drawer-secondary:focus-visible{color:#fff;}
@@ -152,11 +156,11 @@
     <button class="drawer-close" id="drawerClose" onclick="closeMenu()" aria-label="Close menu">&times;</button>
   </div>
   <nav class="drawer-nav">
-    <a href="for-athletes.html">For Athletes</a>
-    <a href="for-coaches.html">For Coaches</a>
-    <a href="for-mentors.html">For Mentors</a>
+    <a class="acc-athlete" href="for-athletes.html">For Athletes</a>
+    <a class="acc-coach" href="for-coaches.html">For Coaches</a>
+    <a class="acc-mentor" href="for-mentors.html">For Mentors</a>
     <!-- LOCKER ROOM — intercepted pre-launch; closes the menu then opens the coming-soon modal. -->
-    <a href="locker-room.html" onclick="event.preventDefault();closeMenu();openLockerSoon();">The Locker Room</a>
+    <a class="acc-locker" href="locker-room.html" onclick="event.preventDefault();closeMenu();openLockerSoon();">The Locker Room</a>
     <a href="faq.html">FAQ</a>
     <div class="drawer-divider"></div>
     <a class="drawer-secondary" href="login.html">Sign in</a>
