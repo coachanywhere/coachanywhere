@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Contact Us — CoachAnywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="Got a question about CoachAnywhere? Send us a message and we'll get back to you within a couple of days."/>
+  <meta name="theme-color" content="#0A1C4A"/>
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#020617;--bg2:#020B24;--bg3:#0A1C4A;
+      --card:rgba(15,23,42,.7);--border:rgba(148,163,184,.18);--border2:rgba(148,163,184,.32);
+      --text:#e5e7eb;--muted:#94a3b8;--muted2:#64748b;
+      --blue:#2563eb;--blue2:#60a5fa;--amber:#fbbf24;--green:#22c55e;
+      --tr:160ms ease-out;
+    }
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 0%,var(--bg3) 0%,var(--bg2) 60%,var(--bg) 100%);color:var(--text);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;}
+    a{color:inherit;text-decoration:none;}
+    button{font-family:inherit;cursor:pointer;}
+    .container{max-width:1080px;margin:0 auto;padding:0 22px;}
+
+    /* HEADER / NAV — shared site treatment. */
+    header{position:sticky;top:0;z-index:30;backdrop-filter:blur(18px);background:linear-gradient(to bottom,rgba(3,7,18,.96),rgba(3,7,18,.88),transparent);border-bottom:1px solid rgba(30,64,175,.7);}
+    .nav{display:flex;align-items:center;padding:12px 0;gap:12px;}
+    .nav-wordmark{font-size:18px;font-weight:800;letter-spacing:.04em;color:#fff;text-transform:uppercase;}
+    .nav-wordmark span{color:var(--blue2);}
+    .nav-spacer{flex:1 1 auto;}
+    .nav-signin{font-size:14px;color:rgba(226,232,240,.75);transition:color var(--tr);white-space:nowrap;}
+    .nav-signin:hover{color:#fff;}
+    .nav-wl-btn{padding:11px 22px;border-radius:999px;background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);color:#fff;font-weight:700;font-size:14px;border:none;box-shadow:0 8px 22px rgba(37,99,235,.35);transition:transform var(--tr);white-space:nowrap;}
+    .nav-wl-btn:hover{transform:translateY(-1px);}
+    @media(max-width:520px){.nav-wordmark{font-size:15px;}.nav-signin{font-size:13px;}}
+
+    /* SLIDE-OUT MENU */
+    .hamburger{display:inline-flex;align-items:center;justify-content:center;background:none;border:none;color:#fff;padding:6px;cursor:pointer;border-radius:8px;transition:background var(--tr);flex-shrink:0;}
+    .hamburger:hover{background:rgba(148,163,184,.14);}
+    .hamburger svg{width:24px;height:24px;}
+    .drawer-backdrop{position:fixed;inset:0;background:rgba(2,6,23,.62);backdrop-filter:blur(2px);opacity:0;visibility:hidden;transition:opacity 260ms ease;z-index:200;}
+    .drawer-backdrop.open{opacity:1;visibility:visible;}
+    .drawer{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:84vw;background:linear-gradient(160deg,#0b1430,#070d22);border-right:1px solid rgba(148,163,184,.18);transform:translateX(-100%);transition:transform 280ms cubic-bezier(.4,0,.2,1);z-index:210;display:flex;flex-direction:column;box-shadow:0 0 60px rgba(0,0,0,.55);}
+    .drawer.open{transform:translateX(0);}
+    .drawer-head{display:flex;align-items:center;justify-content:space-between;padding:16px 12px 14px 22px;border-bottom:1px solid rgba(148,163,184,.12);}
+    .drawer-title{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#94a3b8;}
+    .drawer-close{background:none;border:none;color:#e2e8f0;font-size:26px;line-height:1;cursor:pointer;width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:9px;transition:background var(--tr),color var(--tr);}
+    .drawer-close:hover{background:rgba(148,163,184,.16);color:#fff;}
+    .drawer-nav{display:flex;flex-direction:column;padding:8px 0;overflow-y:auto;}
+    .drawer-nav a{display:flex;align-items:center;min-height:50px;padding:12px 22px;font-size:16px;font-weight:600;color:#e2e8f0;border-left:4px solid transparent;transition:background var(--tr),color var(--tr);}
+    .drawer-nav a:hover,.drawer-nav a:focus-visible{background:rgba(148,163,184,.10);color:#fff;outline:none;}
+    .drawer-nav a.acc-athlete{border-left-color:#3b82f6;}
+    .drawer-nav a.acc-coach{border-left-color:#fbbf24;}
+    .drawer-nav a.acc-mentor{border-left-color:#8b5cf6;}
+    .drawer-nav a.acc-locker{border-left-color:#b91c1c;}
+    .drawer-divider{height:1px;background:rgba(148,163,184,.14);margin:10px 22px;}
+    .drawer-nav a.drawer-secondary{font-size:14px;font-weight:600;color:#94a3b8;min-height:46px;}
+    .drawer-nav a.drawer-secondary:hover,.drawer-nav a.drawer-secondary:focus-visible{color:#fff;}
+    #lockerSoonModal{display:none;position:fixed;inset:0;background:rgba(2,6,23,.78);backdrop-filter:blur(10px);z-index:300;align-items:center;justify-content:center;padding:20px;}
+
+    /* HERO */
+    .c-hero{text-align:center;padding:56px 0 18px;}
+    .c-hero .eyebrow{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--blue2);margin-bottom:14px;}
+    .c-hero h1{font-size:clamp(28px,5vw,42px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;line-height:1.1;margin-bottom:12px;}
+    .c-hero p{font-size:16px;color:rgba(226,232,240,.72);max-width:480px;margin:0 auto;}
+
+    /* FORM */
+    .form-wrap{max-width:600px;margin:0 auto;padding:18px 0 56px;}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:30px 28px;}
+    .fg{margin-bottom:18px;}
+    .fl{display:block;font-size:13px;font-weight:700;color:#cbd5e1;margin-bottom:7px;}
+    .fl .req{color:var(--blue2);}
+    .fi,.fs,.ft{width:100%;padding:13px 14px;border-radius:11px;border:1px solid var(--border2);background:rgba(2,6,23,.5);color:#f1f5f9;font-size:16px;font-family:inherit;outline:none;transition:border-color var(--tr),box-shadow var(--tr);}
+    .ft{resize:vertical;min-height:130px;line-height:1.6;}
+    .fi:focus,.fs:focus,.ft:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(96,165,250,.18);}
+    .fs{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;}
+    .fi.err,.fs.err,.ft.err{border-color:#f87171;}
+    .fmsg{font-size:12px;color:#f87171;margin-top:6px;display:none;}
+    .fmsg.show{display:block;}
+    .charcount{font-size:11px;color:var(--muted2);text-align:right;margin-top:6px;}
+    /* honeypot — hidden from real users */
+    .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;}
+    .submit-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px 28px;border-radius:999px;background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);color:#fff;font-weight:700;font-size:16px;border:none;box-shadow:0 12px 30px rgba(37,99,235,.4);transition:transform var(--tr),opacity var(--tr);}
+    .submit-btn:hover{transform:translateY(-1px);}
+    .submit-btn:disabled{opacity:.6;cursor:default;transform:none;}
+    .submit-btn svg{width:16px;height:16px;}
+    .form-error{display:none;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);color:#fca5a5;font-size:13px;border-radius:11px;padding:12px 14px;margin-bottom:16px;}
+    .form-error.show{display:block;}
+
+    /* SUCCESS STATE */
+    .success{display:none;text-align:center;padding:14px 8px;}
+    .success.show{display:block;}
+    .success .tick{width:62px;height:62px;border-radius:50%;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.4);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+    .success .tick svg{width:30px;height:30px;color:#4ade80;}
+    .success h2{font-size:22px;font-weight:800;color:#f9fafb;margin-bottom:10px;}
+    .success p{font-size:15px;color:rgba(226,232,240,.75);max-width:380px;margin:0 auto;}
+
+    /* SOCIAL FOOTER (low-key) */
+    .social{text-align:center;font-size:12px;color:var(--muted2);margin-top:22px;}
+    .social a{color:var(--muted);text-decoration:underline;text-underline-offset:2px;margin:0 4px;}
+    .social a:hover{color:#fff;}
+
+    footer{border-top:1px solid var(--border);padding:26px 0 40px;text-align:center;}
+    .foot-text{font-size:12px;color:var(--muted2);line-height:1.7;}
+    .foot-text a{color:var(--blue2);}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="nav">
+      <button class="hamburger" id="hamburger" onclick="openMenu()" aria-label="Open menu" aria-haspopup="true" aria-expanded="false" aria-controls="drawer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <a class="nav-wordmark" href="index.html">COACH<span>ANYWHERE</span></a>
+      <div class="nav-spacer"></div>
+      <a class="nav-signin" href="login.html">Sign in</a>
+      <a class="nav-wl-btn" href="waitlist.html">Join waitlist</a>
+    </div>
+  </div>
+</header>
+
+<!-- SLIDE-OUT MENU -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeMenu()"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Site menu" aria-hidden="true">
+  <div class="drawer-head">
+    <span class="drawer-title">Menu</span>
+    <button class="drawer-close" id="drawerClose" onclick="closeMenu()" aria-label="Close menu">&times;</button>
+  </div>
+  <nav class="drawer-nav">
+    <a class="acc-athlete" href="for-athletes.html">For Athletes</a>
+    <a class="acc-coach" href="for-coaches.html">For Coaches</a>
+    <a class="acc-mentor" href="for-mentors.html">For Mentors</a>
+    <!-- LOCKER ROOM — intercepted pre-launch; closes the menu then opens the coming-soon modal. -->
+    <a class="acc-locker" href="locker-room.html" onclick="event.preventDefault();closeMenu();openLockerSoon();">The Locker Room</a>
+    <a href="faq.html">FAQ</a>
+    <a href="contact.html">Contact us</a>
+    <div class="drawer-divider"></div>
+    <a class="drawer-secondary" href="login.html">Sign in</a>
+    <a class="drawer-secondary" href="waitlist.html">Join waitlist</a>
+  </nav>
+</aside>
+
+<section class="c-hero">
+  <div class="container">
+    <div class="eyebrow">Contact</div>
+    <h1>Got questions? We'd love to hear.</h1>
+    <p>Send us a message and we'll get back to you within a couple of days.</p>
+  </div>
+</section>
+
+<section class="form-wrap">
+  <div class="container">
+    <div class="card">
+
+      <!-- FORM -->
+      <form id="contactForm" novalidate>
+        <div class="form-error" id="formError"></div>
+
+        <div class="fg">
+          <label class="fl" for="cName">Name <span class="req">*</span></label>
+          <input class="fi" type="text" id="cName" name="name" autocomplete="name" maxlength="120"/>
+          <div class="fmsg" id="errName">Please tell us your name.</div>
+        </div>
+
+        <div class="fg">
+          <label class="fl" for="cEmail">Email <span class="req">*</span></label>
+          <input class="fi" type="email" id="cEmail" name="email" autocomplete="email" maxlength="180"/>
+          <div class="fmsg" id="errEmail">Please enter a valid email address.</div>
+        </div>
+
+        <div class="fg">
+          <label class="fl" for="cRole">I'm a… <span class="req">*</span></label>
+          <select class="fs" id="cRole" name="role">
+            <option value="" disabled selected>Select one</option>
+            <option>Athlete</option>
+            <option>Coach</option>
+            <option>Mentor</option>
+            <option>Parent</option>
+            <option>Other</option>
+          </select>
+          <div class="fmsg" id="errRole">Please choose a role.</div>
+        </div>
+
+        <div class="fg">
+          <label class="fl" for="cTopic">Topic <span class="req">*</span></label>
+          <select class="fs" id="cTopic" name="topic">
+            <option value="" disabled selected>Select a topic</option>
+            <option>General question</option>
+            <option>Becoming a coach</option>
+            <option>Becoming a mentor</option>
+            <option>Pricing</option>
+            <option>Technical issue</option>
+            <option>Partnership</option>
+            <option>Other</option>
+          </select>
+          <div class="fmsg" id="errTopic">Please choose a topic.</div>
+        </div>
+
+        <div class="fg">
+          <label class="fl" for="cMessage">Message <span class="req">*</span></label>
+          <textarea class="ft" id="cMessage" name="message" rows="5" maxlength="2000"></textarea>
+          <div class="fmsg" id="errMessage">Please include a message.</div>
+          <div class="charcount"><span id="charNow">0</span> / 2000</div>
+        </div>
+
+        <!-- Honeypot: hidden from humans; bots that fill it are silently dropped. -->
+        <div class="hp" aria-hidden="true">
+          <label for="cCompany">Company</label>
+          <input type="text" id="cCompany" name="company" tabindex="-1" autocomplete="off"/>
+        </div>
+
+        <button class="submit-btn" type="submit" id="submitBtn">
+          Send message
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </form>
+
+      <!-- SUCCESS STATE -->
+      <div class="success" id="successState">
+        <div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <h2>Thanks — message received.</h2>
+        <p>We'll get back to you within a couple of days.</p>
+      </div>
+
+    </div>
+
+    <!-- Low-key social line — links are placeholders to fill in later. -->
+    <div class="social">
+      Or reach us on social:
+      <a href="#" rel="noopener">Instagram</a>·
+      <a href="#" rel="noopener">TikTok</a>·
+      <a href="#" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-text">
+      CoachAnywhere — elite coaching, anytime anywhere. Australia-wide.<br>
+      Questions? <a href="contact.html">Contact us</a>
+    </div>
+  </div>
+</footer>
+
+<!-- LOCKER ROOM "COMING SOON" MODAL — shared with the nav interception. -->
+<div id="lockerSoonModal">
+  <div style="width:100%;max-width:460px;background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(9,14,35,.99));border:1px solid rgba(148,163,184,.3);border-radius:18px;padding:30px 28px;box-shadow:0 30px 80px rgba(0,0,0,.6);text-align:center;">
+    <div style="width:56px;height:56px;border-radius:14px;background:rgba(220,38,38,.12);border:1px solid rgba(239,68,68,.3);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+    </div>
+    <h3 style="font-size:21px;font-weight:800;color:#f9fafb;letter-spacing:-.01em;margin-bottom:10px;">The Locker Room is coming soon</h3>
+    <p style="font-size:14px;line-height:1.65;color:rgba(226,232,240,.78);margin:0 auto 22px;max-width:360px;">Live tactical sessions with elite coaches — launching after our public launch. Join the waitlist and be the first to know when the first session drops.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <a href="waitlist.html" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 24px;border-radius:999px;background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);color:#fff;font-weight:700;font-size:15px;text-decoration:none;box-shadow:0 12px 30px rgba(37,99,235,.4);">
+        Join the waitlist
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+      <button onclick="closeLockerSoon()" style="width:100%;padding:13px 24px;border-radius:999px;background:transparent;border:1px solid rgba(148,163,184,.25);color:#94a3b8;font-weight:600;font-size:14px;font-family:inherit;cursor:pointer;">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openLockerSoon(){ document.getElementById("lockerSoonModal").style.display = "flex"; }
+  function closeLockerSoon(){ document.getElementById("lockerSoonModal").style.display = "none"; }
+  document.getElementById("lockerSoonModal").addEventListener("click", function(e){ if (e.target === this) closeLockerSoon(); });
+
+  // ── SLIDE-OUT MENU ──
+  (function(){
+    const drawer=document.getElementById("drawer");
+    const backdrop=document.getElementById("drawerBackdrop");
+    const ham=document.getElementById("hamburger");
+    if(!drawer||!ham) return;
+    let lastFocus=null;
+    function focusables(){return Array.from(drawer.querySelectorAll('a[href],button:not([disabled])'));}
+    function onKey(e){
+      if(e.key==="Escape"){closeMenu();return;}
+      if(e.key==="Tab"){
+        const f=focusables();if(!f.length)return;
+        const first=f[0],last=f[f.length-1];
+        if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+        else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+      }
+    }
+    window.openMenu=function(){
+      lastFocus=document.activeElement;
+      drawer.classList.add("open");backdrop.classList.add("open");
+      drawer.setAttribute("aria-hidden","false");
+      ham.setAttribute("aria-label","Close menu");ham.setAttribute("aria-expanded","true");
+      document.body.style.overflow="hidden";
+      const f=focusables();if(f.length)f[0].focus();
+      document.addEventListener("keydown",onKey);
+    };
+    window.closeMenu=function(){
+      drawer.classList.remove("open");backdrop.classList.remove("open");
+      drawer.setAttribute("aria-hidden","true");
+      ham.setAttribute("aria-label","Open menu");ham.setAttribute("aria-expanded","false");
+      document.body.style.overflow="";
+      document.removeEventListener("keydown",onKey);
+      if(lastFocus&&lastFocus.focus)lastFocus.focus();
+    };
+  })();
+
+  // ── CONTACT FORM ──
+  (function(){
+    const form = document.getElementById("contactForm");
+    const btn  = document.getElementById("submitBtn");
+    const formError = document.getElementById("formError");
+    const msg = document.getElementById("cMessage");
+    const charNow = document.getElementById("charNow");
+
+    msg.addEventListener("input", () => { charNow.textContent = msg.value.length; });
+
+    const fields = {
+      name:    { el: document.getElementById("cName"),    err: document.getElementById("errName"),    valid: v => v.trim().length > 0 },
+      email:   { el: document.getElementById("cEmail"),   err: document.getElementById("errEmail"),   valid: v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.trim()) },
+      role:    { el: document.getElementById("cRole"),    err: document.getElementById("errRole"),    valid: v => v.trim().length > 0 },
+      topic:   { el: document.getElementById("cTopic"),   err: document.getElementById("errTopic"),   valid: v => v.trim().length > 0 },
+      message: { el: document.getElementById("cMessage"), err: document.getElementById("errMessage"), valid: v => v.trim().length > 0 }
+    };
+
+    function clearError(f){ f.el.classList.remove("err"); f.err.classList.remove("show"); }
+    Object.values(fields).forEach(f => f.el.addEventListener("input", () => clearError(f)));
+    Object.values(fields).forEach(f => f.el.addEventListener("change", () => clearError(f)));
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      formError.classList.remove("show");
+
+      let firstBad = null, ok = true;
+      Object.values(fields).forEach(f => {
+        if (!f.valid(f.el.value)) {
+          ok = false;
+          f.el.classList.add("err");
+          f.err.classList.add("show");
+          if (!firstBad) firstBad = f.el;
+        }
+      });
+      if (!ok) { firstBad.focus(); return; }
+
+      btn.disabled = true;
+      const original = btn.innerHTML;
+      btn.textContent = "Sending…";
+
+      const payload = {
+        name:    fields.name.el.value.trim(),
+        email:   fields.email.el.value.trim(),
+        role:    fields.role.el.value.trim(),
+        topic:   fields.topic.el.value.trim(),
+        message: fields.message.el.value.trim(),
+        company: document.getElementById("cCompany").value  // honeypot
+      };
+
+      try {
+        const resp = await fetch("/.netlify/functions/contact-submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (resp.ok && data.ok) {
+          form.style.display = "none";
+          document.getElementById("successState").classList.add("show");
+          form.reset();
+          charNow.textContent = "0";
+          return;
+        }
+        formError.textContent = data.error || "Something went wrong — please try again.";
+        formError.classList.add("show");
+      } catch (err) {
+        formError.textContent = "Couldn't reach the server — check your connection and try again.";
+        formError.classList.add("show");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>
