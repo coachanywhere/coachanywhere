@@ -75,8 +75,11 @@
     .hero-glow .g1{position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:700px;height:400px;background:radial-gradient(ellipse,rgba(37,99,235,.1) 0%,transparent 70%);}
     .hero-glow .g2{position:absolute;top:40px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(251,191,36,.05),transparent 70%);}
     .hero-glow .g3{position:absolute;bottom:0;left:-60px;width:280px;height:280px;background:radial-gradient(circle,rgba(220,38,38,.05),transparent 70%);}
-    .hero-wordmark{text-align:center;margin-bottom:14px;position:relative;}
-    .hero-wordmark h1{font-size:clamp(32px,10vw,110px);font-weight:900;letter-spacing:.02em;line-height:1;margin:0;text-transform:uppercase;white-space:nowrap;}
+    /* Width-matched to the three-card row below (max-width:980px). A JS fitter
+       (fitWordmark) scales the font so COACHANYWHERE fills this width on ONE line;
+       the clamp() here is the no-JS fallback. */
+    .hero-wordmark{text-align:center;margin:0 auto 14px;position:relative;max-width:980px;}
+    .hero-wordmark h1{font-size:clamp(30px,11vw,104px);font-weight:900;letter-spacing:.02em;line-height:1;margin:0;text-transform:uppercase;white-space:nowrap;}
     .hero-wordmark .w-coach{color:#ffffff;}
     .hero-wordmark .w-any{color:#60a5fa;}
     .hero-tagline{text-align:center;margin-bottom:40px;position:relative;}
@@ -443,6 +446,25 @@
       document.removeEventListener("keydown",onKey);
       if(lastFocus&&lastFocus.focus)lastFocus.focus();
     };
+  })();
+
+  // ── HERO WORDMARK FIT — scale COACHANYWHERE to fill the card-row width on one line ──
+  (function(){
+    const wrap=document.querySelector(".hero-wordmark");
+    const h1=wrap&&wrap.querySelector("h1");
+    if(!wrap||!h1) return;
+    const BASE=100, CAP=104;
+    function fit(){
+      h1.style.fontSize=BASE+"px";
+      const natural=h1.scrollWidth;
+      if(!natural) return;
+      const target=wrap.clientWidth;            // = the 980px-capped card-row width
+      const size=Math.min(BASE*(target/natural)*0.98, CAP);  // 2% safety margin
+      h1.style.fontSize=size+"px";
+    }
+    fit();
+    window.addEventListener("resize",fit);
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(fit);
   })();
 
   // ── TESTIMONIAL CAROUSEL ──
