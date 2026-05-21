@@ -151,12 +151,12 @@
 
     /* HOW IT WORKS — stacked audience journeys */
     .journey-sub{text-align:center;font-size:clamp(20px,3.4vw,28px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:32px;}
-    .journeys{display:flex;flex-direction:column;gap:14px;}
+    .journeys{display:flex;flex-direction:column;gap:14px;max-width:680px;margin:0 auto;}
     .journey{border-left:4px solid;border-radius:0 16px 16px 0;padding:20px 24px;}
     .journey.athlete{border-color:#3b82f6;background:linear-gradient(135deg,rgba(59,130,246,.18) 0%,rgba(59,130,246,.08) 100%);}
     .journey.coach{border-color:#fbbf24;background:linear-gradient(135deg,rgba(251,191,36,.18) 0%,rgba(251,191,36,.08) 100%);}
     .journey.mentor{border-color:#8b5cf6;background:linear-gradient(135deg,rgba(139,92,246,.18) 0%,rgba(139,92,246,.08) 100%);}
-    .journey-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
+    .journey-head{display:flex;align-items:center;justify-content:center;text-align:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
     .journey-label{font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
     .journey.athlete .journey-label{color:var(--blue2);}
     .journey.coach .journey-label{color:var(--amber);}
@@ -375,7 +375,6 @@
      Sits between the testimonials and the Ready-to-start CTA. -->
 <section class="block">
   <div class="container">
-    <div class="block-label" style="margin-bottom:10px;">How it works</div>
     <div class="journey-sub">A clear journey for every level</div>
     <div class="journeys">
 
@@ -425,7 +424,8 @@
   </div>
 </section>
 
-<!-- TRUST ROW — founding-coach proof, sitting just above the closing CTA. -->
+<!-- FC TRUST STRIP — removed pending real founding coach photos, preserved for reference
+     (the "Founding cohort now accepting members" pill was already hidden before removal)
 <div class="trust">
   <div class="container">
     <div class="trust-inner">
@@ -436,12 +436,11 @@
         <div class="trust-av">FC</div>
       </div>
       <div class="trust-item"><strong>Basketball, AFL, soccer, tennis, cricket</strong> &amp; more</div>
-      <!-- FOUNDING COHORT PILL — removed pending clearer positioning context, preserved for reference
       <div class="trust-badge">Founding cohort now accepting members</div>
-      -->
     </div>
   </div>
 </div>
+-->
 
 <!-- FOOTER CTA — mirrors the top, plus quiet sign-in for dual-role members. -->
 <section class="footer-cta">
