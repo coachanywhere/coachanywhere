@@ -48,7 +48,10 @@
        widths; on tablet/mobile it wraps naturally as the container narrows. */
     .hero h1{font-size:clamp(28px,4.2vw,40px);font-weight:800;color:#f9fafb;letter-spacing:-.025em;line-height:1.12;margin-bottom:16px;max-width:900px;margin-left:auto;margin-right:auto;}
     .hero h1 .grad{background:linear-gradient(120deg,#60a5fa,#fbbf24);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
-    .hero-sub{font-size:17px;color:rgba(226,232,240,.74);max-width:520px;margin:0 auto;}
+    .hero h1 .hl-blue{color:var(--blue2);}
+    /* max-width holds the subheading on one line at desktop; it wraps as the
+       viewport narrows below the text's natural width. */
+    .hero-sub{font-size:17px;color:rgba(226,232,240,.74);max-width:640px;margin:0 auto;}
 
     section.block{padding:46px 0;border-top:1px solid var(--border);}
     .block-label{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:18px;}
@@ -174,8 +177,8 @@
 <!-- HERO -->
 <section class="hero">
   <div class="container">
-    <h1>Access to elite coaching, anytime, anywhere.</h1>
-    <p class="hero-sub">Upload your footage, get expert eyes on your game, no matter where you live.</p>
+    <h1>Access to elite coaching, <span class="hl-blue">anytime, anywhere.</span></h1>
+    <p class="hero-sub">Upload your video, get expert feedback, no matter where you live.</p>
   </div>
 </section>
 
