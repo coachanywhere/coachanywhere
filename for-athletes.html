@@ -44,7 +44,9 @@
 
     .hero{text-align:center;padding:64px 0 44px;}
     .eyebrow{display:inline-block;padding:5px 13px;border-radius:999px;background:rgba(37,99,235,.14);border:1px solid rgba(59,130,246,.34);font-size:11px;font-weight:700;color:var(--blue2);text-transform:uppercase;letter-spacing:.16em;margin-bottom:18px;}
-    .hero h1{font-size:clamp(30px,6vw,46px);font-weight:800;color:#f9fafb;letter-spacing:-.025em;line-height:1.1;margin-bottom:16px;max-width:680px;margin-left:auto;margin-right:auto;}
+    /* Sized so the headline holds one line within the container at desktop
+       widths; on tablet/mobile it wraps naturally as the container narrows. */
+    .hero h1{font-size:clamp(28px,4.2vw,40px);font-weight:800;color:#f9fafb;letter-spacing:-.025em;line-height:1.12;margin-bottom:16px;max-width:900px;margin-left:auto;margin-right:auto;}
     .hero h1 .grad{background:linear-gradient(120deg,#60a5fa,#fbbf24);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
     .hero-sub{font-size:17px;color:rgba(226,232,240,.74);max-width:520px;margin:0 auto;}
 
@@ -53,13 +55,18 @@
     .block h2{font-size:26px;font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:14px;}
     .block p.lead{font-size:16px;color:rgba(226,232,240,.78);max-width:620px;line-height:1.7;}
 
-    /* HOW IT WORKS — 3 steps */
-    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px;}
-    .step{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 20px;}
-    .step-num{width:30px;height:30px;border-radius:9px;background:rgba(37,99,235,.16);color:var(--blue2);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
-    .step-title{font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:5px;}
-    .step-desc{font-size:13px;color:rgba(226,232,240,.7);line-height:1.55;}
-    @media(max-width:720px){.steps{grid-template-columns:1fr;}}
+    /* HOW IT WORKS — 3 journey tiles, matching the homepage hero entry cards
+       (athlete-blue treatment on all three since this is the athletes page). */
+    .entry-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px;}
+    .entry-card{text-align:left;border-radius:16px;padding:20px 20px;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden;backdrop-filter:blur(10px);background:rgba(10,16,40,.85);border:1px solid rgba(59,130,246,.2);transition:transform var(--tr),border-color var(--tr),background var(--tr),box-shadow var(--tr);}
+    .entry-card .bar{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#3b82f6,transparent);}
+    .entry-card:hover{border-color:rgba(59,130,246,.5);background:rgba(13,22,55,.9);transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.45);}
+    .entry-head{display:flex;align-items:center;gap:11px;}
+    .entry-ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(37,99,235,.15);color:var(--blue2);}
+    .entry-ic svg{width:20px;height:20px;}
+    .entry-label{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--blue2);}
+    .entry-desc{font-size:14px;color:rgba(226,232,240,.78);line-height:1.55;}
+    @media(max-width:720px){.entry-cards{grid-template-columns:1fr;}}
 
     /* COACHES STRIP */
     .coach-strip{display:flex;gap:-12px;margin-bottom:14px;}
@@ -167,7 +174,6 @@
 <!-- HERO -->
 <section class="hero">
   <div class="container">
-    <div class="eyebrow">For Athletes</div>
     <h1>Access to elite coaching, anytime, anywhere.</h1>
     <p class="hero-sub">Upload your footage, get expert eyes on your game, no matter where you live.</p>
   </div>
@@ -181,25 +187,34 @@
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
+<!-- HOW IT WORKS — 3 journey tiles (homepage entry-card treatment, all blue). -->
 <section class="block">
   <div class="container">
     <div class="block-label">How it works</div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-title">Upload your video</div>
-        <div class="step-desc">Film a skill, a training session or a full game on your phone and upload it — no special gear needed.</div>
+    <div class="entry-cards">
+      <div class="entry-card">
+        <div class="bar"></div>
+        <div class="entry-head">
+          <div class="entry-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg></div>
+          <div class="entry-label">Pick a coach</div>
+        </div>
+        <div class="entry-desc">Browse coaches by sport, level, and focus area. Read reviews. Choose who fits you.</div>
       </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-title">Your coach reviews it</div>
-        <div class="step-desc">A vetted elite coach in your sport breaks down your footage frame by frame with written notes and annotations.</div>
+      <div class="entry-card">
+        <div class="bar"></div>
+        <div class="entry-head">
+          <div class="entry-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+          <div class="entry-label">Upload your footage</div>
+        </div>
+        <div class="entry-desc">Up to 90 seconds. Phone video works. Pick the play you want feedback on.</div>
       </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-title">Feedback in days</div>
-        <div class="step-desc">You get a personalised report — corrections, key takeaways and drills — back in your inbox, usually within 48 hours.</div>
+      <div class="entry-card">
+        <div class="bar"></div>
+        <div class="entry-head">
+          <div class="entry-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div class="entry-label">Get reviewed</div>
+        </div>
+        <div class="entry-desc">Frame-by-frame markups, voice notes from your coach, and drills to work on — within 48 hours.</div>
       </div>
     </div>
   </div>
