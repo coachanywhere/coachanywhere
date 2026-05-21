@@ -2,26 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>CoachAnywhere — The home of Australian Sports Coaching.</title>
+  <title>CoachAnywhere — Elite coaching. Anytime, anywhere.</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="description" content="CoachAnywhere connects athletes with elite coaches and helps coaches build a remote coaching business. Get better, or build your coaching income — anywhere in Australia."/>
   <meta name="theme-color" content="#0A1C4A"/>
   <meta property="og:type" content="website"/>
-  <meta property="og:title" content="CoachAnywhere — The home of Australian Sports Coaching."/>
+  <meta property="og:title" content="CoachAnywhere — Elite coaching. Anytime, anywhere."/>
   <meta property="og:description" content="Athletes get expert coaching remotely. Coaches build a business on their schedule. Founding cohort now accepting members."/>
   <meta property="og:image" content="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
   <meta name="twitter:card" content="summary_large_image"/>
   <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
   <!--
     ════════════════════════════════════════════════════════════════
-    HOMEPAGE — combines the legacy long-form hero (big COACHANYWHERE
-    wordmark + dark gradient) with the router segmentation pattern
-    (athlete/coach entry cards → /for-athletes.html, /for-coaches.html).
+    HOMEPAGE = ROUTER. Its only job: segment the visitor, build trust,
+    route to /for-athletes.html or /for-coaches.html. It does NOT teach
+    the product. No feature grids. No paragraphs over two sentences.
 
-    Reference files preserved & unlinked:
-      • index-legacy.html  — the original long-form homepage
-      • index-router.html  — the previous router-only homepage
-    Lift content back from either if needed.
+    The previous full homepage (hero cards, "Marketplace for sport"
+    framing, marketplace flow animation, full FAQ, portal section) is
+    preserved verbatim and unlinked in index-legacy.html — lift content
+    back from there if needed.
     ════════════════════════════════════════════════════════════════
   -->
   <style>
@@ -42,7 +42,8 @@
     button{font-family:inherit;cursor:pointer;}
     .container{max-width:1080px;margin:0 auto;padding:0 22px;}
 
-    /* HEADER / NAV — sticky blur, blue underline-on-hover links, outlined login pill. */
+    /* HEADER / NAV — restored to the standard site header treatment
+       (sticky blur, blue underline-on-hover links, outlined login pill). */
     header{position:sticky;top:0;z-index:30;backdrop-filter:blur(18px);
       background:linear-gradient(to bottom,rgba(3,7,18,.96),rgba(3,7,18,.88),transparent);
       border-bottom:1px solid rgba(30,64,175,.7);}
@@ -58,7 +59,6 @@
     .nav-links a.athlete{color:var(--blue2);font-weight:700;}
     .nav-links a.coach{color:var(--amber);font-weight:700;}
     .nav-links a.locker{color:#fca5a5;font-weight:700;}
-    .nav-links a.nav-signin-mobile{display:none;}
     .nav-cta{display:flex;align-items:center;gap:10px;}
     .nav-signin{font-size:14px;color:rgba(226,232,240,.75);transition:color var(--tr);white-space:nowrap;}
     .nav-signin:hover{color:#fff;}
@@ -73,29 +73,13 @@
       .nav-links.open{display:flex;}
       .nav-links a{width:100%;padding:13px 24px;font-size:15px;}
       .nav-links a::after{display:none;}
-      .nav-links a.nav-signin-mobile{display:block;}
       .nav-toggle{display:block;}
       .nav-signin{display:none;}
     }
 
-    /* HERO — legacy treatment: big COACHANYWHERE wordmark + dark gradient + ambient glow. */
-    .hero{background:linear-gradient(180deg,#0A2A78 0%,#031026 100%);position:relative;overflow:hidden;}
-    .hero-inner{position:relative;padding:60px 0 52px;}
-    .hero-glow{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
-    .hero-glow .g1{position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:700px;height:400px;background:radial-gradient(ellipse,rgba(37,99,235,.1) 0%,transparent 70%);}
-    .hero-glow .g2{position:absolute;top:40px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(251,191,36,.05),transparent 70%);}
-    .hero-glow .g3{position:absolute;bottom:0;left:-60px;width:280px;height:280px;background:radial-gradient(circle,rgba(220,38,38,.05),transparent 70%);}
-    .hero-wordmark{text-align:center;margin-bottom:14px;position:relative;}
-    .hero-wordmark h1{font-size:clamp(32px,10vw,110px);font-weight:900;letter-spacing:.02em;line-height:1;margin:0;text-transform:uppercase;white-space:nowrap;}
-    .hero-wordmark .w-coach{color:#ffffff;}
-    .hero-wordmark .w-any{color:#60a5fa;}
-    .hero-tagline{text-align:center;margin-bottom:40px;position:relative;}
-    .hero-tagline p{font-size:clamp(16px,3.8vw,46px);font-weight:700;letter-spacing:-.01em;line-height:1.2;margin:0;}
-    .hero-tagline .t-light{color:rgba(255,255,255,.85);}
-    .hero-tagline .t-accent{color:#60a5fa;}
-
-    /* HERO ENTRY CARDS — condensed athlete/coach cards routing to the audience landing pages. */
-    .entry-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:660px;margin:0 auto;position:relative;}
+    /* HERO ENTRY CARDS — condensed athlete/coach cards (from legacy hero,
+       tightened to one-line punchy entry points). */
+    .entry-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:660px;margin:0 auto;}
     .entry-card{
       text-align:left;border-radius:16px;padding:20px 20px;display:flex;flex-direction:column;gap:12px;
       position:relative;overflow:hidden;backdrop-filter:blur(10px);cursor:pointer;
@@ -122,6 +106,31 @@
     .entry-card.coach .entry-cta{color:var(--amber);}
     .entry-cta svg{width:15px;height:15px;}
     @media(max-width:560px){.entry-cards{grid-template-columns:1fr;max-width:380px;}}
+
+    /* WHAT WE DO — one-line bridge between hero and trust row. */
+    .whatwedo{text-align:center;padding:8px 0 38px;}
+    .whatwedo .wwd-label{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+    .whatwedo p{font-size:16px;color:rgba(226,232,240,.82);max-width:640px;margin:0 auto;line-height:1.65;}
+
+    /* HERO */
+    .hero{text-align:center;padding:78px 0 60px;}
+    .hero h1{font-size:clamp(34px,7vw,56px);font-weight:800;color:#f9fafb;letter-spacing:-.03em;line-height:1.05;margin-bottom:20px;max-width:760px;margin-left:auto;margin-right:auto;}
+    .hero h1 .grad{background:linear-gradient(120deg,#60a5fa,#fbbf24);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    .hero-sub{font-size:18px;color:rgba(226,232,240,.74);max-width:520px;margin:0 auto 38px;}
+    .hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+    .hero-cta{
+      display:inline-flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;
+      width:260px;padding:20px 24px;border-radius:16px;border:1px solid var(--border2);
+      background:var(--card);transition:transform var(--tr),border-color var(--tr),background var(--tr);
+    }
+    .hero-cta:hover{transform:translateY(-3px);}
+    .hero-cta.athlete:hover{border-color:rgba(59,130,246,.6);background:rgba(37,99,235,.08);}
+    .hero-cta.coach:hover{border-color:rgba(251,191,36,.55);background:rgba(234,179,8,.06);}
+    .hero-cta .cta-eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;}
+    .hero-cta.athlete .cta-eyebrow{color:var(--blue2);}
+    .hero-cta.coach .cta-eyebrow{color:var(--amber);}
+    .hero-cta .cta-main{font-size:17px;font-weight:800;color:#f9fafb;display:flex;align-items:center;gap:8px;}
+    .hero-cta .cta-main svg{width:16px;height:16px;}
 
     /* TRUST ROW */
     .trust{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:22px 0;}
@@ -150,33 +159,17 @@
     .path-desc{font-size:13px;color:rgba(226,232,240,.7);line-height:1.55;}
     @media(max-width:720px){.paths{grid-template-columns:1fr;}}
 
-    /* TESTIMONIAL CAROUSEL — auto-rotating, cross-fade, no controls. */
-    .tcard{max-width:680px;margin:0 auto;text-align:center;padding:38px 30px;border-radius:18px;
+    /* PROOF POINT */
+    .proof{max-width:680px;margin:0 auto;text-align:center;padding:34px 30px;border-radius:18px;
       background:linear-gradient(135deg,rgba(37,99,235,.1),rgba(15,23,42,.5));
-      border:1px solid rgba(59,130,246,.25);min-height:280px;display:flex;flex-direction:column;justify-content:center;}
-    .tslide{transition:opacity 600ms ease;opacity:1;}
-    .tslide.fading{opacity:0;}
-    .t-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;margin:0 auto 16px;display:block;border:2px solid rgba(96,165,250,.4);}
-    .t-avatar-fallback{width:72px;height:72px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:30px;background:rgba(37,99,235,.15);border:2px solid rgba(96,165,250,.4);}
-    .t-quote{font-size:19px;font-weight:600;color:#f1f5f9;line-height:1.5;margin-bottom:16px;letter-spacing:-.01em;}
-    .t-cite{font-size:13px;color:var(--text);font-weight:600;}
-    @media(max-width:560px){.t-quote{font-size:17px;}.tcard{min-height:320px;}}
+      border:1px dashed rgba(59,130,246,.4);}
+    .proof-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;margin:0 auto 16px;display:block;border:2px solid rgba(96,165,250,.4);}
+    .proof-avatar-fallback{display:none;width:72px;height:72px;border-radius:50%;margin:0 auto 16px;align-items:center;justify-content:center;font-size:30px;background:rgba(37,99,235,.15);border:2px solid rgba(96,165,250,.4);}
+    .proof-quote{font-size:19px;font-weight:600;color:#f1f5f9;line-height:1.5;margin-bottom:16px;letter-spacing:-.01em;}
+    .proof-cite{font-size:13px;color:var(--text);font-weight:600;}
+    .proof-sample{font-size:11px;color:var(--muted2);font-style:italic;margin-top:12px;letter-spacing:.04em;}
 
     /* FOOTER CTA */
-    .hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
-    .hero-cta{
-      display:inline-flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;
-      width:260px;padding:20px 24px;border-radius:16px;border:1px solid var(--border2);
-      background:var(--card);transition:transform var(--tr),border-color var(--tr),background var(--tr);
-    }
-    .hero-cta:hover{transform:translateY(-3px);}
-    .hero-cta.athlete:hover{border-color:rgba(59,130,246,.6);background:rgba(37,99,235,.08);}
-    .hero-cta.coach:hover{border-color:rgba(251,191,36,.55);background:rgba(234,179,8,.06);}
-    .hero-cta .cta-eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;}
-    .hero-cta.athlete .cta-eyebrow{color:var(--blue2);}
-    .hero-cta.coach .cta-eyebrow{color:var(--amber);}
-    .hero-cta .cta-main{font-size:17px;font-weight:800;color:#f9fafb;display:flex;align-items:center;gap:8px;}
-    .hero-cta .cta-main svg{width:16px;height:16px;}
     .footer-cta{text-align:center;padding:60px 0 30px;}
     .footer-cta h2{font-size:clamp(24px,4vw,34px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:26px;}
     .footer-signin{display:block;margin-top:22px;font-size:13px;color:var(--muted);}
@@ -186,7 +179,7 @@
     .foot-text{font-size:12px;color:var(--muted2);line-height:1.7;}
     .foot-text a{color:var(--blue2);}
 
-    /* LOCKER MODAL */
+    /* LOCKER MODAL (carried from prior soft-hide work) */
     #lockerSoonModal{display:none;position:fixed;inset:0;background:rgba(2,6,23,.78);backdrop-filter:blur(10px);z-index:300;align-items:center;justify-content:center;padding:20px;}
   </style>
 </head>
@@ -204,8 +197,6 @@
         <!-- LOCKER ROOM NAV — intercepted pre-launch; opens the coming-soon modal.
              Restore href to 'locker-room.html' + drop the onclick to re-enable. -->
         <a class="locker" href="locker-room.html" onclick="event.preventDefault();openLockerSoon();">The Locker Room</a>
-        <a href="faq.html">FAQ</a>
-        <a class="nav-signin-mobile" href="login.html">Sign in</a>
       </nav>
       <div class="nav-cta">
         <a class="nav-signin" href="login.html">Sign in</a>
@@ -218,44 +209,45 @@
   </div>
 </header>
 
-<!-- HERO — big wordmark (legacy) + segment/route entry cards (router). -->
+<!-- HERO — segment + route. Nothing else above the fold. -->
 <section class="hero">
   <div class="container">
-    <div class="hero-inner">
-      <div class="hero-glow"><div class="g1"></div><div class="g2"></div><div class="g3"></div></div>
-
-      <div class="hero-wordmark">
-        <h1><span class="w-coach">COACH</span><span class="w-any">ANYWHERE</span></h1>
-      </div>
-      <div class="hero-tagline">
-        <p><span class="t-light">The home of </span><span class="t-accent">Australian Sports Coaching.</span></p>
-      </div>
-
-      <div class="entry-cards">
-        <div class="entry-card athlete" onclick="window.location.href='for-athletes.html'">
-          <div class="bar"></div>
-          <div class="entry-head">
-            <div class="entry-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg></div>
-            <div class="entry-label">Athletes</div>
-          </div>
-          <div class="entry-desc">Upload your footage and get a personalised breakdown from an elite coach within days.</div>
-          <div class="entry-cta">I want to improve
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </div>
+    <h1>[HEADLINE: outcome-led, e.g. "Get better. With elite coaches. <span class="grad">Anywhere.</span>"]</h1>
+    <p class="hero-sub">[SUBHEADING: one sentence — who it's for and the outcome.]</p>
+    <!-- Hero entry cards — condensed athlete/coach cards routing to the
+         audience landing pages (router pattern). -->
+    <div class="entry-cards">
+      <div class="entry-card athlete" onclick="window.location.href='for-athletes.html'">
+        <div class="bar"></div>
+        <div class="entry-head">
+          <div class="entry-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg></div>
+          <div class="entry-label">Athletes</div>
         </div>
-        <div class="entry-card coach" onclick="window.location.href='for-coaches.html'">
-          <div class="bar"></div>
-          <div class="entry-head">
-            <div class="entry-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-            <div class="entry-label">Coaches</div>
-          </div>
-          <div class="entry-desc">Build a remote coaching business, set your own packages, and keep 80% of every sale.</div>
-          <div class="entry-cta">I'm a coach
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </div>
+        <div class="entry-desc">Upload your footage and get a personalised breakdown from an elite coach within days.</div>
+        <div class="entry-cta">I want to improve
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </div>
+      <div class="entry-card coach" onclick="window.location.href='for-coaches.html'">
+        <div class="bar"></div>
+        <div class="entry-head">
+          <div class="entry-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="entry-label">Coaches</div>
+        </div>
+        <div class="entry-desc">Build a remote coaching business, set your own packages, and keep 80% of every sale.</div>
+        <div class="entry-cta">I'm a coach
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- WHAT WE DO — one-line "here's the whole thing" bridge. -->
+<section class="whatwedo">
+  <div class="container">
+    <div class="wwd-label">What we do</div>
+    <p>We connect athletes with elite coaches, give coaches the tools to build a remote coaching business, and pair developing coaches with mentors who've been there.</p>
   </div>
 </section>
 
@@ -269,13 +261,14 @@
         <div class="trust-av">FC</div>
         <div class="trust-av">FC</div>
       </div>
+      <div class="trust-item">[FOUNDING COACHES — names/photos placeholder]</div>
       <div class="trust-item"><strong>Basketball, AFL, soccer, tennis, cricket</strong> &amp; more</div>
       <div class="trust-badge">Founding cohort now accepting members</div>
     </div>
   </div>
 </div>
 
-<!-- THREE WAYS IN — one sentence each, one icon each. -->
+<!-- THREE PATHWAYS — one sentence each, one icon each. -->
 <section class="block">
   <div class="container">
     <div class="block-label">Three ways in</div>
@@ -299,18 +292,20 @@
   </div>
 </section>
 
-<!-- TESTIMONIAL CAROUSEL — auto-rotates every 6s with a cross-fade. No arrows/dots.
-     PLACEHOLDER content — swap quotes/images/attributions for real testimonials later. -->
+<!-- ONE PROOF POINT — mock testimonial (placeholder content, final visual treatment).
+     Swap the image + copy + attribution for a real testimonial later; the styling stays. -->
 <section class="block" style="padding-top:0;">
   <div class="container">
-    <div class="tcard">
-      <div class="tslide" id="tSlide">
-        <img class="t-avatar" id="tAvatar" src="" alt="Athlete" loading="lazy"
-             onerror="this.style.display='none';document.getElementById('tFallback').style.display='flex';"/>
-        <div class="t-avatar-fallback" id="tFallback" aria-hidden="true" style="display:none;">🏅</div>
-        <div class="t-quote" id="tQuote"></div>
-        <div class="t-cite" id="tCite"></div>
-      </div>
+    <div class="proof">
+      <img class="proof-avatar"
+           src="https://images.unsplash.com/photo-1546519638-68e109498ffc?w=160&h=160&fit=crop"
+           alt="Basketball player (sample)"
+           loading="lazy"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+      <div class="proof-avatar-fallback" aria-hidden="true">🏀</div>
+      <div class="proof-quote">"I'd been stuck on the same finishing patterns for months. After two video reviews with my coach on CoachAnywhere, I broke down exactly where my footwork was off — three weeks later it's a different game for me."</div>
+      <div class="proof-cite">Marcus T. — Basketball, U18 representative</div>
+      <div class="proof-sample">Sample testimonial — placeholder</div>
     </div>
   </div>
 </section>
@@ -363,72 +358,10 @@
     </div>
   </div>
 </div>
-
 <script>
   function openLockerSoon(){ document.getElementById("lockerSoonModal").style.display = "flex"; }
   function closeLockerSoon(){ document.getElementById("lockerSoonModal").style.display = "none"; }
   document.getElementById("lockerSoonModal").addEventListener("click", function(e){ if (e.target === this) closeLockerSoon(); });
-
-  // ── TESTIMONIAL CAROUSEL ──
-  // PLACEHOLDER testimonials — clearly mock content, swap for real ones before/after launch.
-  // Round headshots use stable Unsplash portraits; emoji fallback if an image fails.
-  const TESTIMONIALS = [
-    {
-      img:"https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=160&h=160&fit=crop&crop=faces",
-      fallback:"🏀",
-      quote:"“I'd been stuck on the same finishing patterns for months. Two video reviews in, my coach pinpointed exactly where my footwork was off — three weeks later it's a different game.”",
-      cite:"Marcus T. — Basketball, U18 · Melbourne"
-    },
-    {
-      img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&h=160&fit=crop&crop=faces",
-      fallback:"🏉",
-      quote:"“I sent a kicking clip on Monday night and had detailed voiceover feedback by Wednesday morning. My drop punt's improved more in three weeks than the past three years.”",
-      cite:"Jack O. — AFL · Adelaide"
-    },
-    {
-      img:"https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&h=160&fit=crop&crop=faces",
-      fallback:"🎾",
-      quote:"“I'm reviewing clips from Sydney while I'm coaching in Perth. Breaking down a serve frame by frame with the annotation tools has completely changed how I reach players.”",
-      cite:"Sarah R. — Tennis Coach · Perth"
-    },
-    {
-      img:"https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=160&h=160&fit=crop&crop=faces",
-      fallback:"⚽",
-      quote:"“My daughter couldn't get regular one-on-one time at her club. For less than $50 a month she's now getting detailed feedback on her first touch every single week.”",
-      cite:"Lisa K. — Soccer parent · Brisbane"
-    },
-    {
-      img:"https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=160&h=160&fit=crop&crop=faces",
-      fallback:"🏏",
-      quote:"“I uploaded a batting clip and got back a full breakdown with slow-motion annotations and three drills to work on. More analysis than my club coach has ever given me.”",
-      cite:"Aryan P. — Cricket · Sydney"
-    }
-  ];
-  (function initTestimonials(){
-    const slide=document.getElementById("tSlide");
-    const img=document.getElementById("tAvatar");
-    const fb=document.getElementById("tFallback");
-    const q=document.getElementById("tQuote");
-    const cite=document.getElementById("tCite");
-    let i=0;
-    function paint(idx){
-      const t=TESTIMONIALS[idx];
-      img.style.display="block"; fb.style.display="none";
-      img.src=t.img; img.alt=t.cite;
-      fb.textContent=t.fallback;
-      q.textContent=t.quote;
-      cite.textContent=t.cite;
-    }
-    paint(0);
-    setInterval(function(){
-      slide.classList.add("fading");
-      setTimeout(function(){
-        i=(i+1)%TESTIMONIALS.length;
-        paint(i);
-        slide.classList.remove("fading");
-      },600);
-    },6000);
-  })();
 </script>
 
 </body>
