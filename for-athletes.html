@@ -306,7 +306,6 @@
 <section class="block">
   <div class="container">
     <div class="block-label">What it costs</div>
-    <h2>Pay per review. No lock-in.</h2>
     <p class="lead" style="margin-bottom:6px;">Choose the package that fits what you want reviewed. Prices are set by each coach within these tiers.</p>
     <div class="price-grid">
       <div class="price-card">
@@ -335,24 +334,17 @@
         <div class="pdesc">Full review + 30-min live Zoom debrief + monthly training plan.</div>
       </div>
     </div>
-    <div class="price-note">Prices reflect current package tiers in the platform and may vary by coach. Final launch pricing TBC.</div>
   </div>
 </section>
 
-<!-- TESTIMONIALS -->
+<!-- TESTIMONIALS — 6-testimonial auto-scroll carousel (same mechanics as the
+     coach carousel). PLACEHOLDER quotes — swap for real ones when available. -->
 <section class="block">
   <div class="container">
     <div class="block-label">What athletes say</div>
-    <div class="quotes">
-      <div class="quote">
-        <div class="quote-text">"[ATHLETE TESTIMONIAL PLACEHOLDER]"</div>
-        <div class="quote-cite">[— Name, sport, level]</div>
-      </div>
-      <div class="quote">
-        <div class="quote-text">"[ATHLETE TESTIMONIAL PLACEHOLDER]"</div>
-        <div class="quote-cite">[— Name, sport, level]</div>
-      </div>
-    </div>
+  </div>
+  <div class="carousel" id="tmnCarousel">
+    <div class="carousel-track scroll" id="tmnTrack" style="--dur:48s;"></div>
   </div>
 </section>
 
@@ -506,6 +498,33 @@
     track.addEventListener("click", function(e){
       const t = e.target.closest(".coach-tile"); if(!t) return;
       openShowModal(inner(COACHES[+t.dataset.idx]));
+    });
+  })();
+
+  // ── ATHLETE TESTIMONIAL CAROUSEL ──
+  // PLACEHOLDER testimonials — mock one-liners for pre-launch; swap for real ones.
+  (function(){
+    const TMN = [
+      { meta:"Alex A. — Basketball, Age 14", quote:"My finishing's actually clicking now.",        initials:"AA", img:"https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=160&h=160&fit=crop&crop=faces" },
+      { meta:"Maddy R. — Netball, Age 16",   quote:"Saw three things in my pass I never noticed.",  initials:"MR", img:"https://images.unsplash.com/photo-1463453091185-61582044d556?w=160&h=160&fit=crop&crop=faces" },
+      { meta:"Tom B. — AFL, Age 15",         quote:"My drop punt finally has shape.",               initials:"TB", img:"https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=160&h=160&fit=crop&crop=faces" },
+      { meta:"Lily H. — Tennis, Age 17",     quote:"Got real feedback on my serve in two days.",    initials:"LH", img:"https://images.unsplash.com/photo-1521119989659-a83eee488004?w=160&h=160&fit=crop&crop=faces" },
+      { meta:"Jack W. — Soccer, Age 13",     quote:"Different positioning, different game.",         initials:"JW", img:"https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=160&h=160&fit=crop&crop=faces" },
+      { meta:"Sophie M. — Swimming, Age 15", quote:"My catch is night and day.",                    initials:"SM", img:"https://images.unsplash.com/photo-1500336624523-d727130c3328?w=160&h=160&fit=crop&crop=faces" }
+    ];
+    function tile(t){
+      return `<div class="tmn-head">${avatarHTML(Object.assign({name:t.meta},t))}<div class="tmn-meta">${t.meta}</div></div><div class="tmn-quote">&ldquo;${t.quote}&rdquo;</div>`;
+    }
+    function modal(t){
+      return `${avatarHTML(Object.assign({name:t.meta},t))}<div class="tmn-meta" style="margin-bottom:10px;">${t.meta}</div><div class="tmn-quote">&ldquo;${t.quote}&rdquo;</div>`;
+    }
+    const track = document.getElementById("tmnTrack");
+    if(!track) return;
+    const tiles = TMN.map((t,i)=>`<div class="tmn-tile" data-idx="${i}" role="button" tabindex="0">${tile(t)}</div>`).join("");
+    track.innerHTML = tiles + tiles;  // duplicate for a seamless loop
+    track.addEventListener("click", function(e){
+      const el = e.target.closest(".tmn-tile"); if(!el) return;
+      openShowModal(modal(TMN[+el.dataset.idx]));
     });
   })();
 </script>
