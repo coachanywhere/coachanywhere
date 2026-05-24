@@ -11,6 +11,7 @@
 <meta http-equiv="Expires" content="0"/>
 <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="focus-areas.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -126,6 +127,19 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
 .panel-sort{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
 .panel-sort strong{color:var(--text);font-weight:600;}
 .panel-sort svg{width:11px;height:11px;}
+/* My Focus Areas panel */
+.fp-chips{display:flex;flex-wrap:wrap;gap:7px;padding:14px 16px;}
+.fp-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:600;background:rgba(234,179,8,.12);border:1px solid rgba(251,191,36,.3);color:var(--amber3);}
+.fp-chip.custom{background:rgba(148,163,184,.12);border-color:rgba(148,163,184,.3);color:var(--muted);}
+.fp-empty{padding:14px 16px;font-size:12px;color:var(--muted);line-height:1.5;}
+.fp-edit{padding:14px 16px;}
+.fp-opt{display:inline-flex;align-items:center;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--border);color:var(--muted);cursor:pointer;margin:0 6px 6px 0;background:rgba(255,255,255,.03);user-select:none;}
+.fp-opt.sel{background:rgba(234,179,8,.16);border-color:rgba(251,191,36,.4);color:var(--amber3);}
+.fp-custom-row{display:flex;gap:8px;margin-top:10px;}
+.fp-input{flex:1;padding:9px 11px;border-radius:9px;border:1px solid var(--border);background:rgba(2,6,23,.4);color:var(--text);font-size:13px;font-family:inherit;outline:none;}
+.fp-btn{padding:9px 14px;border-radius:9px;border:none;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;}
+.fp-btn.save{background:var(--amber3);color:#1a1205;}
+.fp-btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
 
 /* ── REVIEW QUEUE TABLE ── */
 .queue-table{width:100%;border-collapse:collapse;}
@@ -554,6 +568,15 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
               </div>
             </div>
             <div class="sched-foot" onclick="showSection('schedule')"><span>View Full Schedule</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+
+          <!-- MY FOCUS AREAS -->
+          <div class="panel">
+            <div class="panel-hdr">
+              <div class="panel-title">My Focus Areas</div>
+              <button class="panel-link" id="focusEditBtn" onclick="enterFocusEdit()">Edit <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            </div>
+            <div id="focusPanelBody"></div>
           </div>
 
           <!-- PERFORMANCE OVERVIEW -->
@@ -1039,6 +1062,55 @@ const SB_URL="https://rtaxjewvshhpdnkpojjn.supabase.co";
 const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ca-auth",storage:window.localStorage,detectSessionInUrl:true}});
 
+// ── MY FOCUS AREAS PANEL (in-place view/edit; reads window._coachProfile) ──
+let fpSelected=[], fpCustom=[];
+const FP_CAP   = (window.FOCUS_LIMITS && FOCUS_LIMITS.coachCurated) || 3;
+const FP_CAP_C = (window.FOCUS_LIMITS && FOCUS_LIMITS.coachCustom)  || 2;
+function fpEsc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function fpSportList(){const p=window._coachProfile||{};return window.focusAreasForSport?focusAreasForSport(p.sport):[];}
+function renderFocusPanel(){
+  const body=document.getElementById("focusPanelBody"); if(!body)return;
+  const p=window._coachProfile||{};
+  const cur=Array.isArray(p.focus_areas)?p.focus_areas:[];
+  const cus=Array.isArray(p.custom_focus_areas)?p.custom_focus_areas:[];
+  const btn=document.getElementById("focusEditBtn"); if(btn)btn.style.display="";
+  if(!cur.length&&!cus.length){body.innerHTML='<div class="fp-empty">No focus areas yet. Add the skills you specialise in so athletes can match to you.</div>';return;}
+  body.innerHTML='<div class="fp-chips">'+cur.map(f=>'<span class="fp-chip">'+fpEsc(f)+'</span>').join('')+cus.map(f=>'<span class="fp-chip custom">'+fpEsc(f)+'</span>').join('')+'</div>';
+}
+function enterFocusEdit(){
+  const p=window._coachProfile||{};
+  fpSelected=(Array.isArray(p.focus_areas)?p.focus_areas:[]).slice(0,FP_CAP);
+  fpCustom=(Array.isArray(p.custom_focus_areas)?p.custom_focus_areas:[]).slice(0,FP_CAP_C);
+  const btn=document.getElementById("focusEditBtn"); if(btn)btn.style.display="none";
+  renderFocusEdit();
+}
+function renderFocusEdit(){
+  const body=document.getElementById("focusPanelBody"); if(!body)return;
+  const list=fpSportList();
+  const opts=list.length
+    ? list.map(a=>'<span class="fp-opt'+(fpSelected.indexOf(a)!==-1?' sel':'')+'" data-area="'+fpEsc(a)+'" onclick="fpToggle(this)">'+fpEsc(a)+'</span>').join('')
+    : '<div class="fp-empty" style="padding:0 0 8px;">Set your sport in Settings to choose focus areas.</div>';
+  const customChips=fpCustom.map((c,i)=>'<span class="fp-chip custom">'+fpEsc(c)+' <button onclick="fpRemoveCustom('+i+')" style="background:none;border:none;color:inherit;cursor:pointer;font-size:14px;line-height:1;padding:0;">&times;</button></span>').join('');
+  body.innerHTML='<div class="fp-edit">'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Pick up to '+FP_CAP+'</div>'
+    +'<div>'+opts+'</div>'
+    +(customChips?'<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;">'+customChips+'</div>':'')
+    +'<div class="fp-custom-row"><input class="fp-input" id="fpCustomInput" maxlength="40" placeholder="Custom focus (optional)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();fpAddCustom();}"/><button class="fp-btn ghost" onclick="fpAddCustom()">Add</button></div>'
+    +'<div style="display:flex;gap:8px;margin-top:12px;"><button class="fp-btn save" onclick="saveFocusPanel()">Save</button><button class="fp-btn ghost" onclick="cancelFocusEdit()">Cancel</button></div>'
+    +'</div>';
+}
+function fpToggle(el){const a=el.getAttribute("data-area");const i=fpSelected.indexOf(a);if(i!==-1){fpSelected.splice(i,1);el.classList.remove("sel");}else if(fpSelected.length<FP_CAP){fpSelected.push(a);el.classList.add("sel");}}
+function fpAddCustom(){const inp=document.getElementById("fpCustomInput");const v=(inp.value||"").trim();if(!v)return;if(fpCustom.length>=FP_CAP_C){alert("Up to "+FP_CAP_C+" custom focus areas.");return;}if(fpCustom.concat(fpSelected).some(x=>x.toLowerCase()===v.toLowerCase())){inp.value="";return;}fpCustom.push(v);renderFocusEdit();}
+function fpRemoveCustom(i){fpCustom.splice(i,1);renderFocusEdit();}
+function cancelFocusEdit(){renderFocusPanel();}
+async function saveFocusPanel(){
+  const {error}=await sb.from("profiles").update({focus_areas:fpSelected,custom_focus_areas:fpCustom}).eq("id",currentUser.id);
+  if(error){alert("Couldn't save focus areas: "+error.message);return;}
+  window._coachProfile.focus_areas=fpSelected.slice();
+  window._coachProfile.custom_focus_areas=fpCustom.slice();
+  renderFocusPanel();
+}
+
 let currentUser=null,currentThreadId=null,msgSub=null,acceptingAthletes=true;
 
 // Sport → [icon, accent hex] lookup used wherever a sport tag is rendered.
@@ -1088,6 +1160,7 @@ async function init(){
     document.getElementById("setBio").value=p.bio||"";
     if(p.accepting_athletes===false){acceptingAthletes=false;document.getElementById("acceptToggle").classList.remove("on");}
   }
+  renderFocusPanel();
   renderQueue();
   renderRecent();
   renderAthletes();
