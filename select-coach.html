@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="focus-areas.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -361,6 +362,34 @@ const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ca-auth",storage:window.localStorage,detectSessionInUrl:true}});
 
 let currentUser=null,selectedSkills=[],coaches=[],allCoaches=[],activeCoachId=null,athleteSport="Basketball";
+let athleteFocus=[];  // the athlete's improvement_focus (drives Best Match ranking)
+
+// ── MATCHING WEIGHTS (tunable) ──
+// score = focusMatches*focus + (spotlight?spotlight:0) + tierLevel*tier
+const MATCH_WEIGHTS = { focus: 10, spotlight: 5, tier: 1 };
+// Pre-launch we blend in mock coaches so the page looks full. Flip to true at
+// launch to show ONLY real coaches in the matched list.
+const SUPPRESS_DUMMY_COACHES = false;
+
+// "Level 3" -> 3; falls back to the dummy display tier (TOP/ELITE/PRO) then 1.
+function tierLevel(c){
+  const m=String(c.selected_tier||"").match(/(\d)/);
+  if(m) return parseInt(m[1],10);
+  if(c.tier==="TOP") return 4; if(c.tier==="ELITE") return 3; if(c.tier==="PRO") return 2;
+  return 1;
+}
+// Overlap between the athlete's improvement_focus and the coach's curated
+// focus_areas (case-insensitive; custom areas are intentionally excluded).
+function focusMatchCount(c){
+  if(!athleteFocus.length) return 0;
+  const cf=(c.focus_areas||[]).map(s=>String(s).toLowerCase());
+  return athleteFocus.filter(a=>cf.indexOf(String(a).toLowerCase())!==-1).length;
+}
+function scoreCoach(c){
+  const fm=focusMatchCount(c);
+  c._matchCount=fm;
+  return fm*MATCH_WEIGHTS.focus + (c.spotlight_active?MATCH_WEIGHTS.spotlight:0) + tierLevel(c)*MATCH_WEIGHTS.tier;
+}
 
 // Skills per sport (3 lines worth each)
 const SPORT_SKILLS={
@@ -421,8 +450,9 @@ async function init(){
   }
   if(!session){window.location.href="login.html";return;}
   currentUser=session.user;
-  const {data:p}=await sb.from("profiles").select("first_name,last_name,role,avatar_url,sport").eq("id",currentUser.id).maybeSingle();
+  const {data:p}=await sb.from("profiles").select("first_name,last_name,role,avatar_url,sport,improvement_focus").eq("id",currentUser.id).maybeSingle();
   if(p){
+    if(Array.isArray(p.improvement_focus)) athleteFocus=p.improvement_focus;
     const initials=(p.first_name?.[0]||"A")+(p.last_name?.[0]||"");
     document.getElementById("athleteAv").textContent=initials;
     document.getElementById("athleteName").textContent=((p.first_name||"")+" "+(p.last_name?.[0]||"")+".").trim()||"Athlete";
@@ -463,17 +493,21 @@ function clearSkills(){selectedSkills=[];renderSkills();applyFilters();}
 async function loadCoaches(){
   // Pull real coaches from Supabase
   const {data:realCoaches}=await sb.from("profiles")
-    .select("id,first_name,last_name,sport,location,bio,coaching_style,selected_tier,service_packages,avatar_url")
+    .select("id,first_name,last_name,sport,location,bio,coaching_style,selected_tier,service_packages,avatar_url,spotlight_active,focus_areas")
     .eq("role","coach");
   let list=[];
   if(realCoaches&&realCoaches.length){
     list=realCoaches.map((c,i)=>{
-      const specs=(c.coaching_style||"").split(",").map(s=>s.trim()).filter(Boolean).slice(0,4);
+      const focus=Array.isArray(c.focus_areas)?c.focus_areas:[];
+      // Card "specializes in" tags prefer real focus areas, fall back to coaching style.
+      const specs=(focus.length?focus:(c.coaching_style||"").split(",").map(s=>s.trim()).filter(Boolean)).slice(0,4);
       const dummy=DUMMY_COACHES[i%DUMMY_COACHES.length];
       return {
         id:c.id,first:c.first_name||"Coach",last:c.last_name||"",
         role:c.selected_tier||"Coach",
         selected_tier:c.selected_tier||"",
+        focus_areas:focus,
+        spotlight_active:!!c.spotlight_active,
         rating:dummy.rating,reviews:dummy.reviews,
         loc:c.location||"Australia",
         tier:dummy.tier,
@@ -486,8 +520,20 @@ async function loadCoaches(){
       };
     });
   }
-  // Always blend in dummy coaches so the page looks full
-  allCoaches=list.length?list.concat(DUMMY_COACHES):DUMMY_COACHES;
+  // Pre-launch: blend in mock coaches so the page looks full. They get
+  // focus_areas (from their specs) + a spotlight flag so matching demos
+  // realistically. SUPPRESS_DUMMY_COACHES hides them at launch.
+  if(!SUPPRESS_DUMMY_COACHES){
+    DUMMY_COACHES.forEach(d=>{
+      if(!d.focus_areas) d.focus_areas=d.specs||[];
+      if(d.spotlight_active===undefined) d.spotlight_active=!!d.featured; // featured dummy = "Spotlight"
+    });
+    allCoaches=list.length?list.concat(DUMMY_COACHES):DUMMY_COACHES;
+  }else{
+    allCoaches=list;
+  }
+  // Pre-compute the match score on every coach object (used by Best Match sort).
+  allCoaches.forEach(c=>{ c._score=scoreCoach(c); });
   applyFilters();
 }
 
@@ -510,7 +556,11 @@ function applyFilters(){
   });
   if(sortBy==="rating")filtered.sort((a,b)=>b.rating-a.rating);
   else if(sortBy==="reviews")filtered.sort((a,b)=>b.reviews-a.reviews);
-  else filtered.sort((a,b)=>(b.featured?1:0)-(a.featured?1:0));
+  else if(athleteFocus.length)filtered.sort((a,b)=>(b._score||0)-(a._score||0)); // Best Match
+  else filtered.sort((a,b)=>  // legacy fallback (no improvement_focus): spotlight, then tier
+    ((b.spotlight_active?1:0)-(a.spotlight_active?1:0))
+    || (tierLevel(b)-tierLevel(a))
+    || ((b.featured?1:0)-(a.featured?1:0)));
 
   coaches=filtered;
   document.getElementById("coachCount").textContent=coaches.length;
