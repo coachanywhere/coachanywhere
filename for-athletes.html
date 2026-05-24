@@ -117,6 +117,8 @@
     .coach-sport{font-size:12px;color:var(--muted);margin-bottom:9px;}
     .coach-level{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:rgba(37,99,235,.16);color:var(--blue2);border:1px solid rgba(59,130,246,.3);margin-bottom:10px;}
     .coach-tag{font-size:11px;color:rgba(226,232,240,.7);line-height:1.5;}
+    .coach-focus-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px;}
+    .coach-focus-chip{font-size:11px;font-weight:600;padding:4px 11px;border-radius:999px;background:rgba(37,99,235,.16);border:1px solid rgba(59,130,246,.34);color:#bfdbfe;}
     /* testimonial tiles — static grid (no carousel) */
     .tmn-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px;}
     .tmn-grid .tmn-tile{width:auto;cursor:default;}
@@ -479,19 +481,26 @@
   // PLACEHOLDER coaches — mock data for pre-launch; swap for real profiles later.
   (function(){
     const COACHES = [
-      { name:"Sarah K.",  sport:"Basketball", level:"Level 4", tag:"Former WNBL guard · U18 development",   initials:"SK", img:"https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop&crop=faces" },
-      { name:"Jack O.",   sport:"AFL",        level:"Level 4", tag:"AFLW assistant 2022–24",                initials:"JO", img:"https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces" },
-      { name:"Marco B.",  sport:"Soccer",     level:"Level 3", tag:"A-League academy · first touch",         initials:"MB", img:"https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop&crop=faces" },
-      { name:"Priya N.",  sport:"Tennis",     level:"Level 4", tag:"ITF-certified · serve & return",         initials:"PN", img:"https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=faces" },
-      { name:"Aryan P.",  sport:"Cricket",    level:"Level 3", tag:"Batting technique · 15+ years",          initials:"AP", img:"https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&h=200&fit=crop&crop=faces" },
-      { name:"Chloe M.",  sport:"Netball",    level:"Level 4", tag:"Ex-ANL defender · footwork & vision",    initials:"CM", img:"https://images.unsplash.com/photo-1499996860823-5214fcc65f8f?w=200&h=200&fit=crop&crop=faces" },
-      { name:"Ethan R.",  sport:"Rugby",      level:"Level 2", tag:"Junior development · contact skills",    initials:"ER", img:"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=faces" },
-      { name:"Hannah L.", sport:"Swimming",   level:"Level 4", tag:"National-pathway · stroke mechanics",    initials:"HL", img:"https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=faces" },
-      { name:"Dylan F.",  sport:"Athletics",  level:"Level 3", tag:"Sprint mechanics · state coach",         initials:"DF", img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces" },
-      { name:"Mia C.",    sport:"Hockey",     level:"Level 3", tag:"Drag-flick & penalty corners",           initials:"MC", img:"https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=200&h=200&fit=crop&crop=faces" }
+      // focus[] holds real dictionary focus areas so the mock mirrors live data;
+      // focus[0] shows on the tile, all show in the popup. Swap to real coaches later.
+      { name:"Sarah K.",  sport:"Basketball", level:"Level 4", focus:["Shooting","Court vision/IQ","U18 development"], initials:"SK", img:"https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Jack O.",   sport:"AFL",        level:"Level 4", focus:["Set shot","Kicking technique","Marking"],        initials:"JO", img:"https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Marco B.",  sport:"Soccer",     level:"Level 3", focus:["First touch","Passing range","Finishing"],       initials:"MB", img:"https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Priya N.",  sport:"Tennis",     level:"Level 4", focus:["Serve technique","Net play","Baseline rallying"],initials:"PN", img:"https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Aryan P.",  sport:"Cricket",    level:"Level 3", focus:["Batting technique","Game strategy"],             initials:"AP", img:"https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Chloe M.",  sport:"Netball",    level:"Level 4", focus:["Defence","Footwork","Passing & vision"],         initials:"CM", img:"https://images.unsplash.com/photo-1499996860823-5214fcc65f8f?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Ethan R.",  sport:"Rugby",      level:"Level 2", focus:["Tackling technique","Rucking & breakdown"],      initials:"ER", img:"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Hannah L.", sport:"Swimming",   level:"Level 4", focus:["Stroke technique","Starts & turns"],             initials:"HL", img:"https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Dylan F.",  sport:"Athletics",  level:"Level 3", focus:["Sprint mechanics","Race strategy"],              initials:"DF", img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Mia C.",    sport:"Hockey",     level:"Level 3", focus:["Drag-flick","Penalty corners","Stick skills"],  initials:"MC", img:"https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=200&h=200&fit=crop&crop=faces" }
     ];
+    // Tile shows the primary focus area; popup shows all of them.
     function inner(c){
-      return `${avatarHTML(c)}<div class="coach-name">${c.name}</div><div class="coach-sport">${c.sport}</div><div class="coach-level">${c.level}</div><div class="coach-tag">${c.tag}</div>`;
+      return `${avatarHTML(c)}<div class="coach-name">${c.name}</div><div class="coach-sport">${c.sport}</div><div class="coach-level">${c.level}</div><div class="coach-tag">${(c.focus&&c.focus[0])||""}</div>`;
+    }
+    function coachModal(c){
+      const chips=(c.focus||[]).map(f=>`<span class="coach-focus-chip">${f}</span>`).join("");
+      return `${avatarHTML(c)}<div class="coach-name">${c.name}</div><div class="coach-sport">${c.sport}</div><div class="coach-level">${c.level}</div><div class="coach-focus-chips">${chips}</div>`;
     }
     const track = document.getElementById("coachTrack");
     if(!track) return;
@@ -499,7 +508,7 @@
     track.innerHTML = tiles + tiles;  // duplicate for a seamless loop
     track.addEventListener("click", function(e){
       const t = e.target.closest(".coach-tile"); if(!t) return;
-      openShowModal(inner(COACHES[+t.dataset.idx]));
+      openShowModal(coachModal(COACHES[+t.dataset.idx]));
     });
   })();
 
