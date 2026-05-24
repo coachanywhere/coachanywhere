@@ -9,6 +9,7 @@
   <meta http-equiv="Expires" content="0"/>
   <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="focus-areas.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     :root{--amber:#fbbf24;--amber2:#d97706;--navy:#020617;--text:#e5e7eb;--muted:#94a3b8;--border:rgba(148,163,184,.18);--transition:160ms ease-out;}
@@ -61,6 +62,11 @@
     .style-check svg{width:10px;height:10px;color:#000;opacity:0;}
     .style-option.selected .style-check svg{opacity:1;}
     .style-limit{font-size:11px;color:rgba(148,163,184,.5);margin-top:8px;}
+    .focus-custom-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:rgba(37,99,235,.14);border:1px solid rgba(59,130,246,.34);color:#bfdbfe;font-size:12px;font-weight:600;}
+    .focus-custom-chip button{background:none;border:none;color:#93c5fd;cursor:pointer;font-size:15px;line-height:1;padding:0;font-family:inherit;}
+    .focus-custom-chip button:hover{color:#fff;}
+    .focus-add-btn{white-space:nowrap;padding:0 18px;border-radius:10px;border:1px solid rgba(59,130,246,.4);background:rgba(37,99,235,.16);color:#bfdbfe;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
+    .focus-add-btn:hover{background:rgba(37,99,235,.26);color:#fff;}
 
     /* AI TIER */
     .ai-run-btn{width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,rgba(109,40,217,.2),rgba(139,92,246,.1));border:1px solid rgba(167,139,250,.35);color:#c4b5fd;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all var(--transition);}
@@ -265,6 +271,26 @@
     <div class="form-group" style="margin-bottom:0;">
       <label class="form-label">Qualifications</label>
       <input class="form-input" type="text" id="qualifications" placeholder="e.g. Basketball Australia Level 2, NBL Academy Coach, Bachelor of Sports Science"/>
+    </div>
+  </div>
+
+  <!-- FOCUS AREAS -->
+  <div class="section-card">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      Focus areas
+      <span style="font-size:10px;color:rgba(148,163,184,.5);font-weight:400;text-transform:none;letter-spacing:0;">Up to 3 + 2 custom</span>
+    </div>
+    <p style="font-size:12px;color:rgba(148,163,184,.6);margin:-4px 0 12px;">What you specialise in. Athletes are matched to you on these — pick up to 3.</p>
+    <div class="style-grid" id="focusGrid"></div>
+    <div class="style-limit"><span id="focusCount">0</span>/3 selected</div>
+    <div class="form-group" style="margin-top:16px;margin-bottom:0;">
+      <label class="form-label">Add a custom focus area <span style="font-weight:400;color:rgba(148,163,184,.5);text-transform:none;">(optional, up to 2)</span></label>
+      <div style="display:flex;gap:8px;">
+        <input class="form-input" type="text" id="customFocusInput" placeholder="e.g. Left-foot kicking" maxlength="40" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomFocus();}"/>
+        <button type="button" class="focus-add-btn" onclick="addCustomFocus()">Add</button>
+      </div>
+      <div id="customFocusChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
     </div>
   </div>
 
@@ -503,12 +529,22 @@
       if(profile.coaching_style){
         selectedStyles=profile.coaching_style.split(",").map(s=>s.trim()).filter(Boolean).slice(0,5);
       }
+      // Pre-select existing focus areas (text[] columns come back as JS arrays)
+      if(Array.isArray(profile.focus_areas)) selectedFocus=profile.focus_areas.slice(0,CAP_FOCUS);
+      if(Array.isArray(profile.custom_focus_areas)) customFocus=profile.custom_focus_areas.slice(0,CAP_CUSTOM);
       if(profile.avatar_url){
         const prev=document.getElementById("photoPreview");
         if(prev){prev.src=profile.avatar_url;prev.style.display="block";}
       }
     }
     renderStyles();
+    renderFocus();
+    // Re-render focus options when the sport changes; drop any picks not in the new sport's list.
+    document.getElementById("sport").addEventListener("change",function(){
+      const list=currentFocusList();
+      selectedFocus=selectedFocus.filter(a=>list.includes(a));
+      renderFocus();
+    });
     document.getElementById("bio").addEventListener("input",function(){document.getElementById("bioCount").textContent=this.value.length;});
   }
 
@@ -530,6 +566,51 @@
     if(el.classList.contains("selected")){el.classList.remove("selected");selectedStyles=selectedStyles.filter(x=>x!==s);}
     else if(selectedStyles.length<5){el.classList.add("selected");selectedStyles.push(s);}
     document.getElementById("styleCount").textContent=selectedStyles.length;
+  }
+
+  // ── FOCUS AREAS ── (curated picks capped at FOCUS_LIMITS.coachCurated + up to .coachCustom customs)
+  let selectedFocus=[]; let customFocus=[];
+  const CAP_FOCUS  = (window.FOCUS_LIMITS && FOCUS_LIMITS.coachCurated) || 3;
+  const CAP_CUSTOM = (window.FOCUS_LIMITS && FOCUS_LIMITS.coachCustom)  || 2;
+  function escFocus(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+  function currentFocusList(){return window.focusAreasForSport?focusAreasForSport(document.getElementById("sport").value):[];}
+  function renderFocus(){
+    const grid=document.getElementById("focusGrid");
+    if(!grid)return;
+    const list=currentFocusList();
+    if(!list.length){
+      grid.innerHTML=`<div style="font-size:13px;color:rgba(148,163,184,.6);">Select your sport above to choose focus areas.</div>`;
+    }else{
+      grid.innerHTML=list.map(a=>{
+        const sel=selectedFocus.includes(a)?" selected":"";
+        return `<div class="style-option${sel}" data-area="${escFocus(a)}" onclick="toggleFocus(this)">
+          <div class="style-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          ${escFocus(a)}
+        </div>`;
+      }).join("");
+    }
+    document.getElementById("focusCount").textContent=selectedFocus.length;
+    renderCustomFocus();
+  }
+  function toggleFocus(el){
+    const a=el.getAttribute("data-area");
+    if(el.classList.contains("selected")){el.classList.remove("selected");selectedFocus=selectedFocus.filter(x=>x!==a);}
+    else if(selectedFocus.length<CAP_FOCUS){el.classList.add("selected");selectedFocus.push(a);}
+    document.getElementById("focusCount").textContent=selectedFocus.length;
+  }
+  function addCustomFocus(){
+    const inp=document.getElementById("customFocusInput");
+    const v=(inp.value||"").trim();
+    if(!v)return;
+    if(customFocus.length>=CAP_CUSTOM){alert("You can add up to "+CAP_CUSTOM+" custom focus areas.");return;}
+    if(customFocus.some(x=>x.toLowerCase()===v.toLowerCase())||selectedFocus.some(x=>x.toLowerCase()===v.toLowerCase())){inp.value="";return;}
+    customFocus.push(v); inp.value=""; renderCustomFocus();
+  }
+  function removeCustomFocus(i){customFocus.splice(i,1);renderCustomFocus();}
+  function renderCustomFocus(){
+    const wrap=document.getElementById("customFocusChips");
+    if(!wrap)return;
+    wrap.innerHTML=customFocus.map((c,i)=>`<span class="focus-custom-chip">${escFocus(c)}<button type="button" onclick="removeCustomFocus(${i})" aria-label="Remove">&times;</button></span>`).join("");
   }
 
   // ── PHOTO ──
@@ -818,6 +899,8 @@
       first_name:firstName,last_name:lastName,sport,location,
       bio,qualifications:qual,
       coaching_style:selectedStyles.join(", "),
+      focus_areas:selectedFocus,
+      custom_focus_areas:customFocus,
       selected_tier:selectedTier.id,
       billing_cycle:selectedBilling,
       service_packages:selectedPackages.join(", "),
@@ -888,6 +971,8 @@
       bio:        document.getElementById("bio").value.trim() || null,
       qualifications: document.getElementById("qualifications").value.trim() || null,
       coaching_style: selectedStyles.length ? selectedStyles.join(", ") : null,
+      focus_areas: selectedFocus.length ? selectedFocus : null,
+      custom_focus_areas: customFocus.length ? customFocus : null,
       role: "coach"
     };
     if(photoUrl) partial.avatar_url = photoUrl;
