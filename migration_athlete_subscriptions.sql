@@ -33,11 +33,14 @@ UPDATE public.profiles
    AND selected_tier ~ '[1-4]';
 
 -- ── 2. New athlete bundle subscriptions table ───────────────────────
+-- athlete_id / coach_id use ON DELETE SET NULL (and are therefore nullable) so a
+-- subscription row SURVIVES profile deletion for audit + refund tracking — the
+-- financial record stays, just orphaned from the deleted profile.
 CREATE TABLE IF NOT EXISTS public.athlete_subscriptions (
   id                     uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at             timestamptz NOT NULL DEFAULT now(),
-  athlete_id             uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  coach_id               uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  athlete_id             uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  coach_id               uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
   bundle_type            text NOT NULL CHECK (bundle_type IN ('starter','standard','pro')),
   monthly_price          numeric NOT NULL,            -- snapshot at signup (AUD)
   stripe_subscription_id text,
