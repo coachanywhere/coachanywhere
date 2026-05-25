@@ -117,6 +117,46 @@ exports.handler = async (event) => {
         break;
       }
 
+      if (type === "bundle" && athleteId && coachId) {
+        // Athlete subscribed to a coach's monthly bundle. Write the
+        // athlete_subscriptions row + link athlete_coaches. (mode:subscription,
+        // so session.subscription is set — fetch it for the period dates.)
+        const bundleType   = session.metadata?.bundle_type || null;
+        const monthlyPrice = session.metadata?.monthly_price ? Number(session.metadata.monthly_price) : null;
+        let periodStart = null, periodEnd = null;
+        try {
+          if (session.subscription) {
+            const sub = await stripe.subscriptions.retrieve(session.subscription);
+            if (sub.current_period_start) periodStart = new Date(sub.current_period_start * 1000).toISOString();
+            if (sub.current_period_end)   periodEnd   = new Date(sub.current_period_end * 1000).toISOString();
+          }
+        } catch (e) { console.error("bundle sub retrieve failed:", e?.message || e); }
+
+        const row = {
+          athlete_id: athleteId,
+          coach_id: coachId,
+          bundle_type: bundleType,
+          monthly_price: monthlyPrice,
+          stripe_subscription_id: session.subscription || null,
+          status: "active",
+          current_period_start: periodStart,
+          current_period_end: periodEnd
+        };
+        if (row.stripe_subscription_id) {
+          const { data: existing } = await supabase.from("athlete_subscriptions")
+            .select("id").eq("stripe_subscription_id", row.stripe_subscription_id).maybeSingle();
+          if (existing) await supabase.from("athlete_subscriptions").update(row).eq("id", existing.id);
+          else          await supabase.from("athlete_subscriptions").insert(row);
+        } else {
+          await supabase.from("athlete_subscriptions").insert(row);
+        }
+        await supabase.from("athlete_coaches")
+          .upsert({ athlete_id: athleteId, coach_id: coachId }, { onConflict: "athlete_id,coach_id" });
+        console.log("Athlete bundle subscription activated:",
+          { athleteId, coachId, bundleType, subscription: session.subscription });
+        break;
+      }
+
       break;
     }
 
@@ -172,6 +212,21 @@ exports.handler = async (event) => {
           .update({ status: "active", updated_at: new Date().toISOString() })
           .eq("stripe_subscription_id", subscriptionId);
         console.log("Athlete package renewed for subscription:", subscriptionId);
+      }
+
+      // Athlete BUNDLE subscription renewal — flip active + refresh period dates.
+      const { data: bundleSubs } = await supabase
+        .from("athlete_subscriptions")
+        .select("id")
+        .eq("stripe_subscription_id", subscriptionId);
+      if (bundleSubs && bundleSubs.length) {
+        const patch = { status: "active" };
+        const period = session.lines?.data?.[0]?.period;
+        if (period?.start) patch.current_period_start = new Date(period.start * 1000).toISOString();
+        if (period?.end)   patch.current_period_end   = new Date(period.end * 1000).toISOString();
+        await supabase.from("athlete_subscriptions")
+          .update(patch).eq("stripe_subscription_id", subscriptionId);
+        console.log("Athlete bundle renewed for subscription:", subscriptionId);
       }
       break;
     }
@@ -229,6 +284,19 @@ exports.handler = async (event) => {
           .eq("stripe_subscription_id", subscriptionId);
         console.log("Athlete package cancelled for subscription:", subscriptionId);
       }
+
+      // Athlete BUNDLE subscription cancellation — flip status + stamp.
+      const { data: bundleSubs } = await supabase
+        .from("athlete_subscriptions")
+        .select("id, cancelled_at")
+        .eq("stripe_subscription_id", subscriptionId);
+      if (bundleSubs && bundleSubs.length) {
+        const patch = { status: "cancelled" };
+        if (!bundleSubs[0].cancelled_at) patch.cancelled_at = new Date().toISOString();
+        await supabase.from("athlete_subscriptions")
+          .update(patch).eq("stripe_subscription_id", subscriptionId);
+        console.log("Athlete bundle cancelled for subscription:", subscriptionId);
+      }
       break;
     }
 
@@ -271,6 +339,17 @@ exports.handler = async (event) => {
           .update({ status: "past_due", updated_at: new Date().toISOString() })
           .eq("stripe_subscription_id", subscriptionId);
         console.log("Athlete package marked past_due for subscription:", subscriptionId);
+      }
+
+      // Athlete BUNDLE subscription payment failure — mark past_due.
+      const { data: bundleSubs } = await supabase
+        .from("athlete_subscriptions")
+        .select("id")
+        .eq("stripe_subscription_id", subscriptionId);
+      if (bundleSubs && bundleSubs.length) {
+        await supabase.from("athlete_subscriptions")
+          .update({ status: "past_due" }).eq("stripe_subscription_id", subscriptionId);
+        console.log("Athlete bundle marked past_due for subscription:", subscriptionId);
       }
       console.log("Payment failed processed for subscription:", subscriptionId);
       break;
