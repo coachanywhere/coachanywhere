@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="focus-areas.js"></script>
+<script src="bundles.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -140,6 +141,22 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
 .fp-btn{padding:9px 14px;border-radius:9px;border:none;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;}
 .fp-btn.save{background:var(--amber3);color:#1a1205;}
 .fp-btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+/* My Packages panel */
+.pkg-rate{padding:12px 16px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);}
+.pkg-rate strong{color:var(--text);}
+.pkg{padding:14px 16px;border-bottom:1px solid var(--border);}
+.pkg:last-child{border-bottom:none;}
+.pkg-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.pkg-name{font-size:14px;font-weight:800;color:var(--text);}
+.pkg-sum{font-size:11px;color:var(--muted);margin-top:2px;}
+.pkg-price{font-size:15px;font-weight:800;color:var(--amber3);}
+.pkg-price small{font-size:11px;color:var(--muted);font-weight:600;}
+.pkg-toggle{margin-top:6px;font-size:11px;font-weight:700;padding:5px 11px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;}
+.pkg-toggle.on{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac;}
+.pkg-contents{list-style:none;margin:8px 0 0;padding:0;}
+.pkg-contents li{font-size:11px;color:rgba(226,232,240,.7);padding:2px 0 2px 14px;position:relative;}
+.pkg-contents li::before{content:"·";position:absolute;left:3px;color:var(--amber3);font-weight:800;}
+.pkg.pkg-inactive{opacity:.5;}
 
 /* ── REVIEW QUEUE TABLE ── */
 .queue-table{width:100%;border-collapse:collapse;}
@@ -577,6 +594,14 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
               <button class="panel-link" id="focusEditBtn" onclick="enterFocusEdit()">Edit <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
             </div>
             <div id="focusPanelBody"></div>
+          </div>
+
+          <!-- MY PACKAGES -->
+          <div class="panel">
+            <div class="panel-hdr">
+              <div class="panel-title">My Packages</div>
+            </div>
+            <div id="packagesBody"></div>
           </div>
 
           <!-- PERFORMANCE OVERVIEW -->
@@ -1111,6 +1136,46 @@ async function saveFocusPanel(){
   renderFocusPanel();
 }
 
+// ── MY PACKAGES PANEL (read-only pricing; coach toggles which bundles to offer) ──
+function renderPackagesPanel(){
+  const body=document.getElementById("packagesBody"); if(!body||!window.BUNDLES) return;
+  const p=window._coachProfile||{};
+  const rate=tierHourlyRate(p);
+  const active=Array.isArray(p.bundles_active)?p.bundles_active.slice():BUNDLE_ORDER.slice();
+  if(!rate){
+    body.innerHTML='<div class="fp-empty">Your hourly rate isn’t set yet — finish tier setup to see your package prices.</div>';
+    return;
+  }
+  let html='<div class="pkg-rate">'+tierShort(p.selected_tier)+' · <strong>$'+rate+'/hr</strong> · prices set by your tier</div>';
+  BUNDLE_ORDER.forEach(k=>{
+    const b=BUNDLES[k]; const on=active.indexOf(k)!==-1;
+    html+='<div class="pkg'+(on?'':' pkg-inactive')+'">'
+      +'<div class="pkg-top">'
+        +'<div><div class="pkg-name">'+b.name+'</div><div class="pkg-sum">'+b.summary+'</div></div>'
+        +'<div style="text-align:right;flex-shrink:0;"><div class="pkg-price">$'+b.price(rate)+'<small>/mo</small></div>'
+        +'<button class="pkg-toggle'+(on?' on':'')+'" onclick="togglePackage(\''+k+'\')">'+(on?'Active':'Inactive')+'</button></div>'
+      +'</div>'
+      +'<ul class="pkg-contents">'+b.contents.map(c=>'<li>'+c+'</li>').join('')+'</ul>'
+    +'</div>';
+  });
+  body.innerHTML=html;
+}
+async function togglePackage(k){
+  const p=window._coachProfile||{};
+  let active=Array.isArray(p.bundles_active)?p.bundles_active.slice():BUNDLE_ORDER.slice();
+  if(active.indexOf(k)!==-1){
+    if(active.length<=1){alert("You must offer at least one package.");return;}
+    active=active.filter(x=>x!==k);
+  }else{
+    active.push(k);
+    active=BUNDLE_ORDER.filter(x=>active.indexOf(x)!==-1); // keep canonical order
+  }
+  const {error}=await sb.from("profiles").update({bundles_active:active}).eq("id",currentUser.id);
+  if(error){alert("Couldn't update packages: "+error.message);return;}
+  window._coachProfile.bundles_active=active;
+  renderPackagesPanel();
+}
+
 let currentUser=null,currentThreadId=null,msgSub=null,acceptingAthletes=true;
 
 // Sport → [icon, accent hex] lookup used wherever a sport tag is rendered.
@@ -1161,6 +1226,7 @@ async function init(){
     if(p.accepting_athletes===false){acceptingAthletes=false;document.getElementById("acceptToggle").classList.remove("on");}
   }
   renderFocusPanel();
+  renderPackagesPanel();
   renderQueue();
   renderRecent();
   renderAthletes();
