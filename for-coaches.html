@@ -4,115 +4,142 @@
   <meta charset="UTF-8"/>
   <title>For Coaches — CoachAnywhere</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="description" content="Build a remote coaching business on CoachAnywhere. Athletes who want elite coaching find you, you set your own packages, and you keep 80% of every sale."/>
+  <meta name="description" content="Run a remote coaching business on CoachAnywhere. Set your packages, review athlete footage with pro tools from anywhere, and keep 80% of every package."/>
   <meta name="theme-color" content="#0A1C4A"/>
   <meta property="og:type" content="website"/>
   <meta property="og:title" content="For Coaches — CoachAnywhere"/>
-  <meta property="og:description" content="Reach athletes across Australia, set your own prices, keep 80%. Join the founding cohort."/>
+  <meta property="og:description" content="Coach the world from wherever you are. Your athletes, your packages, your schedule. Join the founding cohort."/>
   <meta property="og:image" content="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
   <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     :root{
-      --bg:#020617;--bg2:#020B24;--bg3:#1a0f00;
+      --bg:#020617;--bg2:#020B24;--bg3:#0A1C4A;
       --card:rgba(15,23,42,.7);--border:rgba(148,163,184,.18);--border2:rgba(148,163,184,.32);
       --text:#e5e7eb;--muted:#94a3b8;--muted2:#64748b;
-      --blue:#2563eb;--blue2:#60a5fa;--amber:#fbbf24;--amber2:#d97706;--amber3:#f59e0b;--green:#22c55e;--green2:#86efac;
+      --blue:#2563eb;--blue2:#60a5fa;--amber:#fbbf24;--amber2:#d97706;--green:#22c55e;
       --tr:160ms ease-out;
     }
-    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 0%,var(--bg3) 0%,var(--bg2) 55%,var(--bg) 100%);color:var(--text);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:radial-gradient(circle at 20% 0%,var(--bg3) 0%,var(--bg2) 60%,var(--bg) 100%);color:var(--text);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;}
     a{color:inherit;text-decoration:none;}
     button{font-family:inherit;cursor:pointer;}
     .container{max-width:980px;margin:0 auto;padding:0 22px;}
 
-    /* NAV (shared) */
+    /* NAV (shared pattern across marketing pages) */
     header{position:sticky;top:0;z-index:30;backdrop-filter:blur(18px);background:linear-gradient(to bottom,rgba(3,7,18,.96),rgba(3,7,18,.86));border-bottom:1px solid rgba(180,83,9,.35);}
     .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;max-width:1080px;margin:0 auto;gap:18px;}
     .nav-wordmark{font-size:17px;font-weight:800;letter-spacing:.05em;color:#fff;text-transform:uppercase;flex-shrink:0;}
     .nav-wordmark span{color:var(--blue2);}
-    .nav-links{display:flex;align-items:center;gap:22px;}
-    .nav-links a{font-size:14px;color:var(--muted);transition:color var(--tr);white-space:nowrap;}
-    .nav-links a:hover{color:#fff;}
-    .nav-links a.athlete{color:var(--blue2);font-weight:700;}
-    .nav-links a.coach{color:var(--amber);font-weight:700;}
-    .nav-links a.mentor{color:#a78bfa;font-weight:700;}
-    .nav-links a.locker{color:#fca5a5;font-weight:700;}
-    .nav-cta{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+    .nav-spacer{flex:1 1 auto;}
     .nav-signin{font-size:14px;color:var(--muted);}
     .nav-signin:hover{color:#fff;}
-    .nav-wl-btn{padding:9px 16px;border-radius:999px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:#fff;font-weight:700;font-size:13px;border:none;box-shadow:0 8px 22px rgba(180,83,9,.35);}
+    .nav-wl-btn{padding:9px 16px;border-radius:999px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:#1a1205;font-weight:700;font-size:13px;border:none;box-shadow:0 8px 22px rgba(180,83,9,.35);}
 
     .hero{text-align:center;padding:64px 0 44px;}
-    .eyebrow{display:inline-block;padding:5px 13px;border-radius:999px;background:rgba(234,179,8,.12);border:1px solid rgba(251,191,36,.34);font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.16em;margin-bottom:18px;}
-    .hero h1{font-size:clamp(30px,6vw,46px);font-weight:800;color:#f9fafb;letter-spacing:-.025em;line-height:1.1;margin-bottom:16px;max-width:680px;margin-left:auto;margin-right:auto;}
-    .hero h1 .grad{background:linear-gradient(120deg,#fbbf24,#60a5fa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
-    .hero-sub{font-size:17px;color:rgba(226,232,240,.74);max-width:520px;margin:0 auto;}
+    /* Sized so the headline holds one line within the container at desktop. */
+    .hero h1{font-size:clamp(28px,4.2vw,40px);font-weight:800;color:#f9fafb;letter-spacing:-.025em;line-height:1.12;margin-bottom:16px;max-width:900px;margin-left:auto;margin-right:auto;}
+    .hero h1 .hl-amber{color:var(--amber);}
+    /* Wider max-width keeps this longer subheading on one line at desktop; wraps on mobile. */
+    .hero-sub{font-size:17px;color:rgba(226,232,240,.74);max-width:800px;margin:0 auto;}
 
     section.block{padding:46px 0;border-top:1px solid var(--border);}
-    .block-label{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:18px;}
+    .block-label{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:18px;}
     .block h2{font-size:26px;font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:14px;}
-    .block p.lead{font-size:16px;color:rgba(226,232,240,.78);max-width:620px;line-height:1.7;}
+    .block p.lead{font-size:16px;color:rgba(226,232,240,.78);max-width:640px;line-height:1.7;}
 
-    /* WHAT YOU GET — bullets */
-    .gets{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
-    .get{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:rgba(226,232,240,.85);line-height:1.55;}
-    .get svg{width:18px;height:18px;color:var(--amber);flex-shrink:0;margin-top:3px;}
+    /* HOW IT WORKS — 3 journey tiles (amber treatment, mirrors for-athletes). */
+    .entry-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px;}
+    .entry-card{text-align:left;border-radius:16px;padding:20px 20px;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden;backdrop-filter:blur(10px);background:rgba(18,12,0,.85);border:1px solid rgba(251,191,36,.2);transition:transform var(--tr),border-color var(--tr),background var(--tr),box-shadow var(--tr);}
+    .entry-card .bar{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#fbbf24,transparent);}
+    .entry-card:hover{border-color:rgba(251,191,36,.5);background:rgba(24,15,0,.9);transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.45);}
+    .entry-head{display:flex;align-items:center;gap:11px;}
+    .entry-ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(234,179,8,.14);color:var(--amber);position:relative;}
+    .entry-ic svg{width:20px;height:20px;}
+    .entry-num{position:absolute;top:-6px;right:-6px;font-size:9px;font-weight:800;letter-spacing:.04em;color:var(--amber);background:rgba(18,12,0,.95);border:1px solid rgba(251,191,36,.4);border-radius:6px;padding:1px 4px;}
+    .entry-label{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--amber);}
+    .entry-desc{font-size:14px;color:rgba(226,232,240,.78);line-height:1.55;}
+    @media(max-width:720px){.entry-cards{grid-template-columns:1fr;}}
 
-    /* STEPS */
-    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px;}
-    .step{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 20px;}
-    .step-num{width:30px;height:30px;border-radius:9px;background:rgba(234,179,8,.16);color:var(--amber);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
-    .step-title{font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:5px;}
-    .step-desc{font-size:13px;color:rgba(226,232,240,.7);line-height:1.55;}
-    @media(max-width:720px){.steps{grid-template-columns:1fr;}}
+    /* HOW IT WORKS — animated amber glow cycling tile 1 -> 2 -> 3 (CSS-only). */
+    .flow{display:flex;align-items:stretch;justify-content:center;gap:0;margin-top:8px;}
+    .flow .entry-card{flex:1 1 0;min-width:0;animation:tileGlow 3.6s ease-in-out infinite;}
+    .flow .entry-card.s1{animation-delay:0s;}
+    .flow .entry-card.s2{animation-delay:1.2s;}
+    .flow .entry-card.s3{animation-delay:2.4s;}
+    .flow-arrow{display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0 8px;color:var(--amber);}
+    .flow-arrow svg{width:22px;height:22px;animation:arrowPulse 3.6s ease-in-out infinite;}
+    @keyframes tileGlow{0%,15%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0);border-color:rgba(251,191,36,.2);}40%{box-shadow:0 0 26px 2px rgba(251,191,36,.5);border-color:rgba(251,191,36,.75);}}
+    @keyframes arrowPulse{0%,100%{opacity:.4;transform:translateX(0);}50%{opacity:.95;transform:translateX(3px);}}
+    @media(prefers-reduced-motion:reduce){.flow .entry-card,.flow-arrow svg{animation:none;}}
+    @media(max-width:720px){.flow{flex-direction:column;}.flow-arrow{padding:6px 0;transform:rotate(90deg);}}
 
-    /* WHAT YOU KEEP */
-    .keep-card{background:linear-gradient(135deg,rgba(234,179,8,.1),rgba(15,23,42,.5));border:1px solid rgba(251,191,36,.25);border-radius:16px;padding:26px;text-align:center;}
-    .keep-split{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;}
-    .keep-big{font-size:48px;font-weight:800;color:var(--amber);letter-spacing:-.02em;line-height:1;}
-    .keep-small{font-size:15px;color:var(--muted);}
-    .keep-sub{font-size:14px;color:rgba(226,232,240,.78);max-width:440px;margin:0 auto;}
+    /* PRICING */
+    .price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:8px;}
+    .price-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 16px;transition:border-color var(--tr);}
+    .price-card:hover{border-color:rgba(251,191,36,.4);}
+    .price-card .pname{font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:4px;}
+    .price-card .pamt{font-size:24px;font-weight:800;color:var(--amber);margin-bottom:6px;}
+    .price-card .pamt small{font-size:12px;font-weight:600;color:var(--muted);}
+    .price-card .pdesc{font-size:11px;color:var(--muted);line-height:1.5;}
+    .keep-note{margin-top:16px;padding:14px 16px;border-radius:12px;background:rgba(234,179,8,.08);border:1px solid rgba(251,191,36,.28);font-size:13px;color:#fcd34d;line-height:1.6;}
 
-    /* TIERS */
-    .tiers{display:flex;flex-direction:column;gap:10px;margin-top:8px;}
-    .tier{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:13px;padding:16px 18px;}
-    .tier-badge{font-size:11px;font-weight:800;padding:5px 10px;border-radius:7px;background:rgba(234,179,8,.13);color:var(--amber);border:1px solid rgba(251,191,36,.3);white-space:nowrap;}
-    .tier-name{font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:2px;}
-    .tier-desc{font-size:12px;color:var(--muted);line-height:1.45;}
-    .tier-price{font-size:16px;font-weight:800;color:#f1f5f9;white-space:nowrap;}
-    .tier-price span{font-size:11px;color:var(--muted);font-weight:500;}
-    @media(max-width:560px){.tier{grid-template-columns:auto 1fr;}.tier-price{grid-column:2;text-align:right;}}
+    /* SHOWCASE CAROUSEL (athletes) — CSS marquee, pause on hover (reused). */
+    .showcase-lead{text-align:center;font-size:clamp(17px,2.4vw,21px);font-weight:600;color:#e2e8f0;max-width:660px;margin:0 auto 28px;line-height:1.5;}
+    .carousel{position:relative;overflow:hidden;-webkit-mask-image:linear-gradient(to right,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(to right,transparent,#000 7%,#000 93%,transparent);}
+    .carousel-track{display:flex;gap:14px;width:max-content;padding:8px 0;}
+    .carousel-track.scroll{animation:scrollX var(--dur,60s) linear infinite;}
+    .carousel:hover .carousel-track{animation-play-state:paused;}
+    @keyframes scrollX{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+    @media(prefers-reduced-motion:reduce){.carousel-track.scroll{animation:none;}}
+    /* athlete tile — width matched to the price tiles (~184px) */
+    .coach-tile{width:184px;flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 16px;text-align:center;cursor:pointer;transition:transform var(--tr),border-color var(--tr),box-shadow var(--tr);}
+    .coach-tile:hover{transform:translateY(-4px);border-color:rgba(251,191,36,.55);box-shadow:0 16px 40px rgba(0,0,0,.45);}
+    .av-wrap{position:relative;width:64px;height:64px;margin:0 auto 12px;}
+    .av-wrap img{width:100%;height:100%;border-radius:50%;object-fit:cover;border:2px solid rgba(251,191,36,.4);display:block;}
+    .av-fallback{display:none;width:64px;height:64px;border-radius:50%;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fcd34d;background:linear-gradient(135deg,#3a2e0d,#1a1400);border:2px solid rgba(251,191,36,.4);}
+    .coach-name{font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:2px;}
+    .coach-sport{font-size:12px;color:var(--muted);margin-bottom:9px;}
+    .coach-level{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:rgba(234,179,8,.16);color:var(--amber);border:1px solid rgba(251,191,36,.3);margin-bottom:10px;}
+    .coach-tag{font-size:11px;color:rgba(226,232,240,.7);line-height:1.5;}
+    /* testimonial tiles — static grid (no carousel), reused from for-athletes */
+    .tmn-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px;}
+    .tmn-grid .tmn-tile{width:auto;cursor:default;}
+    @media(max-width:720px){.tmn-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:480px){.tmn-grid{grid-template-columns:1fr;}}
+    .tmn-tile{width:300px;flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;}
+    .tmn-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .tmn-head .av-wrap{width:40px;height:40px;margin:0;}
+    .tmn-head .av-fallback{width:40px;height:40px;font-size:13px;}
+    .tmn-meta{font-size:13px;font-weight:700;color:#f1f5f9;line-height:1.3;}
+    .tmn-quote{font-size:14px;color:rgba(226,232,240,.85);line-height:1.6;font-style:italic;}
+    /* showcase popup modal (reused) */
+    .show-modal{display:none;position:fixed;inset:0;background:rgba(2,6,23,.8);backdrop-filter:blur(8px);z-index:320;align-items:center;justify-content:center;padding:20px;}
+    .show-modal.open{display:flex;}
+    .show-modal-card{width:100%;max-width:380px;background:linear-gradient(145deg,rgba(15,23,42,.98),rgba(9,14,35,.99));border:1px solid var(--border2);border-radius:20px;padding:36px 30px;text-align:center;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.6);}
+    .show-modal-close{position:absolute;top:12px;right:14px;background:none;border:none;color:#94a3b8;font-size:28px;line-height:1;cursor:pointer;}
+    .show-modal-card .av-wrap{width:104px;height:104px;margin:0 auto 18px;}
+    .show-modal-card .av-fallback{width:104px;height:104px;font-size:30px;}
+    .show-modal-card .coach-name{font-size:20px;}
+    .show-modal-card .coach-sport{font-size:14px;}
+    .show-modal-card .coach-tag{font-size:13px;margin-top:6px;}
 
-    /* TESTIMONIAL */
-    .quote{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;max-width:560px;}
-    .quote-text{font-size:15px;color:#f1f5f9;line-height:1.6;margin-bottom:10px;}
-    .quote-cite{font-size:12px;color:var(--muted);}
-
-    /* FAQ */
-    .faq-item{border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;background:var(--card);}
-    .faq-q{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;background:none;border:none;color:#f1f5f9;font-size:15px;font-weight:600;text-align:left;font-family:inherit;}
-    .faq-q svg{width:18px;height:18px;color:var(--muted);flex-shrink:0;transition:transform var(--tr);}
-    .faq-q.open svg{transform:rotate(180deg);}
-    .faq-a{max-height:0;overflow:hidden;transition:max-height var(--tr);}
-    .faq-a p{padding:0 18px 16px;font-size:14px;color:rgba(226,232,240,.72);line-height:1.65;}
-
+    /* FINAL CTA */
     .final-cta{text-align:center;padding:56px 0;border-top:1px solid var(--border);}
     .final-cta h2{font-size:clamp(24px,4vw,32px);font-weight:800;color:#f9fafb;letter-spacing:-.02em;margin-bottom:10px;}
     .final-cta p{font-size:15px;color:var(--muted);margin-bottom:24px;}
-    .cta-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:16px 32px;border-radius:999px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:#fff;font-weight:700;font-size:16px;box-shadow:0 14px 38px rgba(180,83,9,.42);transition:transform var(--tr);}
+    .cta-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:16px 32px;border-radius:999px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:#1a1205;font-weight:700;font-size:16px;box-shadow:0 14px 38px rgba(180,83,9,.42);transition:transform var(--tr);}
     .cta-btn:hover{transform:translateY(-2px);}
     .cta-btn svg{width:17px;height:17px;}
 
     footer{border-top:1px solid var(--border);padding:26px 0 40px;text-align:center;}
     .foot-text{font-size:12px;color:var(--muted2);line-height:1.7;}
-    .foot-text a{color:var(--blue2);}
+    .foot-text a{color:var(--amber);}
     #lockerSoonModal{display:none;position:fixed;inset:0;background:rgba(2,6,23,.78);backdrop-filter:blur(10px);z-index:300;align-items:center;justify-content:center;padding:20px;}
 
-    /* SLIDE-OUT MENU */
+    /* SLIDE-OUT MENU (shared) */
     .hamburger{display:inline-flex;align-items:center;justify-content:center;background:none;border:none;color:#fff;padding:6px;cursor:pointer;border-radius:8px;transition:background var(--tr);flex-shrink:0;}
     .hamburger:hover{background:rgba(148,163,184,.14);}
     .hamburger svg{width:24px;height:24px;}
-    .nav-spacer{flex:1 1 auto;}
     .drawer-backdrop{position:fixed;inset:0;background:rgba(2,6,23,.62);backdrop-filter:blur(2px);opacity:0;visibility:hidden;transition:opacity 260ms ease;z-index:200;}
     .drawer-backdrop.open{opacity:1;visibility:visible;}
     .drawer{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:84vw;background:linear-gradient(160deg,#0b1430,#070d22);border-right:1px solid rgba(148,163,184,.18);transform:translateX(-100%);transition:transform 280ms cubic-bezier(.4,0,.2,1);z-index:210;display:flex;flex-direction:column;box-shadow:0 0 60px rgba(0,0,0,.55);}
@@ -172,9 +199,8 @@
 <!-- HERO -->
 <section class="hero">
   <div class="container">
-    <div class="eyebrow">For Coaches</div>
-    <h1>[HEADLINE: outcome-led, answers "How do I earn/build?" — e.g. "Turn your coaching into a <span class="grad">business</span> — on your schedule."]</h1>
-    <p class="hero-sub">[SUBHEADING: one sentence — reach athletes across Australia, set your own packages, keep most of what you earn.]</p>
+    <h1>Coach the world. <span class="hl-amber">From wherever you are.</span></h1>
+    <p class="hero-sub">Run a remote coaching business that fits your life — your athletes, your packages, your schedule.</p>
   </div>
 </section>
 
@@ -182,115 +208,107 @@
 <section class="block">
   <div class="container">
     <div class="block-label">What you get</div>
-    <div class="gets">
-      <div class="get"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Athletes who actively want elite coaching — matched to you by sport and level.</span></div>
-      <div class="get"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Full control over your packages and pricing — you decide what you offer and what it's worth.</span></div>
-      <div class="get"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Review on your own schedule — no fixed hours, no commute, work from anywhere.</span></div>
-      <div class="get"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Build mentorship income alongside your athlete work by mentoring developing coaches.</span></div>
-    </div>
+    <p class="lead">A real coaching business — without the overheads of a studio or facility. Build your profile, set your packages, and review athlete footage from anywhere using pro tools: slow-mo, frame-by-frame annotation, voice notes, and AI movement tracking. Athletes find you. You decide who you take on.</p>
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
+<!-- HOW IT WORKS — 3 journey tiles (amber treatment, numbered, animated glow). -->
 <section class="block">
   <div class="container">
     <div class="block-label">How it works</div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-title">Set up your profile &amp; packages</div>
-        <div class="step-desc">Add your bio, credentials and coaching style, pick your tier, and choose which review packages you offer and at what price.</div>
+    <div class="flow">
+      <div class="entry-card s1">
+        <div class="bar"></div>
+        <div class="entry-head">
+          <div class="entry-ic"><span class="entry-num">01</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="entry-label">Build your profile</div>
+        </div>
+        <div class="entry-desc">Show your style, sport, and packages. Highlight what makes you the right coach for the athletes you want.</div>
       </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-title">Athletes find you</div>
-        <div class="step-desc">Athletes browse and get matched to you by sport and level, then subscribe to the package that fits them.</div>
+      <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></div>
+      <div class="entry-card s2">
+        <div class="bar"></div>
+        <div class="entry-head">
+          <div class="entry-ic"><span class="entry-num">02</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <div class="entry-label">Get matched with athletes</div>
+        </div>
+        <div class="entry-desc">Athletes find you based on your sport and focus areas. You decide who to take on.</div>
       </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-title">Review and get paid</div>
-        <div class="step-desc">Use the built-in review tools to break down their footage, send feedback, and earn on every package sold.</div>
+      <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></div>
+      <div class="entry-card s3">
+        <div class="bar"></div>
+        <div class="entry-head">
+          <div class="entry-ic"><span class="entry-num">03</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+          <div class="entry-label">Review on your schedule</div>
+        </div>
+        <div class="entry-desc">Annotate footage, record voice notes, send drills. Work when it suits you — no studio, no commute.</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- WHAT YOU KEEP -->
+<!-- ATHLETES CAROUSEL — auto-scrolling mock athletes; click a tile for a popup.
+     Athletes are placeholders (swap for real waitlist/athlete data later). -->
 <section class="block">
   <div class="container">
-    <div class="block-label">What you keep</div>
-    <div class="keep-card">
-      <div class="keep-split">
-        <div class="keep-big">80%</div>
-        <div class="keep-small">to you · 20% platform fee</div>
-      </div>
-      <div class="keep-sub">You keep 80% of every package you sell. Weekly automated payouts (coming as the platform launches). No lock-in — pause or leave anytime.</div>
-    </div>
+    <p class="showcase-lead">These athletes are waiting for coaches.</p>
+  </div>
+  <div class="carousel" id="athleteCarousel">
+    <div class="carousel-track scroll" id="athleteTrack" style="--dur:60s;"></div>
   </div>
 </section>
 
-<!-- TIER STRUCTURE -->
+<!-- PRICING — coach tier subscriptions -->
 <section class="block">
   <div class="container">
-    <div class="block-label">Tier structure</div>
-    <h2>Four levels — priced to match your experience.</h2>
-    <p class="lead" style="margin-bottom:8px;">Your tier sets your monthly platform fee and which packages you can offer. Higher tiers unlock premium packages and coach mentorship. (Foundation-member pricing shown.)</p>
-    <div class="tiers">
-      <div class="tier">
-        <div class="tier-badge">L1</div>
-        <div><div class="tier-name">Development Coach</div><div class="tier-desc">Emerging &amp; grassroots coaches, junior development. Core review packages.</div></div>
-        <div class="tier-price">$39<span>/mo</span></div>
+    <div class="block-label">Pricing</div>
+    <h2>Transparent monthly subscription. No surprises.</h2>
+    <p class="lead" style="margin-bottom:8px;">Founding cohort rates locked in for your first year. You keep 80% of every athlete package.</p>
+    <!-- Pricing values are placeholder/Foundation rates. Final pricing TBC — see pricing review spreadsheet. -->
+    <div class="price-grid">
+      <div class="price-card">
+        <div class="pname">L1 Development</div>
+        <div class="pamt">$39<small>/mo</small></div>
+        <div class="pdesc">Emerging &amp; grassroots coaches building their first online athlete base.</div>
       </div>
-      <div class="tier">
-        <div class="tier-badge">L2</div>
-        <div><div class="tier-name">Performance Coach</div><div class="tier-desc">Experienced representative &amp; academy coaches. Unlocks longer-form review packages.</div></div>
-        <div class="tier-price">$79<span>/mo</span></div>
+      <div class="price-card">
+        <div class="pname">L2 Performance</div>
+        <div class="pamt">$79<small>/mo</small></div>
+        <div class="pdesc">Experienced representative &amp; academy coaches ready to scale.</div>
       </div>
-      <div class="tier">
-        <div class="tier-badge">L3</div>
-        <div><div class="tier-name">Elite Coach</div><div class="tier-desc">State-level, national pathway &amp; high performance. Unlocks the Elite package + coach mentorship.</div></div>
-        <div class="tier-price">$159<span>/mo</span></div>
+      <div class="price-card">
+        <div class="pname">L3 Elite</div>
+        <div class="pamt">$159<small>/mo</small></div>
+        <div class="pdesc">State-level &amp; national-pathway coaches. Unlocks premium packages + mentoring.</div>
       </div>
-      <div class="tier">
-        <div class="tier-badge">L4</div>
-        <div><div class="tier-name">Verified Elite Coach</div><div class="tier-desc">Professional, national-level &amp; Olympic pathway specialists. Top placement + mentorship.</div></div>
-        <div class="tier-price">$319<span>/mo</span></div>
+      <div class="price-card">
+        <div class="pname">L4 Verified Elite</div>
+        <div class="pamt">$399<small>/mo</small></div>
+        <div class="pdesc">Professional &amp; Olympic-pathway specialists. Top placement + mentoring.</div>
       </div>
     </div>
-    <div style="font-size:12px;color:var(--muted2);margin-top:14px;">Pricing reflects current tier logic in the platform (Foundation rates). Final launch pricing TBC.</div>
+    <div class="keep-note">Your subscription is the only monthly cost. You keep 80% of every athlete package — set your own prices, build your own income.</div>
   </div>
 </section>
 
-<!-- TESTIMONIAL -->
+<!-- TESTIMONIALS — 6 athlete testimonials, static grid (demand-side proof). -->
 <section class="block">
   <div class="container">
-    <div class="block-label">What coaches say</div>
-    <div class="quote">
-      <div class="quote-text">"[COACH TESTIMONIAL PLACEHOLDER]"</div>
-      <div class="quote-cite">[— Name, sport, level]</div>
-    </div>
-  </div>
-</section>
-
-<!-- FAQ -->
-<section class="block">
-  <div class="container">
-    <div class="block-label">Coach FAQ</div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>How do I get paid?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>[PLACEHOLDER ANSWER] You keep 80% of every package sold, paid out via automated weekly payouts (rolling out as the platform launches). [Confirm payout mechanics + timing before publishing.]</p></div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>How much time does it take?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>[PLACEHOLDER ANSWER] As much or as little as you want. You review on your own schedule and can pause new athlete requests anytime from your dashboard.</p></div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>Am I an employee or a contractor?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>[PLACEHOLDER ANSWER — confirm with legal] You're an independent coach using the platform to reach athletes, not an employee. [Final wording to be confirmed against terms of service.]</p></div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>What happens if an athlete cancels?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>[PLACEHOLDER ANSWER] Athletes can cancel anytime; you keep what you've already earned on completed reviews. Cancelled subscriptions simply stop renewing.</p></div></div>
-    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span>Can I set my own prices?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><p>[PLACEHOLDER ANSWER] Yes — you choose which packages you offer and set your pricing within your tier's range. You're always in control of what you charge.</p></div></div>
+    <div class="block-label">What athletes say</div>
+    <h2 style="margin-bottom:18px;">What athletes say about working with their coaches</h2>
+    <div class="tmn-grid" id="tmnGrid"></div>
   </div>
 </section>
 
 <!-- FINAL CTA -->
 <section class="final-cta">
   <div class="container">
-    <h2>Become a founding coach.</h2>
-    <p>Founding coaches lock in reduced fees and help shape the platform.</p>
+    <h2>Ready to coach the world?</h2>
+    <p>Founding coaches get priority placement and locked-in pricing.</p>
+    <!-- CTA routes to the waitlist (?role=coach), NOT coach-signup, while the athlete
+         payment + payout loop is still stubbed. Switch to coach-signup.html post-launch. -->
     <a class="cta-btn" href="waitlist.html?role=coach">
-      Join the waitlist
+      Become a Coach
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
     </a>
   </div>
@@ -300,9 +318,6 @@
   <div class="container">
     <div class="foot-text">
       CoachAnywhere — elite coaching, anytime anywhere. Australia-wide.<br>
-      <!-- ORIGINAL EMAIL — replaced with contact form, preserved for reference
-      <a href="mailto:kane@coachanywhere247.com">kane@coachanywhere247.com</a>
-      -->
       <a href="contact.html">Contact us</a>
     </div>
   </div>
@@ -317,7 +332,7 @@
     <h3 style="font-size:21px;font-weight:800;color:#f9fafb;letter-spacing:-.01em;margin-bottom:10px;">The Locker Room is coming soon</h3>
     <p style="font-size:14px;line-height:1.65;color:rgba(226,232,240,.78);margin:0 auto 22px;max-width:360px;">Live tactical sessions with elite coaches — launching after our public launch. Join the waitlist and be the first to know when the first session drops.</p>
     <div style="display:flex;flex-direction:column;gap:10px;">
-      <a href="waitlist.html" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 24px;border-radius:999px;background:radial-gradient(circle at top left,#3b82f6,#1d4ed8);color:#fff;font-weight:700;font-size:15px;text-decoration:none;box-shadow:0 12px 30px rgba(37,99,235,.4);">
+      <a href="waitlist.html" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 24px;border-radius:999px;background:linear-gradient(135deg,#fbbf24,#d97706);color:#1a1205;font-weight:700;font-size:15px;text-decoration:none;box-shadow:0 12px 30px rgba(180,83,9,.4);">
         Join the waitlist
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </a>
@@ -326,17 +341,20 @@
   </div>
 </div>
 
+<!-- SHOWCASE POPUP — shared modal -->
+<div class="show-modal" id="showModal">
+  <div class="show-modal-card">
+    <button class="show-modal-close" onclick="closeShowModal()" aria-label="Close">&times;</button>
+    <div id="showModalBody"></div>
+  </div>
+</div>
+
 <script>
-  function toggleFaq(btn){
-    const a = btn.nextElementSibling;
-    const open = btn.classList.toggle("open");
-    a.style.maxHeight = open ? a.scrollHeight + "px" : "0";
-  }
   function openLockerSoon(){ document.getElementById("lockerSoonModal").style.display = "flex"; }
   function closeLockerSoon(){ document.getElementById("lockerSoonModal").style.display = "none"; }
   document.getElementById("lockerSoonModal").addEventListener("click", function(e){ if (e.target === this) closeLockerSoon(); });
 
-  // ── SLIDE-OUT MENU ──
+  // ── SLIDE-OUT MENU (shared) ──
   (function(){
     const drawer=document.getElementById("drawer");
     const backdrop=document.getElementById("drawerBackdrop");
@@ -370,6 +388,70 @@
       document.removeEventListener("keydown",onKey);
       if(lastFocus&&lastFocus.focus)lastFocus.focus();
     };
+  })();
+
+  // ── SHOWCASE POPUP (shared) ──
+  function openShowModal(html){
+    document.getElementById("showModalBody").innerHTML = html;
+    document.getElementById("showModal").classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeShowModal(){
+    document.getElementById("showModal").classList.remove("open");
+    document.body.style.overflow = "";
+  }
+  document.getElementById("showModal").addEventListener("click", function(e){ if (e.target === this) closeShowModal(); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeShowModal(); });
+
+  function avatarHTML(item){
+    return `<div class="av-wrap"><img src="${item.img}" alt="${item.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/><div class="av-fallback">${item.initials}</div></div>`;
+  }
+
+  // ── ATHLETES CAROUSEL ──
+  // PLACEHOLDER athletes — mock demand-side data for pre-launch; swap for real later.
+  (function(){
+    const ATHLETES = [
+      { name:"Liam K.",   sport:"Basketball", age:14, focus:"Working on my finishing at the rim",  initials:"LK", img:"https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Ava S.",    sport:"Netball",    age:16, focus:"Sharpening footwork & defence",        initials:"AS", img:"https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Noah D.",   sport:"AFL",        age:15, focus:"Working on my drop punt",              initials:"ND", img:"https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Mia T.",    sport:"Tennis",     age:17, focus:"Wants to improve baseline rallying",   initials:"MT", img:"https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Jack R.",   sport:"Soccer",     age:13, focus:"Goalkeeping technique",                initials:"JR", img:"https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Ella W.",   sport:"Swimming",   age:15, focus:"Working on starts & turns",           initials:"EW", img:"https://images.unsplash.com/photo-1499996860823-5214fcc65f8f?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Ethan B.",  sport:"Cricket",    age:16, focus:"Batting technique under pace",         initials:"EB", img:"https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Zoe H.",    sport:"Athletics",  age:14, focus:"Sprint mechanics & race starts",       initials:"ZH", img:"https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Cooper M.", sport:"Rugby",      age:18, focus:"Tackling technique & contact",         initials:"CM", img:"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=faces" },
+      { name:"Isla F.",   sport:"Hockey",     age:12, focus:"Drag-flick & stick skills",            initials:"IF", img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces" }
+    ];
+    function inner(a){
+      return `${avatarHTML(a)}<div class="coach-name">${a.name}</div><div class="coach-sport">${a.sport}</div><div class="coach-level">Age ${a.age}</div><div class="coach-tag">${a.focus}</div>`;
+    }
+    const track = document.getElementById("athleteTrack");
+    if(!track) return;
+    const tiles = ATHLETES.map((a,i)=>`<div class="coach-tile" data-idx="${i}" role="button" tabindex="0">${inner(a)}</div>`).join("");
+    track.innerHTML = tiles + tiles;  // duplicate for a seamless loop
+    track.addEventListener("click", function(e){
+      const t = e.target.closest(".coach-tile"); if(!t) return;
+      openShowModal(inner(ATHLETES[+t.dataset.idx]));
+    });
+  })();
+
+  // ── ATHLETE TESTIMONIALS (static grid) ──
+  // PLACEHOLDER testimonials — same mock athletes as for-athletes; swap for real.
+  (function(){
+    const TMN = [
+      { meta:"Alex A. — Basketball, Age 14", quote:"My finishing's actually clicking now.",        initials:"AA", img:"https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=160&h=160&fit=crop&crop=faces" },
+      { meta:"Maddy R. — Netball, Age 16",   quote:"Saw three things in my pass I never noticed.",  initials:"MR", img:"https://images.unsplash.com/photo-1463453091185-61582044d556?w=160&h=160&fit=crop&crop=faces" },
+      { meta:"Tom B. — AFL, Age 15",         quote:"My drop punt finally has shape.",               initials:"TB", img:"https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=160&h=160&fit=crop&crop=faces" },
+      { meta:"Lily H. — Tennis, Age 17",     quote:"Got real feedback on my serve in two days.",    initials:"LH", img:"https://images.unsplash.com/photo-1521119989659-a83eee488004?w=160&h=160&fit=crop&crop=faces" },
+      { meta:"Jack W. — Soccer, Age 13",     quote:"Different positioning, different game.",         initials:"JW", img:"https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=160&h=160&fit=crop&crop=faces" },
+      { meta:"Sophie M. — Swimming, Age 15", quote:"My catch is night and day.",                    initials:"SM", img:"https://images.unsplash.com/photo-1500336624523-d727130c3328?w=160&h=160&fit=crop&crop=faces" }
+    ];
+    function tile(t){
+      return `<div class="tmn-head">${avatarHTML(Object.assign({name:t.meta},t))}<div class="tmn-meta">${t.meta}</div></div><div class="tmn-quote">&ldquo;${t.quote}&rdquo;</div>`;
+    }
+    const grid = document.getElementById("tmnGrid");
+    if(!grid) return;
+    grid.innerHTML = TMN.map((t,i)=>`<div class="tmn-tile" data-idx="${i}">${tile(t)}</div>`).join("");
   })();
 </script>
 
