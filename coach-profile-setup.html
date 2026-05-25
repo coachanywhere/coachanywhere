@@ -326,9 +326,9 @@
       <select class="form-select" id="selfTier">
         <option value="">Not sure — let the AI decide</option>
         <option value="Level 1 — Development Coach">Level 1 — Development Coach (grassroots, junior, community)</option>
-        <option value="Level 2 — Performance Coach">Level 2 — Performance Coach (representative, academy)</option>
-        <option value="Level 3 — Elite Coach">Level 3 — Elite Coach (state, national pathway, high performance)</option>
-        <option value="Level 4 — Verified Elite Coach">Level 4 — Verified Elite Coach (professional, Olympic pathway)</option>
+        <option value="Level 2 — Performance Coach">Level 2 — Representative Coach (representative, academy)</option>
+        <option value="Level 3 — Elite Coach">Level 3 — State Coach (state, national pathway, high performance)</option>
+        <option value="Level 4 — Verified Elite Coach">Level 4 — Elite Coach (professional, Olympic pathway)</option>
       </select>
       <div style="font-size:11px;color:rgba(148,163,184,.6);margin-top:6px;line-height:1.5;">
         Your self-assessment carries weight in the AI's recommendation. The AI will still flag if your bio suggests a different level — but ultimately, it's your call.
@@ -466,9 +466,9 @@
 
   const TIERS=[
     {id:"Level 1 — Development Coach",label:"Level 1 — Development Coach",desc:"Emerging & grassroots coaches, junior development",monthly:49,fortnightly:24,foundation:39,foundationFN:19},
-    {id:"Level 2 — Performance Coach",label:"Level 2 — Performance Coach",desc:"Experienced representative & academy coaches",monthly:99,fortnightly:49,foundation:79,foundationFN:39},
-    {id:"Level 3 — Elite Coach",label:"Level 3 — Elite Coach",desc:"State-level, national pathway & high performance specialists",monthly:199,fortnightly:95,foundation:159,foundationFN:79},
-    {id:"Level 4 — Verified Elite Coach",label:"Level 4 — Verified Elite Coach",desc:"Professional, national-level & Olympic pathway coaches",monthly:399,fortnightly:null,foundation:319,foundationFN:null}
+    {id:"Level 2 — Performance Coach",label:"Level 2 — Representative Coach",desc:"Experienced representative & academy coaches",monthly:99,fortnightly:49,foundation:79,foundationFN:39},
+    {id:"Level 3 — Elite Coach",label:"Level 3 — State Coach",desc:"State-level, national pathway & high performance specialists",monthly:199,fortnightly:95,foundation:159,foundationFN:79},
+    {id:"Level 4 — Verified Elite Coach",label:"Level 4 — Elite Coach",desc:"Professional, national-level & Olympic pathway coaches",monthly:399,fortnightly:null,foundation:319,foundationFN:null}
   ];
 
   const PACKAGES=[
@@ -687,9 +687,9 @@
       tier=bioTier;
       confidence = bioIdx===2?88 : bioIdx===1?78 : 72;
       reasoning = bioIdx===2
-        ? "Your profile shows elite-level coaching experience with professional or state-level exposure. The Level 3 Elite tier gives you the tools and positioning to attract serious athletes and command premium packages."
+        ? "Your profile shows elite-level coaching experience with professional or state-level exposure. The Level 3 State tier gives you the tools and positioning to attract serious athletes and command premium packages."
         : bioIdx===1
-        ? "Your profile shows solid coaching experience at representative or academy level. The Level 2 Performance tier is the right fit — it positions you above grassroots coaches and gives you access to more advanced athlete packages."
+        ? "Your profile shows solid coaching experience at representative or academy level. The Level 2 Representative tier is the right fit — it positions you above grassroots coaches and gives you access to more advanced athlete packages."
         : "Your profile shows coaching experience at grassroots or junior level. The Level 1 Development tier is the right starting point — it's affordable, gets you live immediately and you can upgrade anytime as your client base grows.";
     } else if(selfIdx === bioIdx){
       // Self-pick agrees with bio analysis — strongest confidence.

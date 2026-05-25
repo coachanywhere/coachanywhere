@@ -6,16 +6,19 @@
 // profiles row.
 //
 // Foundation pricing only — fortnightly variants aren't in env yet.
-// Level 4 — Verified Elite Coach uses the L4 base price (the only
-// L4 SKU defined).
-
+//
+// NOTE ON TIER NAMES: the keys below are STABLE INTERNAL IDENTIFIERS that match
+// the value stored in profiles.selected_tier — they are NOT renamed. The
+// canonical USER-FACING display names are L1 Development / L2 Representative /
+// L3 State / L4 Elite (rendered via display maps in the UI). The L4 key uses
+// the L4 base price (the only L4 SKU defined).
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const TIER_PRICES = {
-  "Level 1 — Development Coach":    process.env.STRIPE_COACH_L1_FOUNDATION_PRICE_ID,
-  "Level 2 — Performance Coach":    process.env.STRIPE_COACH_L2_FOUNDATION_PRICE_ID,
-  "Level 3 — Elite Coach":          process.env.STRIPE_COACH_L3_FOUNDATION_PRICE_ID,
-  "Level 4 — Verified Elite Coach": process.env.STRIPE_COACH_L4_PRICE_ID
+  "Level 1 — Development Coach":    process.env.STRIPE_COACH_L1_FOUNDATION_PRICE_ID,  // L1 Development
+  "Level 2 — Performance Coach":    process.env.STRIPE_COACH_L2_FOUNDATION_PRICE_ID,  // L2 Representative
+  "Level 3 — Elite Coach":          process.env.STRIPE_COACH_L3_FOUNDATION_PRICE_ID,  // L3 State
+  "Level 4 — Verified Elite Coach": process.env.STRIPE_COACH_L4_PRICE_ID              // L4 Elite
 };
 
 exports.handler = async (event) => {

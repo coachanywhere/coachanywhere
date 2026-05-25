@@ -1151,7 +1151,7 @@ async function init(){
     document.getElementById("coachAv").textContent=initials;
     const fullName=("Coach "+(p.first_name||"")).trim();
     document.getElementById("coachName").textContent=fullName||"Coach";
-    document.getElementById("coachTier").textContent=p.selected_tier?titleCase(p.selected_tier)+" Coach":"Coach";
+    document.getElementById("coachTier").textContent=tierDisplay(p.selected_tier);
     document.getElementById("greeting").textContent=timeGreeting()+", "+fullName;
     document.getElementById("setFirst").value=p.first_name||"";
     document.getElementById("setLast").value=p.last_name||"";
@@ -1211,7 +1211,7 @@ function renderActiveMenteesPanel(){
         <div class="mreq-av"><img src="${esc(avUrl)}" alt="" loading="lazy"/></div>
         <div>
           <div class="mreq-name">${esc(name)}</div>
-          <div class="mreq-meta">${esc(m.selected_tier || "Coach")}${m.sport ? " · " + esc(m.sport) : ""}</div>
+          <div class="mreq-meta">${esc(tierDisplay(m.selected_tier))}${m.sport ? " · " + esc(m.sport) : ""}</div>
         </div>
         <div class="mreq-actions">
           <button class="btn-accept" onclick="openMentorSchedule('${esc(m.id)}','${esc(name).replace(/'/g,"\\'")}')">Schedule</button>
@@ -1313,7 +1313,7 @@ function openSessionDetail(sessionId){
   const avUrl = o.avatar_url || `https://i.pravatar.cc/200?u=${encodeURIComponent(o.id||"x")}`;
   document.getElementById("sdAv").innerHTML = `<img src="${esc(avUrl)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;"/>`;
   document.getElementById("sdOtherName").textContent = name;
-  document.getElementById("sdOtherTier").textContent = o.selected_tier || "Coach";
+  document.getElementById("sdOtherTier").textContent = tierDisplay(o.selected_tier);
   document.getElementById("sdWhen").textContent  = `${new Date(s.scheduled_at).toLocaleString()} · ${s.duration_minutes||60} min`;
   document.getElementById("sdTopic").textContent = s.topic || "(no topic set)";
   document.getElementById("sdNotes").textContent = s.notes || "—";
@@ -1644,7 +1644,7 @@ function escapeHTMLcd(s){
 function openSpotlightModal(){
   const p = window._coachProfile || {};
   const tier = p.selected_tier || "Coach";
-  document.getElementById("spotlightModalTier").textContent  = tier;
+  document.getElementById("spotlightModalTier").textContent  = tierDisplay(tier);
   document.getElementById("spotlightModalPrice").textContent = SPOTLIGHT_COST[tier] || "—";
   document.getElementById("spotlightModalError").style.display = "none";
   document.getElementById("spotlightActivateBtn").disabled = false;
@@ -1763,7 +1763,7 @@ function mentorReqCard(r){
       <div class="mreq-av">${av}</div>
       <div>
         <div class="mreq-name">${esc(name)}</div>
-        <div class="mreq-meta">${esc(m.selected_tier || "Coach")}${m.sport ? " · " + esc(m.sport) : ""}</div>
+        <div class="mreq-meta">${esc(tierDisplay(m.selected_tier))}${m.sport ? " · " + esc(m.sport) : ""}</div>
         <div class="mreq-time">Requested ${timeAgo(r.created_at)}</div>
         ${notesPreview}
       </div>
@@ -1789,7 +1789,7 @@ function openMentorReqReview(relId){
   document.getElementById("reqReviewAv").innerHTML  = `<img src="${esc(avUrl)}" alt="" loading="lazy"/>`;
   document.getElementById("reqReviewName").textContent = name;
   document.getElementById("reqReviewMeta").textContent =
-    [m.selected_tier || "Coach", m.sport, m.location].filter(Boolean).join(" · ");
+    [tierDisplay(m.selected_tier), m.sport, m.location].filter(Boolean).join(" · ");
   document.getElementById("reqReviewBio").textContent = m.bio || "This coach hasn't added a bio yet.";
   document.getElementById("reqReviewStyle").textContent = m.coaching_style || "—";
   document.getElementById("reqReviewQual").textContent  = m.qualifications || "—";
@@ -1892,6 +1892,16 @@ async function submitReply(){
 }
 
 function titleCase(s){return s? s.charAt(0).toUpperCase()+s.slice(1):s;}
+// Display-only canonical tier label. The stored selected_tier strings are kept
+// unchanged as billing-map keys; this maps them to the user-facing names.
+function tierDisplay(t){
+  return ({
+    "Level 1 — Development Coach":    "Level 1 — Development Coach",
+    "Level 2 — Performance Coach":    "Level 2 — Representative Coach",
+    "Level 3 — Elite Coach":          "Level 3 — State Coach",
+    "Level 4 — Verified Elite Coach": "Level 4 — Elite Coach"
+  })[t] || t || "Coach";
+}
 function timeGreeting(){const h=new Date().getHours();return h<12?"Good morning":h<17?"Good afternoon":"Good evening";}
 
 function renderQueue(rows){
