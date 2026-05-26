@@ -326,6 +326,27 @@
     </div>
   </section>
 
+  <!-- ══ PILOT PAYOUTS DUE ══ -->
+  <section class="row">
+    <div class="row-label">Pilot payouts due</div>
+    <div class="kpi-card" style="grid-column: 1 / -1;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:14px;flex-wrap:wrap;">
+        <div>
+          <div class="kpi-label">Pending payouts</div>
+          <div class="kpi-value" id="pilotPayoutsPendingTotal">…</div>
+          <div class="kpi-sub" id="pilotPayoutsPendingCount">— transfers needed</div>
+        </div>
+        <div>
+          <div class="kpi-label">Paid this month</div>
+          <div class="kpi-value" id="pilotPayoutsPaidTotal" style="color:#86efac;">…</div>
+          <div class="kpi-sub" id="pilotPayoutsPaidCount">—</div>
+        </div>
+        <button id="refreshPayoutsBtn" class="refresh-btn">Refresh</button>
+      </div>
+      <div id="pilotPayoutsTable" style="margin-top:14px;font-size:13px;"></div>
+    </div>
+  </section>
+
   <!-- ══ ROW 5 — Platform health ══ -->
   <section>
     <div class="row-label">Platform Health</div>
@@ -388,6 +409,13 @@
     // Refresh on first load + every 60s alongside the other admin refreshes:
     loadPilotCodes();
     setInterval(loadPilotCodes, 60 * 1000);
+
+    // ── PILOT PAYOUTS PANEL ────────────────────────────────────────────────
+    window.markPaid = markPaid;
+    document.getElementById("refreshPayoutsBtn").addEventListener("click", loadPilotPayouts);
+    // Refresh on first load + every 60s
+    loadPilotPayouts();
+    setInterval(loadPilotPayouts, 60 * 1000);
   })();
 
   // ──────────────────────────────────────────────────────────────
@@ -454,6 +482,116 @@
     navigator.clipboard.writeText(text).then(() => {
       alert("Invite email copied to clipboard. Paste into your email and send.");
     }).catch(() => prompt("Copy this invite text:", text));
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // PILOT PAYOUTS
+  // ──────────────────────────────────────────────────────────────
+  async function loadPilotPayouts() {
+    // Pull pending + recent paid payouts with coach details
+    const { data: summary, error } = await sb
+      .from("pilot_payouts_admin_summary")
+      .select("*")
+      .order("month", { ascending: false });
+
+    if (error) {
+      console.error("[admin] payouts query failed:", error);
+      document.getElementById("pilotPayoutsTable").innerHTML =
+        '<div style="padding:14px;color:#fca5a5;">Failed to load payouts.</div>';
+      return;
+    }
+
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const thisMonth = (summary || []).filter(r => r.month === currentMonth);
+
+    const pendingTotal = thisMonth.reduce((s, r) => s + (r.pending_cents || 0), 0) / 100;
+    const paidTotal    = thisMonth.reduce((s, r) => s + (r.paid_cents || 0), 0) / 100;
+    const pendingCount = thisMonth.reduce((s, r) => s + (r.pending_count || 0), 0);
+    const paidCount    = thisMonth.reduce((s, r) => s + (r.paid_count || 0), 0);
+
+    document.getElementById("pilotPayoutsPendingTotal").textContent = "$" + pendingTotal.toFixed(2);
+    document.getElementById("pilotPayoutsPendingCount").textContent =
+      pendingCount + " transfer" + (pendingCount === 1 ? "" : "s") + " needed";
+    document.getElementById("pilotPayoutsPaidTotal").textContent = "$" + paidTotal.toFixed(2);
+    document.getElementById("pilotPayoutsPaidCount").textContent =
+      paidCount + " transfer" + (paidCount === 1 ? "" : "s") + " sent";
+
+    // Pull individual line items for the current month
+    const { data: lines } = await sb
+      .from("pilot_payouts")
+      .select("id, coach_id, athlete_id, amount_cents, status, created_at, paid_at, payment_reference, stripe_invoice_id")
+      .eq("month", currentMonth)
+      .order("created_at", { ascending: false });
+
+    // Join coach + athlete names from summary + a profiles fetch
+    const profileIds = [...new Set([
+      ...(lines || []).map(l => l.coach_id),
+      ...(lines || []).map(l => l.athlete_id)
+    ])];
+    let names = {}, banks = {};
+    if (profileIds.length) {
+      const { data: pp } = await sb
+        .from("profiles")
+        .select("id, first_name, last_name, payout_bsb, payout_account_number, payout_account_name")
+        .in("id", profileIds);
+      (pp || []).forEach(p => {
+        names[p.id] = (p.first_name || "") + " " + (p.last_name || "");
+        banks[p.id] = {
+          name: p.payout_account_name,
+          bsb:  p.payout_bsb,
+          acct: p.payout_account_number
+        };
+      });
+    }
+
+    const rowsHtml = (lines || []).map(l => {
+      const bank = banks[l.coach_id] || {};
+      const bankStr = bank.bsb
+        ? bank.bsb.slice(0,3) + "-" + bank.bsb.slice(3) + " / " + (bank.acct || "—")
+        : '<span style="color:#fca5a5;">⚠ no bank details</span>';
+      const statusBadge = l.status === "paid"
+        ? '<span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#86efac;background:rgba(34,197,94,.12);padding:3px 8px;border-radius:6px;">Paid</span>'
+        : '<span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fbbf24;background:rgba(250,204,21,.12);padding:3px 8px;border-radius:6px;">Pending</span>';
+      const action = l.status === "pending"
+        ? `<button onclick="markPaid('${l.id}')" style="padding:5px 12px;border-radius:6px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Mark paid</button>`
+        : (l.payment_reference ? `<span style="font-size:11px;color:var(--muted);">Ref: ${l.payment_reference}</span>` : "");
+
+      return `
+        <div style="display:grid;grid-template-columns: 1.4fr 1.4fr 1fr 1fr 1.4fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px;">
+          <div>
+            <div style="font-weight:600;color:#f1f5f9;">${names[l.coach_id] || "Coach"}</div>
+            <div style="font-size:11px;color:var(--muted);">${bank.name || ""}</div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);font-family:ui-monospace,monospace;">${bankStr}</div>
+          <div style="font-size:12px;color:var(--muted);">for ${names[l.athlete_id] || "Athlete"}</div>
+          <div style="font-weight:700;color:#fbbf24;">$${(l.amount_cents/100).toFixed(2)}</div>
+          <div>${statusBadge}<div style="font-size:10px;color:var(--muted);margin-top:3px;">${new Date(l.created_at).toLocaleDateString()}</div></div>
+          <div>${action}</div>
+        </div>`;
+    }).join("");
+
+    document.getElementById("pilotPayoutsTable").innerHTML =
+      rowsHtml || '<div style="padding:20px;text-align:center;color:var(--muted);">No payouts this month yet.</div>';
+  }
+
+  async function markPaid(payoutId) {
+    const ref = prompt("Bank transfer reference (optional):") || "";
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      alert("Not authenticated.");
+      return;
+    }
+    const { error } = await sb.rpc("mark_pilot_payout_paid", {
+      p_payout_id: payoutId,
+      p_admin_id:  user.id,
+      p_reference: ref || null,
+      p_notes:     null
+    });
+    if (error) {
+      alert("Failed to mark paid: " + error.message);
+      return;
+    }
+    loadPilotPayouts();
   }
 
   // ──────────────────────────────────────────────────────────────

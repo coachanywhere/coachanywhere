@@ -746,6 +746,8 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
       <div class="sec-title">Earnings</div>
       <!-- Pilot earnings card — filled by renderPilotEarnings() for pilot coaches. -->
       <div id="earningsPanel"></div>
+      <!-- Pilot bank-details badge — filled in init() for pilot coaches. -->
+      <div id="bankDetailsBadge" style="margin-top:14px;"></div>
       <div id="earningsStandard">
       <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
         <div class="kpi-card"><div class="kpi-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div><div class="kpi-val">$0</div><div class="kpi-label">This Month</div><div class="kpi-sub">No payouts yet</div></div></div>
@@ -1308,6 +1310,28 @@ async function init(){
   // PILOT coach detection
   const _isPilotCoach = window.isPilotCoach && window.isPilotCoach(p);
   window._isPilotCoach = _isPilotCoach;   // used by other panels below
+
+  // Pilot bank-details badge: show what account payouts go to, or warn if missing.
+  if (window._isPilotCoach && p) {
+    const bankEl = document.getElementById("bankDetailsBadge");
+    if (bankEl) {
+      if (p.payout_bsb && p.payout_account_number) {
+        const masked = p.payout_account_number.slice(0, 2) + "****" + p.payout_account_number.slice(-2);
+        bankEl.innerHTML = `
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Payouts go to</div>
+          <div style="font-size:13px;color:#f1f5f9;font-weight:600;">${p.payout_account_name || "—"}</div>
+          <div style="font-size:11px;color:var(--muted);font-family:ui-monospace,monospace;margin-top:2px;">BSB ${p.payout_bsb.slice(0,3)}-${p.payout_bsb.slice(3)} · Acct ${masked}</div>
+          <div style="font-size:11px;color:var(--blue2);margin-top:8px;"><a href="settings.html" style="color:inherit;">Update →</a></div>`;
+      } else {
+        bankEl.innerHTML = `
+          <div style="padding:14px;border-radius:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);">
+            <div style="font-size:12px;font-weight:700;color:#fca5a5;margin-bottom:4px;">⚠ Bank details missing</div>
+            <div style="font-size:11px;color:rgba(232,237,245,.7);line-height:1.5;">We can't pay you without your BSB + account number. <a href="settings.html" style="color:#60a5fa;">Add them now →</a></div>
+          </div>`;
+      }
+    }
+  }
+
   // Show / hide the danger-zone cancel-tier card based on the loaded profile.
   setTimeout(wireCancelTierVisibility, 0);
   if(p){
