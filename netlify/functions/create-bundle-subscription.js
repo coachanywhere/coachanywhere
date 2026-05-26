@@ -9,8 +9,8 @@
 //   STRIPE_SECRET_KEY                Stripe secret (sk_test_* or sk_live_*)
 //   STRIPE_PILOT_PRICE_ID            $49 AUD pilot price ID
 //   SUPABASE_URL                     https://rtaxjewvshhpdnkpojjn.supabase.co
-//   SUPABASE_SERVICE_ROLE_KEY        service-role key (for write access)
-//   SITE_URL                         e.g. https://coachanywhere247.com
+//   SUPABASE_SERVICE_KEY        service-role key (for write access)
+//   APP_URL                         e.g. https://coachanywhere247.com
 // =============================================================================
 
 const Stripe = require("stripe");
@@ -19,7 +19,7 @@ const { createClient } = require("@supabase/supabase-js");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_KEY
 );
 
 exports.handler = async (event) => {
@@ -101,8 +101,8 @@ exports.handler = async (event) => {
           is_pilot:    bundleType === "pilot" ? "true" : "false"
         }
       },
-      success_url: process.env.SITE_URL + "/athlete-dashboard.html?subscribed=1",
-      cancel_url:  process.env.SITE_URL + "/select-coach.html?cancelled=1"
+      success_url: process.env.APP_URL + "/athlete-dashboard.html?subscribed=1",
+      cancel_url:  process.env.APP_URL + "/select-coach.html?cancelled=1"
     });
 
     return {

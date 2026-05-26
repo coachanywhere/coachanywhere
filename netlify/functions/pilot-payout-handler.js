@@ -11,7 +11,7 @@
 //   STRIPE_SECRET_KEY
 //   STRIPE_WEBHOOK_SECRET_PILOT_PAYOUT     signing secret for this endpoint
 //   SUPABASE_URL
-//   SUPABASE_SERVICE_ROLE_KEY
+//   SUPABASE_SERVICE_KEY
 // =============================================================================
 
 const Stripe = require("stripe");
@@ -20,7 +20,7 @@ const { createClient } = require("@supabase/supabase-js");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_KEY
 );
 
 // $60 in cents - what we owe each coach per active athlete per invoice cycle.
