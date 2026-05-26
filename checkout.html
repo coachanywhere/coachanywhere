@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="bundles.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -148,73 +149,148 @@
   const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
   const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ca-auth",storage:window.localStorage,detectSessionInUrl:true}});
 
-  // Standard add-on packages (must match select-coach.html)
-  const ADDONS={
-    skill_clip:{name:"Skill Clip Review",price:15},
-    session:{name:"Session Review",price:35},
-    half_game:{name:"Half Game / Long Session Review",price:75},
-    full_game:{name:"Full Game Review",price:120},
-    elite_pkg:{name:"Elite Package",price:199}
-  };
+  // Params accepted (new bundle flow):
+  //   coach     — coach UUID
+  //   coachName — display name
+  //   bundle    — bundle id (starter/standard/pro)
+  //   tierLevel — 1..4 (snapshot of the coach's level at checkout time)
+  // The price is looked up from the matrix in bundles.js — never trust the
+  // URL for the dollar amount.
+  //
+  // Legacy params (tier/tierPrice/addons) are still accepted so any in-flight
+  // links from the old flow don't 404 — they just show a deprecated banner.
+  const params      = new URLSearchParams(window.location.search);
+  const coachId     = params.get("coach")    || "";
+  const coachName   = params.get("coachName")|| "Your Coach";
+  const bundleId    = params.get("bundle")   || "";
+  const tierLevel   = parseInt(params.get("tierLevel")) || null;
 
-  const params=new URLSearchParams(window.location.search);
-  const coachId=params.get("coach")||"";
-  const coachName=params.get("coachName")||"Your Coach";
-  const tierName=params.get("tier")||"Coaching Plan";
-  const tierPrice=parseInt(params.get("tierPrice"))||0;
-  const addonIds=(params.get("addons")||"").split(",").filter(Boolean);
+  // Legacy fallbacks (only used if bundle param is missing)
+  const legacyTier  = params.get("tier")  || "";
+  const legacyPrice = parseInt(params.get("tierPrice")) || 0;
+  const legacyAddons= (params.get("addons") || "").split(",").filter(Boolean);
+  const isLegacy    = !bundleId && (legacyTier || legacyAddons.length);
 
-  let discount=0; // dollars off
-  let currentUser=null;
+  let discount = 0;   // dollars off
+  let currentUser = null;
+
+  function bundleSubtotal(){
+    if(bundleId === "pilot" && window.PILOT_CONFIG) return window.PILOT_CONFIG.monthlyPrice;
+    if (!bundleId || !window.BUNDLES || !window.BUNDLES[bundleId]) return 0;
+    const lvl = tierLevel || 1;
+    return window.bundlePrice(bundleId, lvl);
+  }
+  function legacySubtotal(){
+    // Old ADDONS pricing — kept for in-flight links only.
+    const OLD = { skill_clip:15, session:35, half_game:75, full_game:120, elite_pkg:199 };
+    return legacyPrice + legacyAddons.reduce((s,id)=>s+(OLD[id]||0), 0);
+  }
 
   function recomputeTotal(){
-    let addonTotal=0;
-    addonIds.forEach(id=>{if(ADDONS[id])addonTotal+=ADDONS[id].price;});
-    let grand=tierPrice+addonTotal-discount;
-    if(grand<0)grand=0;
-    document.getElementById("grandTotal").textContent="$"+grand;
+    const subtotal = isLegacy ? legacySubtotal() : bundleSubtotal();
+    let grand = subtotal - discount;
+    if (grand < 0) grand = 0;
+    document.getElementById("grandTotal").textContent = "$" + grand;
     return grand;
   }
 
   function renderLines(){
-    let html=`
-      <div class="line">
-        <div>
-          <div class="line-name">${tierName}</div>
-          <div class="line-tag">Monthly subscription</div>
-        </div>
-        <div class="line-amt">$${tierPrice}/mo</div>
-      </div>`;
-    addonIds.forEach(id=>{
-      const a=ADDONS[id];
-      if(!a)return;
-      html+=`
-      <div class="line">
-        <div>
-          <div class="line-name">${a.name}</div>
-          <div class="line-tag">One-off add-on</div>
-        </div>
-        <div class="line-amt">+$${a.price}</div>
-      </div>`;
-    });
-    document.getElementById("lineItems").innerHTML=html;
+    let html = "";
+    // PILOT branch — single line item, fixed price from PILOT_CONFIG.
+    if(!isLegacy && bundleId === "pilot" && window.getPilotOffer){
+      const offer = window.getPilotOffer();
+      const price = offer.price();
+      html += `
+        <div class="line">
+          <div>
+            <div class="line-name">${offer.name}</div>
+            <div class="line-tag">Founding pilot · monthly subscription</div>
+            <div class="line-desc">${offer.summary}</div>
+          </div>
+          <div class="line-amt">$${price}/mo</div>
+        </div>`;
+      html += '<div style="padding:8px 0 4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700;">Includes</div>';
+      offer.contents.forEach(c => {
+        html += `<div style="font-size:12px;color:rgba(232,237,245,.78);padding:3px 0 3px 14px;position:relative;">
+          <span style="position:absolute;left:0;top:3px;color:var(--green);">✓</span>${c}
+        </div>`;
+      });
+      document.getElementById("lineItems").innerHTML = html;
+      return;
+    }
+    if (!isLegacy && bundleId && window.BUNDLES[bundleId]) {
+      const b = window.BUNDLES[bundleId];
+      const lvl = tierLevel || 1;
+      const price = window.bundlePrice(bundleId, lvl);
+      const rateLabel = window.TIER_RATES[lvl] ? " · L" + lvl + " rate $" + window.TIER_RATES[lvl] + "/hr" : "";
+      html += `
+        <div class="line">
+          <div>
+            <div class="line-name">${b.name} bundle</div>
+            <div class="line-tag">Monthly subscription${rateLabel}</div>
+            <div class="line-desc">${b.summary}</div>
+          </div>
+          <div class="line-amt">$${price}/mo</div>
+        </div>`;
+      // List bundle contents inline so the athlete sees what they're paying for.
+      html += '<div style="padding:8px 0 4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700;">Includes</div>';
+      b.contents.forEach(c => {
+        html += `<div style="font-size:12px;color:rgba(232,237,245,.78);padding:3px 0 3px 14px;position:relative;">
+          <span style="position:absolute;left:0;top:3px;color:var(--green);">✓</span>${c}
+        </div>`;
+      });
+    } else if (isLegacy) {
+      // Render the old line-items shape exactly as before.
+      const OLD = {
+        skill_clip:{name:"Skill Clip Review",price:15},
+        session:{name:"Session Review",price:35},
+        half_game:{name:"Half Game / Long Session Review",price:75},
+        full_game:{name:"Full Game Review",price:120},
+        elite_pkg:{name:"Elite Package",price:199}
+      };
+      html = `
+        <div class="line">
+          <div>
+            <div class="line-name">${legacyTier || "Coaching Plan"}</div>
+            <div class="line-tag">Monthly subscription</div>
+          </div>
+          <div class="line-amt">$${legacyPrice}/mo</div>
+        </div>`;
+      legacyAddons.forEach(id => {
+        const a = OLD[id]; if(!a) return;
+        html += `
+          <div class="line">
+            <div>
+              <div class="line-name">${a.name}</div>
+              <div class="line-tag">One-off add-on</div>
+            </div>
+            <div class="line-amt">+$${a.price}</div>
+          </div>`;
+      });
+    } else {
+      html = `<div style="padding:14px;text-align:center;color:var(--muted);font-size:13px;">No bundle selected. Please <a href="select-coach.html">choose a coach</a>.</div>`;
+    }
+    document.getElementById("lineItems").innerHTML = html;
   }
 
   function applyPromo(){
-    const code=document.getElementById("promoInput").value.trim().toUpperCase();
-    const msg=document.getElementById("promoMsg");
-    if(!code){msg.className="promo-msg err";msg.textContent="Enter a code first.";return;}
+    const code = document.getElementById("promoInput").value.trim().toUpperCase();
+    const msg  = document.getElementById("promoMsg");
+    if(!code){
+      msg.className = "promo-msg err";
+      msg.textContent = "Enter a code first.";
+      return;
+    }
     // Placeholder discount logic — replace with real Stripe promotion codes when live.
-    if(code==="FREE"||code==="LAUNCH100"){
-      let addonTotal=0;
-      addonIds.forEach(id=>{if(ADDONS[id])addonTotal+=ADDONS[id].price;});
-      discount=tierPrice+addonTotal; // 100% off
-      msg.className="promo-msg ok";
-      msg.textContent="✓ Code applied — 100% off.";
+    if(code === "FREE" || code === "LAUNCH100"){
+      // 100% off: discount = whatever the subtotal currently is (bundle or legacy).
+      discount = isLegacy ? legacySubtotal() : bundleSubtotal();
+      msg.className = "promo-msg ok";
+      msg.textContent = "✓ Code applied — 100% off.";
     } else {
-      discount=0;
-      msg.className="promo-msg err";
-      msg.textContent="That code isn't valid.";
+      discount = 0;
+      msg.className = "promo-msg err";
+      msg.textContent = "That code isn't valid.";
     }
     recomputeTotal();
   }
@@ -241,12 +317,26 @@
     //    table to populate the My Coach panel.
     //    Note: supabase-js does NOT throw on DB errors — it returns {error}. The
     //    previous try/catch never fired and silently masked RLS / schema failures.
+    // Resolve the bundle name & price snapshot at insert time so a future
+    // matrix change doesn't appear to retroactively reprice the athlete.
+    const isPilotSub = bundleId === "pilot";
+    const pilotOffer = isPilotSub && window.getPilotOffer ? window.getPilotOffer() : null;
+    const bundleObj = bundleId && window.BUNDLES[bundleId] ? window.BUNDLES[bundleId] : null;
+    const priceSnapshot = pilotOffer
+      ? pilotOffer.price()
+      : (bundleObj ? window.bundlePrice(bundleId, tierLevel || 1)
+                   : (isLegacy ? legacySubtotal() : 0));
     const {error: subErr} = await sb.from("subscriptions").insert({
-      athlete_id:   currentUser.id,
-      coach_id:     coachId,
-      status:       "active",
-      package_name: tierName,
-      billing_cycle:"Monthly"
+      athlete_id:    currentUser.id,
+      coach_id:      coachId,
+      status:        "active",
+      package_name:  pilotOffer ? pilotOffer.name
+                                : (bundleObj ? bundleObj.name : (legacyTier || "Coaching Plan")),
+      bundle_id:     bundleId || null,
+      tier_level:    tierLevel || null,
+      monthly_price: priceSnapshot,
+      billing_cycle: "Monthly",
+      is_pilot:      isPilotSub
     });
     if(subErr){
       btn.disabled=false; btn.textContent="Pay now";

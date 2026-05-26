@@ -376,6 +376,8 @@ const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ca-auth",storage:window.localStorage,detectSessionInUrl:true}});
 
 let currentUser=null,selectedSkills=[],coaches=[],allCoaches=[],activeCoachId=null,athleteSport="Basketball";
+// Pilot state — set in init(), read by showDetail() (top-level fn, hence script-scope).
+let _athleteProfile=null,_isPilotAthlete=false;
 let athleteFocus=[];  // the athlete's improvement_focus (drives Best Match ranking)
 
 // ── MATCHING WEIGHTS (tunable) ──
@@ -475,6 +477,17 @@ async function init(){
     }
     if(p.sport&&SPORT_SKILLS[p.sport])athleteSport=p.sport;
   }
+
+  // ── PILOT ATHLETE DETECTION ──────────────────────────────────────────
+  // Determines whether the bundle picker on the coach detail modal shows
+  // the standard 3 bundles or the single pilot offer.
+  try {
+    const { data: ap } = await sb.from("profiles")
+      .select("pilot_status").eq("id", currentUser.id).maybeSingle();
+    _athleteProfile = ap;
+  } catch(e) {}
+  _isPilotAthlete = window.isPilotAthlete && window.isPilotAthlete(_athleteProfile);
+
   // Set sport filter
   document.getElementById("sportName").textContent=athleteSport;
   document.getElementById("sportDdIcon").textContent=SPORT_ICONS[athleteSport]||SPORT_ICONS.Other;
@@ -739,15 +752,33 @@ function showDetail(id){
   const _order = window.BUNDLE_ORDER || ["starter","standard","pro"];
   const _active = (Array.isArray(c.bundles_active) && c.bundles_active.length) ? c.bundles_active : _order;
   const _tierCtx = (window.tierShort && c.selected_tier) ? tierShort(c.selected_tier) : (badgeTxt || "Coach");
-  const bundlesHtml = window.BUNDLES ? _order.filter(k=>_active.indexOf(k)!==-1).map(k=>{
-    const b=window.BUNDLES[k]; const price=b.price(_rate);
-    return `<div class="bundle-card">
-      <div class="bundle-card-top"><div class="bundle-card-name">${b.name}</div><div class="bundle-card-price">$${price}<span>/mo</span></div></div>
-      <div class="bundle-card-sum">${b.summary}</div>
-      <ul class="bundle-card-list">${b.contents.map(x=>`<li>${x}</li>`).join("")}</ul>
-      <button class="bundle-sub-btn" onclick="subscribeBundle('${c.id}','${k}')">Subscribe</button>
+  // PILOT: pilot athletes see a single pilot offer card instead of the
+  // standard 3 bundles. The same subscribeBundle() flow handles both.
+  let bundlesHtml = "";
+  if(_isPilotAthlete && window.getPilotOffer){
+    const offer = window.getPilotOffer();
+    const price = offer.price();
+    bundlesHtml = `<div class="bundle-card" style="border-color:rgba(250,204,21,.4);background:linear-gradient(160deg,rgba(15,23,42,.95),rgba(9,14,35,.98));">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.18em;color:#facc15;text-transform:uppercase;margin-bottom:8px;">Founding Athlete · Invite-Only</div>
+      <div class="bundle-card-top">
+        <div class="bundle-card-name">${offer.name}</div>
+        <div class="bundle-card-price" style="color:#facc15;">$${price}<span>/mo</span></div>
+      </div>
+      <div class="bundle-card-sum">${offer.summary}</div>
+      <ul class="bundle-card-list">${offer.contents.map(x=>`<li>${x}</li>`).join("")}</ul>
+      <button class="bundle-sub-btn" onclick="subscribeBundle('${c.id}','pilot')">Subscribe — $${price}/mo</button>
     </div>`;
-  }).join("") : "";
+  } else {
+    bundlesHtml = window.BUNDLES ? _order.filter(k=>_active.indexOf(k)!==-1).map(k=>{
+      const b=window.BUNDLES[k]; const price=b.price(_rate);
+      return `<div class="bundle-card">
+        <div class="bundle-card-top"><div class="bundle-card-name">${b.name}</div><div class="bundle-card-price">$${price}<span>/mo</span></div></div>
+        <div class="bundle-card-sum">${b.summary}</div>
+        <ul class="bundle-card-list">${b.contents.map(x=>`<li>${x}</li>`).join("")}</ul>
+        <button class="bundle-sub-btn" onclick="subscribeBundle('${c.id}','${k}')">Subscribe</button>
+      </div>`;
+    }).join("") : "";
+  }
   document.getElementById("modalContent").innerHTML=`
     <div class="modal-banner" style="background:linear-gradient(160deg,${c.av},#0a0f1a);">
       ${banner}
@@ -780,8 +811,8 @@ function showDetail(id){
     <div class="detail-section-title">Athlete Results</div>
     <div class="results-row">${c.results.map(r=>`<div class="result-stat"><div class="result-val">${r[0]}</div><div class="result-lbl">${r[1]}</div></div>`).join("")}</div>
     <div class="detail-divider"></div>
-    <div class="detail-section-title">Monthly Packages</div>
-    <div class="bundle-context">${_tierCtx} · pricing scales with the coach's tier</div>
+    <div class="detail-section-title">${_isPilotAthlete ? "Your Pilot Offer" : "Monthly Packages"}</div>
+    <div class="bundle-context">${_isPilotAthlete ? "Locked pilot pricing · 4 weekly skill reviews · cancel anytime" : (_tierCtx + " · pricing scales with the coach's tier")}</div>
     ${bundlesHtml}
     <div class="billing-note">Monthly subscription billed via Stripe. 80% goes to your coach, 20% to the platform. Cancel anytime.</div>
     </div>

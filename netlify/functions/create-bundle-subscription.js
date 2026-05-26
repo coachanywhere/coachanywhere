@@ -9,11 +9,11 @@
 //
 // 🔴 STRIPE CONNECT DEPENDENCY (launch-critical, NOT yet built):
 //   This requires the coach to have a connected Stripe account id stored on
-//   their profile (expected column: profiles.stripe_connect_id). That column
+//   their profile (expected column: profiles.stripe_account_id). That column
 //   and the Connect onboarding flow do NOT exist yet. Until they do, EVERY
 //   coach reads as "no connect account" and the subscription is BLOCKED with a
 //   clear message — the athlete is never charged. When Connect onboarding is
-//   built (adds profiles.stripe_connect_id + onboarding), this function works
+//   built (adds profiles.stripe_account_id + onboarding), this function works
 //   unchanged. We read the coach profile with select('*') so the missing
 //   column simply reads as undefined rather than erroring.
 //
@@ -68,25 +68,30 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body || "{}"); } catch (e) {}
   const coachId = (body.coachId || "").trim();
   const bundleType = (body.bundleType || "").trim();
+  // PILOT: the single flat $49/mo Founding Athlete Pilot offer. It bypasses
+  // the per-tier bundle pricing matrix and the "coach offers this bundle" gate.
+  const isPilot = bundleType === "pilot";
   if (!coachId) return cors(json(400, { error: "missing coachId" }));
-  if (!BUNDLE_TYPES.includes(bundleType)) return cors(json(400, { error: "invalid bundleType" }));
+  if (!isPilot && !BUNDLE_TYPES.includes(bundleType)) return cors(json(400, { error: "invalid bundleType" }));
   if (coachId === athleteId) return cors(json(400, { error: "cannot subscribe to yourself" }));
 
-  // ── Load the coach (select * so a missing stripe_connect_id just reads undefined) ──
+  // ── Load the coach (select * so a missing stripe_account_id just reads undefined) ──
   const { data: coach, error: coachErr } = await sb.from("profiles").select("*").eq("id", coachId).maybeSingle();
   if (coachErr || !coach) return cors(json(404, { error: "coach not found" }));
   if (coach.role !== "coach") return cors(json(400, { error: "not a coach" }));
 
-  // Bundle must be one this coach offers.
-  const active = Array.isArray(coach.bundles_active) ? coach.bundles_active : BUNDLE_TYPES;
-  if (!active.includes(bundleType)) return cors(json(400, { error: "coach does not offer this package" }));
+  // Bundle must be one this coach offers (pilot is always allowed).
+  if (!isPilot) {
+    const active = Array.isArray(coach.bundles_active) ? coach.bundles_active : BUNDLE_TYPES;
+    if (!active.includes(bundleType)) return cors(json(400, { error: "coach does not offer this package" }));
+  }
 
   const level = tierLevel(coach.selected_tier);
-  if (!level) return cors(json(400, { error: "coach tier not set" }));
+  if (!isPilot && !level) return cors(json(400, { error: "coach tier not set" }));
 
   // ── Stripe Connect gate ──
   // No connected account → block gracefully, athlete is NOT charged.
-  if (!coach.stripe_connect_id) {
+  if (!coach.stripe_account_id) {
     return cors(json(200, {
       blocked: true,
       reason: "no_connect_account",
@@ -95,12 +100,14 @@ exports.handler = async (event) => {
   }
 
   // ── Resolve the Stripe price + snapshot price ──
-  const priceId = process.env[PRICE_ENV[bundleType][level]];
+  // Pilot uses a single flat Stripe price ($49/mo) instead of the tier matrix.
+  const PILOT_PRICE = 49;   // mirrors bundles.js PILOT_CONFIG.monthlyPrice
+  const priceId = isPilot ? process.env.STRIPE_PILOT_PRICE_ID : process.env[PRICE_ENV[bundleType][level]];
   if (!priceId) {
-    console.error("[create-bundle-subscription] missing price env:", PRICE_ENV[bundleType][level]);
-    return cors(json(500, { error: "pricing_not_configured" }));
+    console.error("[create-bundle-subscription] missing price env:", isPilot ? "STRIPE_PILOT_PRICE_ID" : PRICE_ENV[bundleType][level]);
+    return cors(json(500, { error: isPilot ? "pilot_price_not_configured" : "pricing_not_configured" }));
   }
-  const price = monthlyPrice(bundleType, level);
+  const price = isPilot ? PILOT_PRICE : monthlyPrice(bundleType, level);
 
   // ── Create the subscription Checkout session (destination charge, 20% fee) ──
   try {
@@ -110,13 +117,14 @@ exports.handler = async (event) => {
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
         application_fee_percent: 20,
-        transfer_data: { destination: coach.stripe_connect_id },
+        transfer_data: { destination: coach.stripe_account_id },
         metadata: {
           type: "bundle",
           athlete_id: athleteId,
           coach_id: coachId,
           bundle_type: bundleType,
-          monthly_price: String(price)
+          monthly_price: String(price),
+          is_pilot: isPilot ? "true" : "false"
         }
       },
       metadata: {
@@ -124,7 +132,8 @@ exports.handler = async (event) => {
         athlete_id: athleteId,
         coach_id: coachId,
         bundle_type: bundleType,
-        monthly_price: String(price)
+        monthly_price: String(price),
+        is_pilot: isPilot ? "true" : "false"
       },
       success_url: appUrl + "/athlete-dashboard.html?subscribed=1",
       cancel_url:  appUrl + "/select-coach.html"

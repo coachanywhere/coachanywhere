@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Founding Pilot Coach — CoachAnywhere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="You've been invited to coach in the CoachAnywhere Founding Pilot. $60/month per active athlete, free platform access, full coach intake."/>
+  <meta name="theme-color" content="#1a0f00"/>
+  <meta name="robots" content="noindex, nofollow"/>
+  <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="bundles.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0d1117;--bg2:#131920;--bg3:#1a0f00;
+      --card:rgba(15,23,42,.78);--card2:rgba(15,23,42,.92);
+      --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.16);
+      --text:#e8edf5;--muted:#94a3b8;--muted2:#64748b;
+      --amber:#d97706;--amber2:#92400e;--amber3:#f59e0b;--amber-lt:#fbbf24;
+      --green:#22c55e;--gold:#facc15;
+      --tr:160ms ease-out;
+    }
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+      background:radial-gradient(circle at 20% 0%,var(--bg3) 0%,var(--bg2) 55%,var(--bg) 100%);
+      color:var(--text);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;
+    }
+    a{color:inherit;text-decoration:none;}
+    button{font-family:inherit;cursor:pointer;}
+
+    /* SHELL */
+    header{
+      backdrop-filter:blur(18px);
+      background:linear-gradient(to bottom,rgba(13,17,23,.96),rgba(13,17,23,.88),transparent);
+      border-bottom:1px solid rgba(180,83,9,.4);
+      padding:14px 28px;display:flex;align-items:center;justify-content:space-between;
+    }
+    .nav-wordmark{font-size:18px;font-weight:800;letter-spacing:.04em;color:#fff;text-transform:uppercase;}
+    .nav-wordmark span{color:var(--amber3);}
+    .nav-back{font-size:13px;color:var(--muted);transition:color var(--tr);}
+    .nav-back:hover{color:#fff;}
+
+    .container{max-width:760px;margin:0 auto;padding:42px 22px 80px;}
+
+    /* HERO */
+    .pilot-badge{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border-radius:999px;
+      background:linear-gradient(135deg,rgba(217,119,6,.16),rgba(146,64,14,.08));
+      border:1px solid rgba(245,158,11,.4);
+      font-size:11px;font-weight:800;letter-spacing:.18em;
+      color:var(--amber-lt);text-transform:uppercase;
+      margin-bottom:22px;
+    }
+    .pilot-badge .dot{
+      width:7px;height:7px;border-radius:50%;
+      background:var(--amber-lt);box-shadow:0 0 12px var(--amber-lt);
+      animation:pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+
+    h1{
+      font-size:clamp(34px,5vw,52px);font-weight:800;color:#f9fafb;
+      letter-spacing:-.025em;line-height:1.05;margin-bottom:18px;
+    }
+    h1 .grad{
+      background:linear-gradient(120deg,#fbbf24,#d97706,#92400e);
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    }
+    .hero-sub{
+      font-size:18px;color:rgba(232,237,245,.78);line-height:1.65;
+      max-width:560px;margin-bottom:30px;
+    }
+
+    /* OFFER CARD */
+    .offer{
+      background:linear-gradient(160deg,rgba(15,23,42,.92),rgba(13,17,23,.96));
+      border:1px solid rgba(245,158,11,.28);
+      border-radius:20px;padding:28px;margin-bottom:28px;
+      box-shadow:0 30px 80px rgba(0,0,0,.5);
+      position:relative;overflow:hidden;
+    }
+    .offer::before{
+      content:'';position:absolute;top:-100px;right:-100px;
+      width:280px;height:280px;border-radius:50%;
+      background:radial-gradient(circle,rgba(245,158,11,.08),transparent 65%);
+      pointer-events:none;
+    }
+    .offer-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;gap:16px;flex-wrap:wrap;}
+    .offer-name{font-size:22px;font-weight:800;color:#f9fafb;letter-spacing:-.01em;}
+    .offer-sub{font-size:13px;color:var(--muted);margin-top:3px;}
+    .offer-price{text-align:right;flex-shrink:0;}
+    .offer-price-now{
+      font-size:36px;font-weight:800;color:var(--amber-lt);
+      letter-spacing:-.02em;line-height:1;
+    }
+    .offer-price-now small{font-size:14px;font-weight:600;color:var(--muted);}
+    .offer-price-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+
+    .offer-list{display:flex;flex-direction:column;gap:11px;margin:14px 0 4px;}
+    .offer-item{
+      display:flex;align-items:flex-start;gap:11px;
+      font-size:14px;color:rgba(232,237,245,.88);line-height:1.5;
+    }
+    .offer-item svg{
+      width:18px;height:18px;color:var(--green);flex-shrink:0;margin-top:2px;
+    }
+
+    /* CTA */
+    .cta-row{margin-top:24px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    .cta-btn{
+      padding:14px 28px;border-radius:10px;
+      background:linear-gradient(135deg,var(--amber),var(--amber2));
+      color:#fff;font-weight:700;font-size:15px;border:none;
+      box-shadow:0 12px 28px rgba(180,83,9,.4);
+      transition:transform var(--tr);
+    }
+    .cta-btn:hover{transform:translateY(-1px);}
+    .cta-note{font-size:12px;color:var(--muted);}
+
+    /* WHAT YOU GET */
+    .next-section{margin-top:36px;}
+    .next-title{
+      font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--muted);margin-bottom:14px;
+    }
+    .next-step{
+      display:flex;gap:14px;padding:14px 0;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .next-step:last-child{border-bottom:none;}
+    .next-num{
+      width:28px;height:28px;border-radius:8px;
+      background:rgba(245,158,11,.14);color:var(--amber-lt);
+      font-weight:800;font-size:13px;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .next-text{font-size:14px;color:rgba(232,237,245,.78);line-height:1.55;}
+    .next-text strong{color:#f1f5f9;font-weight:700;}
+
+    /* ECONOMICS PANEL */
+    .econ{
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--border2);
+      border-radius:14px;padding:20px;margin-top:24px;
+    }
+    .econ-label{
+      font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--muted);margin-bottom:14px;
+    }
+    .econ-row{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);
+      font-size:14px;
+    }
+    .econ-row:last-child{border-bottom:none;font-weight:700;color:#f9fafb;font-size:16px;padding-top:14px;}
+    .econ-row .left{color:rgba(232,237,245,.7);}
+    .econ-row .right{color:#f1f5f9;font-weight:600;}
+
+    footer{
+      border-top:1px solid var(--border);
+      padding:24px;text-align:center;
+      font-size:12px;color:var(--muted2);
+    }
+    footer a{color:var(--amber3);}
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="nav-wordmark">COACH<span>ANYWHERE</span></a>
+  <a href="index.html" class="nav-back">← Back to home</a>
+</header>
+
+<div class="container">
+
+  <div class="pilot-badge"><span class="dot"></span>Founding Pilot Coach Invitation</div>
+
+  <h1>Coach the founding<br><span class="grad">athlete cohort</span></h1>
+
+  <p class="hero-sub">
+    You've been hand-picked as one of four coaches for the CoachAnywhere pilot.
+    Real athletes, real feedback, and a real opportunity to shape the platform
+    before public launch.
+  </p>
+
+  <!-- OFFER -->
+  <div class="offer">
+    <div class="offer-top">
+      <div>
+        <div class="offer-name">Pilot Coach Programme</div>
+        <div class="offer-sub">Invite-only · 4 coaches · up to 5 athletes each</div>
+      </div>
+      <div class="offer-price">
+        <div class="offer-price-now">$60<small>/mo</small></div>
+        <div class="offer-price-sub">per active athlete</div>
+      </div>
+    </div>
+
+    <div class="offer-list">
+      <div class="offer-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <strong style="color:#f1f5f9;">$60 per active athlete per month</strong> — paid via Stripe Connect
+      </div>
+      <div class="offer-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        4 weekly skill reviews per athlete (1/week, ~15 min each)
+      </div>
+      <div class="offer-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Full coach intake — bio, qualifications, sport, focus areas, profile photo
+      </div>
+      <div class="offer-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <strong style="color:#f1f5f9;">No platform subscription fee during the pilot</strong>
+      </div>
+      <div class="offer-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Foundation pricing locked in for post-pilot
+      </div>
+      <div class="offer-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Direct line to the founder for feedback and feature requests
+      </div>
+    </div>
+
+    <div class="cta-row">
+      <button class="cta-btn" onclick="window.location.href='coach-signup.html?pilot=coach'">Get started →</button>
+      <span class="cta-note">Takes ~10 min to complete intake</span>
+    </div>
+  </div>
+
+  <!-- WHAT HAPPENS NEXT -->
+  <div class="next-section">
+    <div class="next-title">What happens next</div>
+    <div class="next-step">
+      <div class="next-num">1</div>
+      <div class="next-text">Create your coach account (email + password).</div>
+    </div>
+    <div class="next-step">
+      <div class="next-num">2</div>
+      <div class="next-text">Complete your full intake — bio, qualifications, sport, focus areas, profile photo. We'll review and approve within 24 hours.</div>
+    </div>
+    <div class="next-step">
+      <div class="next-num">3</div>
+      <div class="next-text">Connect your Stripe account so we can pay you. Athletes pay via Stripe; we handle the platform top-up automatically.</div>
+    </div>
+    <div class="next-step">
+      <div class="next-num">4</div>
+      <div class="next-text">Athletes pick you from the pilot cohort. You review their uploads weekly. <strong>$60/month per active athlete</strong> arrives in your Stripe account.</div>
+    </div>
+  </div>
+
+  <!-- ECONOMICS BREAKDOWN -->
+  <div class="econ">
+    <div class="econ-label">How the $60 works</div>
+    <div class="econ-row">
+      <span class="left">Athlete subscription</span>
+      <span class="right">$49 / month</span>
+    </div>
+    <div class="econ-row">
+      <span class="left">Platform commission (20%)</span>
+      <span class="right">−$9.80</span>
+    </div>
+    <div class="econ-row">
+      <span class="left">Your share of the subscription (80%)</span>
+      <span class="right">$39.20</span>
+    </div>
+    <div class="econ-row">
+      <span class="left">CoachAnywhere top-up (we cover the difference)</span>
+      <span class="right">+$20.80</span>
+    </div>
+    <div class="econ-row">
+      <span class="left">You receive</span>
+      <span class="right" style="color:var(--amber-lt);">$60.00</span>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  © CoachAnywhere · <a href="terms-of-service.html">Terms</a> · <a href="privacy-policy.html">Privacy</a> · <a href="contact.html">Contact</a>
+</footer>
+
+</body>
+</html>

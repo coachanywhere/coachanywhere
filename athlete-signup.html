@@ -9,6 +9,7 @@
   <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="focus-areas.js"></script>
+  <script src="bundles.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     :root{
@@ -265,6 +266,14 @@
 
   <div class="page-wrap">
     <div class="form-card">
+
+      <!-- Founding Athlete Pilot banner — only visible when ?pilot=athlete is set. -->
+      <div id="pilotBanner" style="display:none;max-width:560px;margin:18px auto 0;padding:14px 18px;border-radius:12px;background:linear-gradient(135deg,rgba(250,204,21,.14),rgba(217,119,6,.06));border:1px solid rgba(250,204,21,.35);">
+        <div style="font-size:10px;font-weight:800;letter-spacing:.18em;color:#facc15;text-transform:uppercase;margin-bottom:4px;">Founding Athlete · Pilot Invite</div>
+        <div style="font-size:13px;color:rgba(232,237,245,.85);line-height:1.55;">
+          Your invite code <strong id="pilotBannerCode" style="color:#fbbf24;font-family:ui-monospace,monospace;">…</strong> will be claimed when you create your account. After signup you'll be subscribed at the pilot rate of <strong>$49/mo</strong>.
+        </div>
+      </div>
 
       <!-- Page header -->
       <div style="text-align:center;margin-bottom:36px;">
@@ -533,6 +542,20 @@
       renderImprove();
     })();
 
+    // ── PILOT MODE DETECTION ──────────────────────────────────────────────
+    // If the user arrived from pilot.html with ?pilot=athlete&code=XXX, show the
+    // founding-athlete banner. The code is claimed at signup-submit time, not
+    // here, so we don't lock codes for users who never finish.
+    const _pilotParams = new URLSearchParams(window.location.search);
+    const _isPilotSignup = _pilotParams.get("pilot") === "athlete";
+    const _pilotCode = (_pilotParams.get("code") || "").toUpperCase();
+    if(_isPilotSignup && _pilotCode){
+      const banner = document.getElementById("pilotBanner");
+      const codeEl = document.getElementById("pilotBannerCode");
+      if(banner){ banner.style.display = "block"; }
+      if(codeEl){ codeEl.textContent = _pilotCode; }
+    }
+
     // Form submit — Supabase auth + profile + Airtable
     document.getElementById("athleteForm").addEventListener("submit", async function(e){
       e.preventDefault();
@@ -606,6 +629,40 @@
       }
       var { error: profileError } = await sb.from("profiles").insert(insertPayload);
       if (profileError) console.warn("Profile insert warning:", profileError.message);
+
+      // ── PILOT CODE CLAIM ──────────────────────────────────────────────────
+      // Only runs if the URL says ?pilot=athlete&code=XXX. We call the RPC which
+      // atomically validates + marks the code used + checks the 20-athlete cap.
+      // On success, we stamp profiles.pilot_status='athlete'. On failure, we
+      // surface the reason but DON'T undo the signup — the user can contact
+      // support to manually claim a code.
+      if(_isPilotSignup && _pilotCode){
+        try {
+          const { data: claimData, error: claimErr } = await sb.rpc(
+            "validate_and_claim_pilot_code",
+            { p_code: _pilotCode, p_user_id: authData.user.id }
+          );
+          const claim = Array.isArray(claimData) ? claimData[0] : claimData;
+          if(claimErr || !claim || !claim.ok){
+            const reason = (claim && claim.reason) || (claimErr && claimErr.message) || "unknown";
+            console.warn("[pilot] code claim failed:", reason);
+            // Show a soft warning but let signup proceed — they can be manually
+            // upgraded by support after the fact.
+            alert("Your invite code couldn't be validated (" + reason + "). " +
+                  "Your account has been created — please contact support to " +
+                  "activate your pilot access.");
+          } else {
+            // Stamp pilot status so dashboards/select-coach/etc. know this user
+            // is on the pilot offer.
+            await sb.from("profiles").update({
+              pilot_status:     "athlete",
+              pilot_started_at: new Date().toISOString()
+            }).eq("id", authData.user.id);
+          }
+        } catch(e) {
+          console.warn("[pilot] code claim threw:", e);
+        }
+      }
 
       // 3. Ensure the user is signed in (signUp may not create a session if email confirmation is on)
       var { data: sessionData } = await sb.auth.getSession();

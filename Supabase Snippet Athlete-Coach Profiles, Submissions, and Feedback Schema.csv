@@ -1,0 +1,68 @@
+column_name,data_type
+id,uuid
+role,text
+first_name,text
+last_name,text
+sport,text
+location,text
+skill_level,text
+main_goal,text
+airtable_id,text
+created_at,timestamp without time zone
+spotlight_active,boolean
+spotlight_pending,boolean
+selected_tier,text
+mentor_active,boolean
+mentor_pending,boolean
+mentor_tagline,text
+mentor_bio,text
+mentor_rate,integer
+mentor_group_max,integer
+mentor_group_current,integer
+mentor_group_day,text
+mentor_group_time,text
+mentor_zoom_link,text
+bio,text
+qualifications,text
+coaching_style,text
+headshot_url,text
+monthly_rate,integer
+turnaround_time,text
+service_packages,text
+profile_status,text
+mobile,text
+accepting_athletes,boolean
+avatar_url,text
+goals,jsonb
+skills,jsonb
+age,integer
+guardian_first_name,text
+guardian_last_name,text
+guardian_mobile,text
+billing_cycle,text
+ai_recommended_tier,text
+coach_agreed_with_ai,boolean
+mentor_focus_area,text
+spotlight_stripe_customer_id,text
+spotlight_stripe_subscription_id,text
+spotlight_activated_at,timestamp with time zone
+spotlight_expires_at,timestamp with time zone
+tier_stripe_customer_id,text
+tier_stripe_subscription_id,text
+tier_activated_at,timestamp with time zone
+tier_status,text
+tier_cancelled_at,timestamp with time zone
+tier_cancellation_reason,text
+tier_cancellation_detail,text
+tier_cancellation_feedback_offer,text
+spotlight_cancelled_at,timestamp with time zone
+spotlight_cancellation_reason,text
+spotlight_cancellation_detail,text
+spotlight_cancellation_feedback_offer,text
+focus_areas,ARRAY
+custom_focus_areas,ARRAY
+improvement_focus,ARRAY
+tier_hourly_rate,numeric
+bundles_active,ARRAY
+pilot_status,text
+pilot_started_at,timestamp with time zone

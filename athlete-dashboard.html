@@ -9,6 +9,7 @@
   <meta http-equiv="Expires" content="0"/>
   <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6923b50adad3246a3f3454bb/692cfabfc289a9742deda737_Transparent%20CoachAnywhere%20logo%20PNG%20file%20URL.png"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="bundles.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -580,6 +581,8 @@
             <div class="act-card"><div class="act-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="act-val" id="actPending">0</div><div class="act-lbl">Pending Review</div><div class="act-sub">In Progress</div></div></div>
             <div class="act-card"><div class="act-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="act-val" id="actReviews">0</div><div class="act-lbl">Reviews Back</div><div class="act-sub">See Feedback</div></div></div>
             <div class="act-card"><div class="act-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div><div class="act-val" id="actDueDays">—</div><div class="act-lbl">Next Upload Due</div><div class="act-sub" id="actDueDate">—</div></div></div>
+            <!-- Pilot review counter — only renders for pilot athletes. -->
+            <div class="act-card" id="pilotReviewTile" style="display:none;"><div class="act-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="act-val"><span id="pilotReviewCount">0</span> <span style="font-size:13px;color:var(--muted);font-weight:600;">of 4</span></div><div class="act-lbl">Pilot reviews this month</div><div class="act-sub" id="pilotReviewSub">Resets on the 1st</div></div></div>
           </div>
 
           <!-- Recent Reviews -->
@@ -1037,20 +1040,24 @@
     if(el) el.textContent = `under ${MAX_DURATION_SEC}s · max ${MAX_UPLOAD_MB} MB`;
   }
 
-  // ── Coach service packages ─────────────────────────────────────
-  // Mirror of the canonical list in coach-profile-setup.html:403–409.
-  // Used here to resolve subscription.package_name → inclusions list and to
-  // render the "More packages" section from coach.service_packages.
-  // Keep the names + ids in sync if you ever edit coach-profile-setup.
-  const PACKAGES = [
-    { id:"starter",  name:"Skill Clip Review",            price:15,  inclusions:["1 skill clip per submission","Written feedback & corrections","Drill recommendation to reinforce improvement","Response within 48 hours"] },
-    { id:"standard", name:"Session Review",               price:35,  inclusions:["Up to 15 min training footage","Multi-skill written feedback report","Key technique corrections","Next session tips","Response within 48 hours"] },
-    { id:"pro",      name:"Half Game / Long Session Review", price:75,  inclusions:["Up to 30 min game or session footage","Multi-phase technique analysis","Decision-making & positioning feedback","Key moments highlighted","Written breakdown + drill plan","Response within 48 hours"] },
-    { id:"elite",    name:"Full Game Review",             price:120, inclusions:["Full game footage reviewed","Comprehensive written report","Technique, tactics & positioning","Performance trends identified","Personalised improvement action plan","Response within 72 hours"] },
-    { id:"premium",  name:"Elite Package",                price:199, inclusions:["Full game or session footage reviewed","Live Zoom debrief session (30 min)","Personalised monthly training plan","Priority response within 48 hours","Ongoing progress tracking"] }
-  ];
-  function packageById(id){ return PACKAGES.find(p => p.id === id) || null; }
-  function packageByName(name){ return PACKAGES.find(p => p.name === name) || null; }
+  // ── Bundles (read from bundles.js) ─────────────────────────────
+  // The athlete's subscription row stores the bundle id (starter/standard/pro).
+  // Resolving by name is kept for backwards compatibility with legacy rows
+  // that stored package_name = the human-readable bundle name.
+  function packageById(id){
+    return window.BUNDLES && window.BUNDLES[id] ? window.BUNDLES[id] : null;
+  }
+  function packageByName(name){
+    if(!window.BUNDLES || !name) return null;
+    return window.BUNDLE_ORDER
+      .map(k => window.BUNDLES[k])
+      .find(b => b.name === name) || null;
+  }
+  // Returns the contents/inclusions list for whatever record shape we got.
+  function packageContents(pkg){
+    if(!pkg) return [];
+    return pkg.contents || pkg.inclusions || [];
+  }
 
   let currentUser=null,selectedFile=null,currentCoach=null;
   let currentThreadCoachId=null,msgSub=null;
@@ -1058,6 +1065,8 @@
 
   // ── Profile-editor module state ──
   let cachedProfile = {};
+  // Pilot state — set in init() after profile load, read by the upload handler.
+  let _isPilotAthlete = false;
   let editGoals = [];
   let editSkills = [];
   let pendingPhotoUrl = null;
@@ -1102,6 +1111,31 @@
     document.getElementById("topGreeting").textContent = "Welcome back, " + displayName;
     renderHomeGoals(cachedProfile.goals);
     renderFullGoals(cachedProfile.goals);
+
+    // ── PILOT ATHLETE STATUS + REVIEW COUNT ──────────────────────────────
+    _isPilotAthlete = window.isPilotAthlete && window.isPilotAthlete(cachedProfile);
+    if(_isPilotAthlete){
+      const tile = document.getElementById("pilotReviewTile");
+      if(tile) tile.style.display = "block";
+
+      // Read the per-month count from the view.
+      const month = new Date().toISOString().slice(0, 7);   // 'YYYY-MM'
+      try {
+        const { data: counts } = await sb.from("pilot_review_counts")
+          .select("review_count")
+          .eq("athlete_id", currentUser.id)
+          .eq("month", month)
+          .maybeSingle();
+        const used = (counts && counts.review_count) || 0;
+        const countEl = document.getElementById("pilotReviewCount");
+        if(countEl) countEl.textContent = used;
+        if(used >= 4){
+          const sub = document.getElementById("pilotReviewSub");
+          if(sub) sub.textContent = "Pilot allowance reached — resets on the 1st";
+        }
+      } catch(e) { console.warn("[pilot] review count fetch failed:", e); }
+    }
+
     // Guardian-block toggle reacts to age changes in the modal
     document.getElementById("profileAge")?.addEventListener("input", toggleGuardianBlock);
     await Promise.all([loadData(),loadCoach(),loadMessages()]);
@@ -1189,14 +1223,16 @@
   }
 
   function renderSidePanelPlan(sub, pkg){
-    const name = sub.package_name || "Active plan";
+    const name = sub.is_pilot
+      ? (window.PILOT_CONFIG ? window.PILOT_CONFIG.label : "Founding Athlete Pilot")
+      : (sub.package_name || "Active plan");
     const billing = sub.billing_cycle || "Monthly";
-    const inclusions = (pkg && pkg.inclusions) ? pkg.inclusions.slice(0,2) : [];
+    const inclusions = packageContents(pkg).slice(0,2);
     return `
       <div style="margin-top:10px;padding:10px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.22);border-radius:9px;">
         <div style="font-size:9px;font-weight:700;color:var(--blue3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px;">Your plan</div>
         <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:2px;">${escapeHtml(name)}</div>
-        <div style="font-size:10px;color:var(--muted);">${escapeHtml(billing)}${pkg ? ` · $${pkg.price}` : ""}</div>
+        <div style="font-size:10px;color:var(--muted);">${escapeHtml(billing)}${sub.monthly_price ? ` · $${sub.monthly_price}/mo` : ""}</div>
         ${inclusions.length ? `<ul style="margin:7px 0 0;padding-left:15px;color:var(--muted2);font-size:11px;line-height:1.5;">
           ${inclusions.map(i => `<li>${escapeHtml(i)}</li>`).join("")}
         </ul>` : ""}
@@ -1221,10 +1257,12 @@
   }
 
   function renderSectionPlan(sub, pkg){
-    const name = sub.package_name || "Active plan";
+    const name = sub.is_pilot
+      ? (window.PILOT_CONFIG ? window.PILOT_CONFIG.label : "Founding Athlete Pilot")
+      : (sub.package_name || "Active plan");
     const billing = sub.billing_cycle || "Monthly";
-    const inclusions = (pkg && pkg.inclusions) ? pkg.inclusions : [];
-    const priceSuffix = pkg ? ` · $${pkg.price}/${billing.toLowerCase().includes("month") ? "mo" : "cycle"}` : "";
+    const inclusions = packageContents(pkg);
+    const priceSuffix = sub.monthly_price ? ` · $${sub.monthly_price}/${billing.toLowerCase().includes("month") ? "mo" : "cycle"}` : "";
     return `
       <div style="margin-bottom:18px;padding:16px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);border-radius:11px;">
         <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
@@ -1243,11 +1281,22 @@
   }
 
   function renderSectionMorePackages(coach){
-    const raw = (coach.service_packages||"").trim();
-    if(!raw) return "";
-    const ids = raw.split(",").map(s => s.trim()).filter(Boolean);
-    const pkgs = ids.map(id => packageById(id)).filter(Boolean);
+    // Prefer the new column (text[] of bundle ids). Fall back to the legacy
+    // comma-separated service_packages string so existing rows keep working
+    // until they're migrated. Anything not in BUNDLE_ORDER is filtered out.
+    const activeIds = Array.isArray(coach.bundles_active) && coach.bundles_active.length
+      ? coach.bundles_active.filter(k => window.BUNDLE_ORDER.includes(k))
+      : (coach.service_packages || "")
+          .split(",").map(s => s.trim()).filter(Boolean)
+          .map(s => {
+            const byId   = window.BUNDLES[s] ? s : null;
+            const byName = packageByName(s);
+            return byId || (byName ? byName.id : null);
+          }).filter(Boolean);
+    const pkgs = activeIds.map(id => packageById(id)).filter(Boolean);
     if(!pkgs.length) return "";
+    const lvl = window.tierLevel(coach.selected_tier);
+    const rate = coach.tier_hourly_rate || window.TIER_RATES[lvl];
     return `
       <div style="margin-bottom:18px;">
         <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;margin-bottom:10px;">More packages from this coach</div>
@@ -1255,9 +1304,9 @@
           ${pkgs.map(p => `
             <div style="padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;">
               <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">${escapeHtml(p.name)}</div>
-              <div style="font-size:11px;color:var(--blue3);font-weight:700;margin-bottom:6px;">$${p.price}</div>
+              <div style="font-size:11px;color:var(--blue3);font-weight:700;margin-bottom:6px;">$${p.price(rate)}/mo</div>
               <ul style="padding-left:15px;color:var(--muted2);font-size:11px;line-height:1.5;margin:0;">
-                ${p.inclusions.slice(0,3).map(i => `<li>${escapeHtml(i)}</li>`).join("")}
+                ${packageContents(p).slice(0,3).map(i => `<li>${escapeHtml(i)}</li>`).join("")}
               </ul>
             </div>`).join("")}
         </div>
@@ -1641,6 +1690,28 @@
     }
     const {data:urlData} = sb.storage.from("videos").getPublicUrl(fn);
     const videoUrl = urlData?.publicUrl;
+
+    // PILOT soft cap — warn (not block) on the 5th+ upload of the month.
+    // Uploads aren't blocked because we want to capture demand data; the
+    // athlete just sees a heads-up that they've used their allowance.
+    if(_isPilotAthlete){
+      const month = new Date().toISOString().slice(0, 7);
+      const { data: row } = await sb.from("pilot_review_counts")
+        .select("review_count")
+        .eq("athlete_id", currentUser.id)
+        .eq("month", month)
+        .maybeSingle();
+      const used = (row && row.review_count) || 0;
+      if(used >= 4){
+        const ok = confirm(
+          "Heads up — you've used your 4 pilot reviews this month.\n\n" +
+          "Your allowance resets on the 1st. You can still upload, but your " +
+          "coach may not get to extra reviews until next month.\n\n" +
+          "Continue anyway?"
+        );
+        if(!ok){ btn.textContent = "Send to Coach"; btn.disabled = false; return; }
+      }
+    }
 
     // coach_id is required — the coach-required gate above guarantees currentCoach is set
     // by loadCoach() from the athlete's active subscription. Without coach_id the row never

@@ -744,6 +744,9 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
     <!-- ══ EARNINGS SECTION ══ -->
     <div class="section" id="section-earnings">
       <div class="sec-title">Earnings</div>
+      <!-- Pilot earnings card — filled by renderPilotEarnings() for pilot coaches. -->
+      <div id="earningsPanel"></div>
+      <div id="earningsStandard">
       <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
         <div class="kpi-card"><div class="kpi-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div><div class="kpi-val">$0</div><div class="kpi-label">This Month</div><div class="kpi-sub">No payouts yet</div></div></div>
         <div class="kpi-card"><div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div><div class="kpi-val">$0</div><div class="kpi-label">Year to Date</div><div class="kpi-sub">No payouts yet</div></div></div>
@@ -753,6 +756,7 @@ button{font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;}
       <div class="fcard" style="margin-top:14px;max-width:none;">
         <div style="font-size:13px;color:var(--muted);line-height:1.6;">💡 Earnings data populates automatically once Stripe payouts are connected. Figures shown are estimates based on active athlete subscriptions and completed sessions.</div>
       </div>
+      </div><!-- /#earningsStandard -->
     </div>
 
     <!-- ══ AVAILABILITY SECTION ══ -->
@@ -1140,6 +1144,19 @@ async function saveFocusPanel(){
 function renderPackagesPanel(){
   const body=document.getElementById("packagesBody"); if(!body||!window.BUNDLES) return;
   const p=window._coachProfile||{};
+
+  // PILOT: pilot coaches have all athletes on the flat $49 offer. Hide the
+  // standard bundle toggle and show a locked pilot card instead.
+  if(window.isPilotCoach && window.isPilotCoach(p)){
+    body.innerHTML = `
+      <div style="padding:18px 20px;border-radius:12px;background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(180,83,9,.04));border:1px solid rgba(245,158,11,.3);">
+        <div style="font-size:10px;font-weight:800;letter-spacing:.18em;color:#fbbf24;text-transform:uppercase;margin-bottom:6px;">Founding Pilot · Locked</div>
+        <div style="font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:6px;">Founding Athlete Pilot — $49/mo</div>
+        <div style="font-size:13px;color:rgba(232,237,245,.7);line-height:1.6;">All your athletes subscribe at the pilot rate. <strong style="color:#fbbf24;">You receive $60 per active athlete per month</strong>. The standard 3-bundle marketplace opens after the pilot.</div>
+      </div>`;
+    return;
+  }
+
   const rate=tierHourlyRate(p);
   const active=Array.isArray(p.bundles_active)?p.bundles_active.slice():BUNDLE_ORDER.slice();
   if(!rate){
@@ -1176,6 +1193,94 @@ async function togglePackage(k){
   renderPackagesPanel();
 }
 
+async function renderPilotEarnings() {
+  if (!window._isPilotCoach) return;
+
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const target = document.getElementById("earningsPanel")
+              || document.getElementById("earningsBody");
+  if (!target) return;
+
+  // Read the rolled-up earnings view for active athletes
+  const { data: earningsRow } = await sb
+    .from("pilot_coach_earnings")
+    .select("active_athletes, amount_dollars")
+    .eq("coach_id", currentUser.id)
+    .maybeSingle();
+
+  const activeAthletes = (earningsRow && earningsRow.active_athletes) || 0;
+  const monthlyDollars = (earningsRow && earningsRow.amount_dollars)   || 0;
+
+  // Pull the itemised pending + paid history (this month)
+  const { data: payoutRows } = await sb
+    .from("pilot_payouts")
+    .select("id, athlete_id, amount_cents, status, paid_at, month, created_at")
+    .eq("coach_id", currentUser.id)
+    .eq("month", currentMonth)
+    .order("created_at", { ascending: false });
+
+  // Pull athlete names so we can show "Sarah J. — $60 — Pending"
+  const athleteIds = [...new Set((payoutRows || []).map(r => r.athlete_id))];
+  let athleteNames = {};
+  if (athleteIds.length) {
+    const { data: ppl } = await sb
+      .from("profiles")
+      .select("id, first_name, last_name")
+      .in("id", athleteIds);
+    (ppl || []).forEach(p => {
+      athleteNames[p.id] = (p.first_name || "") + " " + (p.last_name || "").charAt(0) + ".";
+    });
+  }
+
+  const pending = (payoutRows || []).filter(r => r.status === "pending");
+  const paid    = (payoutRows || []).filter(r => r.status === "paid");
+  const pendingTotal = pending.reduce((s, r) => s + r.amount_cents, 0) / 100;
+  const paidTotal    = paid.reduce((s, r) => s + r.amount_cents, 0) / 100;
+
+  const rowHtml = (r) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+      <div>
+        <div style="font-size:13px;color:#f1f5f9;font-weight:600;">${athleteNames[r.athlete_id] || "Athlete"}</div>
+        <div style="font-size:11px;color:var(--muted);">${new Date(r.created_at).toLocaleDateString()}${r.paid_at ? " · Paid " + new Date(r.paid_at).toLocaleDateString() : ""}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:14px;font-weight:700;color:${r.status === 'paid' ? '#86efac' : '#fbbf24'};">$${(r.amount_cents/100).toFixed(2)}</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:${r.status === 'paid' ? '#86efac' : 'var(--muted)'};font-weight:700;">${r.status}</div>
+      </div>
+    </div>`;
+
+  target.innerHTML = `
+    <div style="padding:20px 22px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;gap:14px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:10px;font-weight:800;letter-spacing:.18em;color:var(--amber3);text-transform:uppercase;margin-bottom:6px;">Pilot Earnings · ${currentMonth}</div>
+          <div style="font-size:32px;font-weight:800;color:#f9fafb;line-height:1;">$${monthlyDollars}<span style="font-size:14px;font-weight:600;color:var(--muted);">/mo</span></div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px;">${activeAthletes} active athlete${activeAthletes === 1 ? "" : "s"} × $60/month</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:3px;">Pending</div>
+          <div style="font-size:22px;font-weight:700;color:#fbbf24;">$${pendingTotal.toFixed(2)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;">Paid this month</div>
+          <div style="font-size:14px;font-weight:600;color:#86efac;">$${paidTotal.toFixed(2)}</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.55;">
+        Athletes pay $49/mo via Stripe. CoachAnywhere pays you <strong style="color:#f1f5f9;">$60 per active athlete</strong> by bank transfer, typically within 24-48 hours of each successful invoice.
+      </div>
+      ${pending.length ? `
+        <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px;">Pending payouts</div>
+        ${pending.map(rowHtml).join("")}
+      ` : ""}
+      ${paid.length ? `
+        <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px;">Paid this month</div>
+        ${paid.map(rowHtml).join("")}
+      ` : ""}
+      ${(!pending.length && !paid.length) ? `
+        <div style="padding:24px;text-align:center;font-size:13px;color:var(--muted);">No payouts yet this month. They appear here within 24h of each athlete's invoice.</div>
+      ` : ""}
+    </div>`;
+}
+
 let currentUser=null,currentThreadId=null,msgSub=null,acceptingAthletes=true;
 
 // Sport → [icon, accent hex] lookup used wherever a sport tag is rendered.
@@ -1200,6 +1305,9 @@ async function init(){
   currentUser=session.user;
   const {data:p}=await sb.from("profiles").select("*").eq("id",currentUser.id).maybeSingle();
   window._coachProfile = p || {};
+  // PILOT coach detection
+  const _isPilotCoach = window.isPilotCoach && window.isPilotCoach(p);
+  window._isPilotCoach = _isPilotCoach;   // used by other panels below
   // Show / hide the danger-zone cancel-tier card based on the loaded profile.
   setTimeout(wireCancelTierVisibility, 0);
   if(p){
@@ -1227,6 +1335,7 @@ async function init(){
   }
   renderFocusPanel();
   renderPackagesPanel();
+  renderPilotEarnings();
   renderQueue();
   renderRecent();
   renderAthletes();
