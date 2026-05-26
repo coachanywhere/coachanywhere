@@ -720,7 +720,7 @@ async function subscribeBundle(coachId, bundleType){
     const resp = await fetch("/.netlify/functions/create-bundle-subscription", {
       method:"POST",
       headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+session.access_token },
-      body: JSON.stringify({ coachId, bundleType })
+      body: JSON.stringify({ coachId, bundleType, athleteId: session.user.id, athleteEmail: session.user.email })
     });
     const data = await resp.json().catch(()=>({}));
     if(data.url){ window.location.href = data.url; return; }

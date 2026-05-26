@@ -1,22 +1,16 @@
 -- =============================================================================
--- CoachAnywhere — Pilot manual-payouts migration (B2)
+-- CoachAnywhere — Pilot manual-payouts migration (B2) — CORRECTED
 -- -----------------------------------------------------------------------------
--- Run this in the Supabase SQL Editor AFTER the original pilot-migration.sql.
--- This is a follow-up that:
---   • Adds bank details columns to profiles (for coach payouts)
---   • Replaces pilot_topups with pilot_payouts (different semantics)
---   • Updates RPC functions to match the manual-payout flow
+-- Fix: the previous version of this migration tried to read pr.email from
+-- profiles, but email lives on auth.users in Supabase. View now joins
+-- auth.users to fetch the email column.
 --
--- Safe to re-run — all schema changes use IF NOT EXISTS / OR REPLACE.
+-- Safe to run on top of the partial/rolled-back previous attempt — nothing
+-- from the previous attempt persisted.
 -- =============================================================================
 
 -- =============================================================================
 -- 1) Coach bank details on profiles
--- -----------------------------------------------------------------------------
--- We collect BSB + account number + account name during coach onboarding.
--- These are sensitive — RLS makes them readable only by the owning coach
--- (so they can edit them) and by the service-role webhook (which doesn't
--- need them since payouts are manual, but listing them is convenient).
 -- =============================================================================
 alter table profiles
   add column if not exists payout_bsb            text,
@@ -24,20 +18,12 @@ alter table profiles
   add column if not exists payout_account_name   text,
   add column if not exists payout_method         text default 'bank-transfer';
 
--- Comment for posterity
 comment on column profiles.payout_bsb is 'AU bank BSB (6 digits). Used for manual coach payouts during pilot.';
 comment on column profiles.payout_account_number is 'AU bank account number. Used for manual coach payouts during pilot.';
 
 
 -- =============================================================================
--- 2) Drop pilot_topups (Connect-specific) and replace with pilot_payouts
--- -----------------------------------------------------------------------------
--- pilot_topups was designed for the Connect flow (auto-transfers via Stripe).
--- In manual-payout mode we instead track each owed payout and let the admin
--- mark it as paid by hand. Schema is similar but semantics are different:
---   pending  → admin sees it in the "Due now" list
---   paid     → admin confirmed bank transfer sent
---   waived   → for refunds or special cases
+-- 2) Drop pilot_topups, create pilot_payouts
 -- =============================================================================
 drop table if exists pilot_topups cascade;
 
@@ -65,6 +51,7 @@ create index if not exists pilot_payouts_month_idx    on pilot_payouts(month);
 
 alter table pilot_payouts enable row level security;
 
+drop policy if exists "pilot_payouts_select_own" on pilot_payouts;
 create policy "pilot_payouts_select_own"
   on pilot_payouts for select
   using (coach_id = auth.uid());
@@ -72,9 +59,6 @@ create policy "pilot_payouts_select_own"
 
 -- =============================================================================
 -- 3) Per-coach earnings view
--- -----------------------------------------------------------------------------
--- Aggregates active pilot subscriptions per coach for the current month so
--- the coach dashboard can show "you'll be paid $X for Y athletes."
 -- =============================================================================
 create or replace view pilot_coach_earnings as
 select
@@ -92,17 +76,17 @@ grant select on pilot_coach_earnings to authenticated;
 
 
 -- =============================================================================
--- 4) Admin view — payouts due summary
+-- 4) Admin payouts summary view — FIXED to fetch email from auth.users
 -- -----------------------------------------------------------------------------
--- One row per coach with totals of what's pending vs paid this month.
--- Used by the admin panel to drive the "Pay these coaches" workflow.
+-- Email lives on auth.users (Supabase's standard model), not profiles.
+-- Joining via auth.users.id = profiles.id (the same UUID).
 -- =============================================================================
 create or replace view pilot_payouts_admin_summary as
 select
   p.coach_id,
   pr.first_name,
   pr.last_name,
-  pr.email,
+  u.email,
   pr.payout_bsb,
   pr.payout_account_number,
   pr.payout_account_name,
@@ -113,8 +97,9 @@ select
   count(*) filter (where p.status = 'paid')    as paid_count,
   max(p.created_at) as last_invoice_at
 from pilot_payouts p
-join profiles pr on pr.id = p.coach_id
-group by p.coach_id, pr.first_name, pr.last_name, pr.email,
+join profiles pr   on pr.id = p.coach_id
+left join auth.users u on u.id = p.coach_id
+group by p.coach_id, pr.first_name, pr.last_name, u.email,
          pr.payout_bsb, pr.payout_account_number, pr.payout_account_name,
          to_char(p.created_at at time zone 'UTC', 'YYYY-MM');
 
@@ -123,9 +108,6 @@ grant select on pilot_payouts_admin_summary to authenticated;
 
 -- =============================================================================
 -- 5) Mark-as-paid RPC
--- -----------------------------------------------------------------------------
--- Admin clicks "Mark as paid" in the panel; this records who marked it,
--- when, and an optional payment reference (your bank transaction ID).
 -- =============================================================================
 create or replace function mark_pilot_payout_paid(
   p_payout_id uuid,
@@ -145,13 +127,3 @@ end;
 $$;
 
 grant execute on function mark_pilot_payout_paid(uuid, uuid, text, text) to authenticated;
-
-
--- =============================================================================
--- VERIFICATION
--- =============================================================================
--- select column_name from information_schema.columns
--- where table_name = 'profiles' and column_name like 'payout%';
---
--- select * from pilot_payouts_admin_summary;
--- select * from pilot_coach_earnings;

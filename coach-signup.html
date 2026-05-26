@@ -198,14 +198,29 @@
     // rather than colliding with whoever is currently signed in.
     try { await sb.auth.signOut(); } catch (e) {}
 
-    // Stash name in user_metadata + send confirmation-link clickers straight
-    // to profile setup (instead of the default site URL). Profile row is
-    // created lazily by coach-profile-setup.html on first arrival, because
-    // we can't insert it here when email confirmation is on (no session).
+    // Read bank details once so we can stash them in both user_metadata (for
+    // the email-confirmation path, where there's no session to write a row yet)
+    // and the direct profiles upsert (for the no-confirmation path).
+    const _payoutName = document.getElementById("payoutAccountName").value.trim();
+    const _payoutBsb  = document.getElementById("payoutBsb").value.replace(/-/g, "");
+    const _payoutAcct = document.getElementById("payoutAccountNumber").value.trim();
+
+    // Stash name + bank details in user_metadata + send confirmation-link
+    // clickers straight to profile setup (instead of the default site URL).
+    // Profile row is created lazily by coach-profile-setup.html on first
+    // arrival, because we can't insert it here when email confirmation is on
+    // (no session → RLS blocks the write). coach-profile-setup persists the
+    // metadata-stashed bank details once a session exists.
     const {data,error}=await sb.auth.signUp({
       email, password,
       options: {
-        data: { first_name: first, last_name: last, role: "coach", pilot_status: _isPilotCoach ? "coach" : null },
+        data: {
+          first_name: first, last_name: last, role: "coach",
+          pilot_status: _isPilotCoach ? "coach" : null,
+          payout_account_name:   _payoutName || null,
+          payout_bsb:            _payoutBsb  || null,
+          payout_account_number: _payoutAcct || null
+        },
         emailRedirectTo: window.location.origin + "/coach-profile-setup.html"
       }
     });
@@ -217,9 +232,9 @@
     if(sess.session){
       await sb.from("profiles").upsert({
         id:data.user.id, role:"coach", first_name:first, last_name:last,
-        payout_account_name:   document.getElementById("payoutAccountName").value.trim(),
-        payout_bsb:            document.getElementById("payoutBsb").value.replace(/-/g, ""),
-        payout_account_number: document.getElementById("payoutAccountNumber").value.trim(),
+        payout_account_name:   _payoutName,
+        payout_bsb:            _payoutBsb,
+        payout_account_number: _payoutAcct,
         payout_method:         "bank-transfer"
       });
       window.location.href="coach-profile-setup.html";

@@ -533,6 +533,20 @@
       }).eq("id", session.user.id);
       if(profile) profile.pilot_status = "coach";
     }
+
+    // Persist bank details stashed in user_metadata at signup (email-confirmation
+    // path had no session, so they couldn't be written then). Now that we have a
+    // session, RLS allows the write. Only fills gaps — never overwrites existing.
+    if((!profile || !profile.payout_bsb) && _userMeta.payout_bsb){
+      const payoutFields = {
+        payout_account_name:   _userMeta.payout_account_name || null,
+        payout_bsb:            _userMeta.payout_bsb,
+        payout_account_number: _userMeta.payout_account_number || null,
+        payout_method:         "bank-transfer"
+      };
+      await sb.from("profiles").update(payoutFields).eq("id", session.user.id);
+      if(profile) Object.assign(profile, payoutFields);
+    }
     _coachProfile = profile;
 
     if(profile){

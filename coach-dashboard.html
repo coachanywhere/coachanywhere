@@ -1198,6 +1198,9 @@ async function togglePackage(k){
 async function renderPilotEarnings() {
   if (!window._isPilotCoach) return;
 
+  const standardPanel = document.getElementById("earningsStandard");
+  if (standardPanel) standardPanel.style.display = "none";
+
   const currentMonth = new Date().toISOString().slice(0, 7);
   const target = document.getElementById("earningsPanel")
               || document.getElementById("earningsBody");
