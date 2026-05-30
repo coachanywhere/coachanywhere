@@ -489,5 +489,20 @@
   })();
 </script>
 
+<script>
+  // ── PILOT MODE — redirect coach signup CTAs to waitlist ──────────────
+  (function(){
+    if (!window.PILOT_MODE) return;
+    document.querySelectorAll('a[href*="coach-signup"], button[onclick*="coach-signup"]').forEach(el => {
+      if (el.tagName === 'A') {
+        el.href = 'waitlist.html?role=coach';
+      } else {
+        el.removeAttribute('onclick');
+        el.addEventListener('click', () => window.location.href = 'waitlist.html?role=coach');
+      }
+    });
+  })();
+</script>
+
 </body>
 </html>

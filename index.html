@@ -613,5 +613,24 @@
   })();
 </script>
 
+<script>
+  // ── PILOT MODE — redirect coach signup CTAs to waitlist ──────────────
+  // While PILOT_MODE = true, coaches sign up by invite only (via the QR card).
+  // Anyone clicking "become a coach" from the public site goes to waitlist
+  // so we capture demand for post-pilot launch.
+  (function(){
+    if (!window.PILOT_MODE) return;
+    document.querySelectorAll('a[href*="coach-signup"], button[onclick*="coach-signup"]').forEach(el => {
+      if (el.tagName === 'A') {
+        el.href = 'waitlist.html?role=coach';
+      } else {
+        // Button with onclick — replace it
+        el.removeAttribute('onclick');
+        el.addEventListener('click', () => window.location.href = 'waitlist.html?role=coach');
+      }
+    });
+  })();
+</script>
+
 </body>
 </html>

@@ -318,9 +318,14 @@
           <div class="kpi-value" id="pilotCodesUsed">…</div>
           <div class="kpi-sub" id="pilotCodesSub">— of 20 redeemed</div>
         </div>
-        <button id="mintCodeBtn" class="refresh-btn" style="background:linear-gradient(135deg,#fbbf24,#d97706);">
-          Mint new code
-        </button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button id="mintAthleteCodeBtn" class="refresh-btn" style="background:linear-gradient(135deg,#facc15,#d97706);color:#0a0f1a;font-weight:700;">
+            + Mint athlete code
+          </button>
+          <button id="mintCoachCodeBtn" class="refresh-btn" style="background:linear-gradient(135deg,#fbbf24,#92400e);color:#fff;font-weight:700;">
+            + Mint coach code
+          </button>
+        </div>
       </div>
       <div id="pilotCodesTable" style="margin-top:14px;font-size:13px;"></div>
     </div>
@@ -404,8 +409,9 @@
     // failed call doesn't drift the cycle.
 
     // ── PILOT CODES PANEL ────────────────────────────────────────────────
-    window.copyInviteEmail = copyInviteEmail;
-    document.getElementById("mintCodeBtn").addEventListener("click", mintCode);
+    window.copyInvite = copyInvite;
+    document.getElementById("mintAthleteCodeBtn").addEventListener("click", () => mintCode("athlete"));
+    document.getElementById("mintCoachCodeBtn").addEventListener("click",   () => mintCode("coach"));
     // Refresh on first load + every 60s alongside the other admin refreshes:
     loadPilotCodes();
     setInterval(loadPilotCodes, 60 * 1000);
@@ -423,43 +429,67 @@
   // ──────────────────────────────────────────────────────────────
   async function loadPilotCodes(){
     const { data: codes } = await sb.from("pilot_codes")
-      .select("code, athlete_email, used_at, notes, created_at")
+      .select("code, athlete_email, used_at, notes, created_at, code_type")
       .order("created_at", { ascending: false });
-    const used = (codes || []).filter(c => c.used_at).length;
-    const total = (codes || []).length;
-    document.getElementById("pilotCodesUsed").textContent = used + " / " + total;
+
+    const used_a = (codes || []).filter(c => c.used_at && c.code_type !== "coach").length;
+    const used_c = (codes || []).filter(c => c.used_at && c.code_type === "coach").length;
+    const total_a = (codes || []).filter(c => c.code_type !== "coach").length;
+    const total_c = (codes || []).filter(c => c.code_type === "coach").length;
+
+    document.getElementById("pilotCodesUsed").textContent =
+      `Athletes ${used_a}/${total_a}  ·  Coaches ${used_c}/${total_c}`;
     document.getElementById("pilotCodesSub").textContent =
-      Math.max(0, 20 - used) + " spots remaining (cap = 20)";
+      `Athletes capped at 20  ·  Coaches managed manually`;
 
-    const rows = (codes || []).map(c => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);gap:14px;">
-        <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0;">
-          <code style="background:rgba(255,255,255,.05);padding:4px 10px;border-radius:6px;font-size:13px;font-weight:600;letter-spacing:.04em;color:#fbbf24;">${c.code}</code>
-          ${c.used_at
-            ? '<span style="font-size:11px;color:var(--green2);font-weight:600;">✓ Used ' + new Date(c.used_at).toLocaleDateString() + '</span>'
-            : '<span style="font-size:11px;color:var(--muted);">Unused</span>'
-          }
-          ${c.athlete_email ? '<span style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + c.athlete_email + '</span>' : ''}
+    const rows = (codes || []).map(c => {
+      const isCoach = c.code_type === "coach";
+      const typePill = isCoach
+        ? '<span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fbbf24;background:rgba(217,119,6,.16);padding:3px 9px;border-radius:6px;">COACH</span>'
+        : '<span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#60a5fa;background:rgba(96,165,250,.16);padding:3px 9px;border-radius:6px;">ATHLETE</span>';
+
+      const status = c.used_at
+        ? '<span style="font-size:11px;color:var(--green2);font-weight:600;">✓ Used ' + new Date(c.used_at).toLocaleDateString() + '</span>'
+        : '<span style="font-size:11px;color:var(--muted);">Unused</span>';
+
+      const actions = !c.used_at
+        ? `<div style="display:flex;gap:6px;flex-wrap:wrap;">
+             <button onclick="copyInvite('${c.code}','${c.code_type}','email')" style="padding:5px 10px;border-radius:6px;background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.3);color:var(--blue2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">📧 Email</button>
+             <button onclick="copyInvite('${c.code}','${c.code_type}','sms')" style="padding:5px 10px;border-radius:6px;background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.3);color:var(--blue2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">💬 SMS</button>
+           </div>`
+        : '';
+
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);gap:14px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:200px;">
+            ${typePill}
+            <code style="background:rgba(255,255,255,.05);padding:4px 10px;border-radius:6px;font-size:13px;font-weight:600;letter-spacing:.04em;color:${isCoach ? '#fbbf24' : '#60a5fa'};">${c.code}</code>
+            ${status}
+          </div>
+          ${actions}
         </div>
-        ${!c.used_at ? '<button onclick="copyInviteEmail(\'' + c.code + '\')" style="padding:5px 12px;border-radius:6px;background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.3);color:var(--blue2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Copy invite email</button>' : ''}
-      </div>
-    `).join("");
+      `;
+    }).join("");
 
-    document.getElementById("pilotCodesTable").innerHTML = rows || '<div style="padding:20px;text-align:center;color:var(--muted);">No codes minted yet.</div>';
+    document.getElementById("pilotCodesTable").innerHTML = rows ||
+      '<div style="padding:20px;text-align:center;color:var(--muted);">No codes minted yet.</div>';
   }
 
   function randomCodeSuffix(){
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";   // no I/O/0/1 to avoid confusion
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let s = "";
     for(let i = 0; i < 4; i++) s += chars[Math.floor(Math.random() * chars.length)];
     return s;
   }
 
-  async function mintCode(){
-    const code = "PIONEER-" + randomCodeSuffix();
-    const note = prompt("Optional: who is this code for? (e.g. 'Sarah, basketball')") || "";
+  async function mintCode(codeType){
+    const prefix = codeType === "coach" ? "COACH-" : "PIONEER-";
+    const code = prefix + randomCodeSuffix();
+    const note = prompt(`Optional: who is this ${codeType} code for? (e.g. "Geoff")`) || "";
     const { error } = await sb.from("pilot_codes").insert({
-      code, notes: note || null
+      code,
+      notes:     note || null,
+      code_type: codeType
     });
     if(error){
       alert("Mint failed: " + error.message);
@@ -468,20 +498,52 @@
     loadPilotCodes();
   }
 
-  function copyInviteEmail(code){
-    const url = window.location.origin + "/pilot.html";
-    const text =
-      "You're invited to the CoachAnywhere Founding Athlete Pilot.\n\n" +
-      "We've hand-picked a small group of athletes to test elite remote coaching. " +
-      "You'll get 4 weekly skill reviews from a vetted coach for $49/mo (normally $60), " +
-      "locked in as a founding member.\n\n" +
-      "Your invite code: " + code + "\n\n" +
-      "Get started: " + url + "\n\n" +
-      "Limited to 20 athletes. Cancel anytime.\n\n" +
-      "— The CoachAnywhere team";
-    navigator.clipboard.writeText(text).then(() => {
-      alert("Invite email copied to clipboard. Paste into your email and send.");
-    }).catch(() => prompt("Copy this invite text:", text));
+  // ── Copy-paste invite templates ─────────────────────────────────────────
+  // Builds an email-friendly OR sms-friendly invite message for the given code.
+  // Pops a prompt so you can copy it (clipboard write often fails on admin pages).
+  function copyInvite(code, codeType, channel){
+    const url = window.location.origin + (codeType === "coach" ? "/pilot-coaches.html" : "/pilot.html") + "?code=" + code;
+
+    let text;
+    if(codeType === "coach" && channel === "email"){
+      text =
+        "Subject: You're invited — CoachAnywhere Founding Coach\n\n" +
+        "Hi [Name],\n\n" +
+        "I'd like to invite you to join CoachAnywhere as one of our Founding Pilot Coaches.\n\n" +
+        "Two coaches, hand-picked. You're one of them. During the pilot you'll review uploaded skill clips from up to 10 athletes and earn $60/month per active athlete, paid by bank transfer within 24-48h of each invoice. No platform fee during pilot.\n\n" +
+        "Your invite code: " + code + "\n\n" +
+        "Get started: " + url + "\n\n" +
+        "Takes ~10 min to complete your intake. Reach out if you have any questions.\n\n" +
+        "— Kane Oakley\n" +
+        "Founder, CoachAnywhere";
+    } else if(codeType === "coach" && channel === "sms"){
+      text =
+        "Hey [Name] — I'd like to invite you to CoachAnywhere as a Founding Pilot Coach. $60/athlete/month, 2 coaches only. Your code: " + code + ". Sign up here: " + url;
+    } else if(codeType !== "coach" && channel === "email"){
+      text =
+        "Subject: You're invited — CoachAnywhere Founding Athlete Pilot\n\n" +
+        "Hi [Name],\n\n" +
+        "You've been invited to the CoachAnywhere Founding Athlete Pilot.\n\n" +
+        "Twenty athletes, hand-picked. You're one of them. You'll get 4 weekly skill reviews from a vetted coach for $49/month (normally $60), locked in as a founding member.\n\n" +
+        "Your invite code: " + code + "\n\n" +
+        "Get started: " + url + "\n\n" +
+        "Limited to 20 athletes. Cancel anytime.\n\n" +
+        "— The CoachAnywhere team";
+    } else {
+      text =
+        "You're invited to CoachAnywhere — Founding Athlete Pilot. 4 weekly skill reviews from a vetted coach, $49/mo (normally $60). Code: " + code + ". Sign up: " + url;
+    }
+
+    // Try clipboard first; fall back to a prompt
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(() => {
+        alert(`${channel === "email" ? "Email" : "SMS"} template copied to clipboard. Paste into your ${channel} app and replace [Name] with the recipient's name.`);
+      }).catch(() => {
+        prompt(`Copy this ${channel} template (replace [Name] with the recipient's name):`, text);
+      });
+    } else {
+      prompt(`Copy this ${channel} template (replace [Name] with the recipient's name):`, text);
+    }
   }
 
   // ──────────────────────────────────────────────────────────────

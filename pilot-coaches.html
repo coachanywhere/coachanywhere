@@ -225,9 +225,21 @@
       </div>
     </div>
 
-    <div class="cta-row">
-      <button class="cta-btn" onclick="window.location.href='coach-signup.html?pilot=coach'">Get started →</button>
-      <span class="cta-note">Takes ~10 min to complete intake</span>
+    <!-- INVITE CODE GATE — coach must enter a valid COACH-XXXX before signup -->
+    <div class="code-gate" id="codeGate" style="background:rgba(255,255,255,.04);border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:20px 22px;margin-top:24px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#fbbf24;margin-bottom:10px;">Enter your invite code</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <input type="text" id="codeInput"
+               placeholder="e.g. COACH-A7K2" autocomplete="off"
+               autocapitalize="characters" spellcheck="false"
+               style="flex:1;min-width:220px;padding:13px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.3);color:#f1f5f9;font-size:15px;font-family:inherit;outline:none;letter-spacing:.04em;font-weight:600;text-transform:uppercase;"/>
+        <button class="cta-btn" id="codeBtn" onclick="validateCoachCode()">Continue →</button>
+      </div>
+      <div id="codeMsg" style="font-size:13px;margin-top:10px;display:none;"></div>
+      <div style="font-size:12px;color:rgba(232,237,245,.55);margin-top:12px;line-height:1.55;">
+        Codes were sent by email or SMS to invited coaches. Lost yours?
+        <a href="contact.html" style="color:#fbbf24;">Message us</a> and we'll resend.
+      </div>
     </div>
   </div>
 
@@ -279,6 +291,93 @@
 <footer>
   © CoachAnywhere · <a href="terms-of-service.html">Terms</a> · <a href="privacy-policy.html">Privacy</a> · <a href="contact.html">Contact</a>
 </footer>
+
+<script>
+  // ── Coach code validation ─────────────────────────────────────────────
+  // We do NOT claim the code here — claim happens server-side at signup
+  // (matches the athlete flow). Here we just verify the code exists and
+  // is unused, then route to coach-signup with the code in the URL.
+  const SB_URL = "https://rtaxjewvshhpdnkpojjn.supabase.co";
+  const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
+  const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth:{ persistSession:false } });
+
+  async function validateCoachCode(){
+    const code = document.getElementById("codeInput").value.trim().toUpperCase();
+    const msg  = document.getElementById("codeMsg");
+    const btn  = document.getElementById("codeBtn");
+
+    msg.style.display = "block";
+    msg.style.color   = "";
+
+    if(!code){
+      msg.style.color = "#fca5a5";
+      msg.textContent = "Enter your invite code.";
+      return;
+    }
+
+    btn.disabled = true;
+    const origText = btn.textContent;
+    btn.textContent = "Checking...";
+
+    try {
+      const { data, error } = await sb.from("pilot_codes")
+        .select("code, used_at, code_type")
+        .eq("code", code)
+        .maybeSingle();
+
+      if(error){
+        msg.style.color = "#fca5a5";
+        msg.textContent = "Couldn't check that code. Try again or contact support.";
+        btn.disabled = false; btn.textContent = origText;
+        return;
+      }
+      if(!data){
+        msg.style.color = "#fca5a5";
+        msg.textContent = "That code isn't valid. Double-check your invite.";
+        btn.disabled = false; btn.textContent = origText;
+        return;
+      }
+      if(data.code_type !== "coach"){
+        msg.style.color = "#fca5a5";
+        msg.textContent = "That code is for athletes, not coaches.";
+        btn.disabled = false; btn.textContent = origText;
+        return;
+      }
+      if(data.used_at){
+        msg.style.color = "#fca5a5";
+        msg.textContent = "That code has already been used. Contact us if this is wrong.";
+        btn.disabled = false; btn.textContent = origText;
+        return;
+      }
+
+      // Valid — route to coach signup carrying the code through.
+      msg.style.color = "#86efac";
+      msg.textContent = "✓ Code valid. Taking you to sign up...";
+      setTimeout(() => {
+        window.location.href = "coach-signup.html?pilot=coach&code=" + encodeURIComponent(code);
+      }, 600);
+    } catch(e) {
+      msg.style.color = "#fca5a5";
+      msg.textContent = "Network error. Try again.";
+      btn.disabled = false; btn.textContent = origText;
+    }
+  }
+
+  document.getElementById("codeInput").addEventListener("keydown", e => {
+    if(e.key === "Enter") validateCoachCode();
+  });
+
+  // Pre-fill code from URL if present (e.g. coach scanned QR with code in URL)
+  (function(){
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if(code){
+      document.getElementById("codeInput").value = code.toUpperCase();
+      // Auto-validate
+      setTimeout(validateCoachCode, 200);
+    }
+  })();
+</script>
 
 </body>
 </html>

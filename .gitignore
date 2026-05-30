@@ -25,3 +25,7 @@ desktop.ini
 # Working-document files (not for deploy)
 *.xlsx
 *.docx
+
+# Large media working directories (not for deploy)
+Videos/
+Logo/

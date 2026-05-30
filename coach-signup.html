@@ -138,7 +138,23 @@
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YXhqZXd2c2hocGRua3BvampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTY5ODgsImV4cCI6MjA5NDQ5Mjk4OH0.PSyoFEAKA0J2pZfIE1QkyziF1quetXelhPzuGqpZbhk";
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ca-auth",storage:window.localStorage,detectSessionInUrl:true}});
 
-  const _isPilotCoach = new URLSearchParams(window.location.search).get("pilot") === "coach";
+  // ── PILOT COACH GATE ──────────────────────────────────────────────────
+  // During PILOT_MODE, coach signup is invite-only. Anyone hitting this page
+  // without ?pilot=coach&code=COACH-XXXX gets redirected to pilot-coaches.html
+  // where they have to enter their code. Anyone WITH a code passes through.
+  const _coachParams = new URLSearchParams(window.location.search);
+  const _isPilotCoach = _coachParams.get("pilot") === "coach";
+  const _coachCode = (_coachParams.get("code") || "").toUpperCase();
+
+  if (window.PILOT_MODE && !_isPilotCoach) {
+    window.location.replace("pilot-coaches.html");
+  }
+
+  if (_isPilotCoach && !_coachCode) {
+    // pilot=coach was set but no code — also redirect
+    window.location.replace("pilot-coaches.html");
+  }
+
   if(_isPilotCoach){
     const banner = document.getElementById("pilotBanner");
     if(banner) banner.style.display = "block";
@@ -237,6 +253,40 @@
         payout_account_number: _payoutAcct,
         payout_method:         "bank-transfer"
       });
+
+      // ── CLAIM COACH CODE ──────────────────────────────────────────────────
+      // Only if this is a pilot-coach signup with a code. Calls the RPC which
+      // atomically validates the code, checks it's a 'coach' type, and marks
+      // it claimed. On success, persists pilot_status='coach' on the profile.
+      if(_isPilotCoach && _coachCode){
+        try {
+          const { data: claimData, error: claimErr } = await sb.rpc(
+            "validate_and_claim_pilot_code",
+            {
+              p_code: _coachCode,
+              p_user_id: data.user.id,
+              p_expected_type: "coach"
+            }
+          );
+          const claim = Array.isArray(claimData) ? claimData[0] : claimData;
+          if(claimErr || !claim || !claim.ok){
+            const reason = (claim && claim.reason) || (claimErr && claimErr.message) || "unknown";
+            console.warn("[pilot] coach code claim failed:", reason);
+            alert("Your invite code couldn't be validated (" + reason + "). " +
+                  "Your account has been created — please contact support to " +
+                  "activate your pilot coach access.");
+          } else {
+            // Stamp pilot_status='coach' so dashboards/setup pages recognise them.
+            await sb.from("profiles").update({
+              pilot_status:     "coach",
+              pilot_started_at: new Date().toISOString()
+            }).eq("id", data.user.id);
+          }
+        } catch(e) {
+          console.warn("[pilot] coach code claim threw:", e);
+        }
+      }
+
       window.location.href="coach-profile-setup.html";
       return;
     }
