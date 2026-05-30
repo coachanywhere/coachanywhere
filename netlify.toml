@@ -5,14 +5,12 @@
   # SUPABASE_URL is paired with the publishable anon key and is intentionally
   # embedded in every client HTML page that talks to Supabase. Listing it
   # here tells Netlify's secret scanner not to flag those occurrences.
+  # APP_URL is also listed — it's just our public domain and shows up in
+  # printed-card scripts/instructions that aren't secrets.occurrences.
   # Real secrets (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, SUPABASE_SERVICE_KEY)
   # are deliberately not on this list — the scanner still guards them.
-  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL"
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL,APP_URL"
 
 [functions]
   node_bundler = "esbuild"
 
-[[redirects]]
-  from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
