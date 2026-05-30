@@ -88,7 +88,6 @@
         "4x Skill Review per month (1 per week)",
         "Personalised written feedback",
         "Direct messaging with your coach",
-        "Cancel anytime",
         "Locked-in pilot pricing"
       ],
       price: function () { return PILOT_CONFIG.monthlyPrice; },
