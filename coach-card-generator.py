@@ -51,10 +51,10 @@ from PIL import Image
 
 # Your 4 coach codes from Supabase (2 active + 2 backups).
 CODES = [
-    "COACH-A7K2",   # → Geoff
-    "COACH-B3M9",   # → Kyle
-    "COACH-C5N1",   # ← backup 1
-    "COACH-D8P4",   # ← backup 2
+    "COACH-4FA5",   # → Geoff
+    "COACH-9997",   # → Kyle
+    "COACH-1097",   # ← None
+    "COACH-46F5",   # ← None
 ]
 
 # Optional: personalise the back of each card with the recipient's name.

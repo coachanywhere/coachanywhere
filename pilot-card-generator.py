@@ -49,26 +49,28 @@ from PIL import Image
 
 # Your real codes from Supabase. Replace these with the 20 you minted.
 CODES = [
-    "PIONEER-A7K2",
-    "PIONEER-B3M9",
-    "PIONEER-C5N1",
-    "PIONEER-D8P4",
-    "PIONEER-E2Q7",
-    "PIONEER-F6R3",
-    "PIONEER-G9S5",
-    "PIONEER-H1T8",
-    "PIONEER-J4U2",
-    "PIONEER-K7V6",
-    "PIONEER-L3W9",
-    "PIONEER-M5X1",
-    "PIONEER-N8Y4",
-    "PIONEER-P2Z7",
-    "PIONEER-Q6A3",
-    "PIONEER-R9B5",
-    "PIONEER-S1C8",
-    "PIONEER-T4D2",
-    "PIONEER-U7E6",
-    "PIONEER-V3F9",
+
+"PIONEER-76NG",
+"PIONEER-WGVP",
+"PIONEER-NDR6",
+"PIONEER-5EFR",
+"PIONEER-SQGS",
+"PIONEER-UDGF",
+"PIONEER-CBNH",
+"PIONEER-C764",
+"PIONEER-62XV",
+"PIONEER-CEJX",
+"PIONEER-RB37",
+"PIONEER-T3YE",
+"PIONEER-VAYQ",
+"PIONEER-GGCU",
+"PIONEER-ZZBX",
+"PIONEER-HTXT",
+"PIONEER-5X2U",
+"PIONEER-BZWX",
+"PIONEER-7QND",
+"PIONEER-BFEX",
+
 ]
 
 # The URL each QR code points to. {code} gets replaced with each PIONEER-XXXX.

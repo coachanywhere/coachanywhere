@@ -346,16 +346,6 @@
             <option>Pickleball</option><option>Other</option>
           </select>
         </div>
-        <div class="fg">
-          <label class="fl" for="wlCountry">Country</label>
-          <select class="fs" id="wlCountry">
-            <option value="" disabled selected>Select</option>
-            <option value="AU">Australia</option>
-            <option value="USA">United States</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
         <!-- Branching qualifier — hidden until role chosen -->
         <div class="fg" id="wlLevelGroup" style="display:none;">
           <label class="fl" for="wlLevel" id="wlLevelLabel">What level?</label>
@@ -374,10 +364,27 @@
           <input class="fi" type="text" id="wlNotes" maxlength="160" placeholder="One line is plenty"/>
         </div>
 
-        <label for="wlLocker" style="display:flex;align-items:flex-start;gap:11px;padding:13px 14px;border:1px solid var(--border);border-radius:11px;background:rgba(255,255,255,.03);cursor:pointer;margin-bottom:6px;">
-          <input type="checkbox" id="wlLocker" style="width:18px;height:18px;margin-top:1px;accent-color:#60a5fa;flex-shrink:0;"/>
-          <span style="font-size:13px;color:rgba(226,232,240,.85);line-height:1.5;">I'm interested in <strong style="color:#fca5a5;">The Locker Room</strong> — live tactical sessions with elite coaches</span>
-        </label>
+        <!-- ═════ MENTOR-ONLY FIELDS (shown when ?role=mentor) ═════ -->
+        <div id="mentorFields" style="display:none;">
+          <label style="display:block;margin-top:18px;">
+            <div style="font-size:12px;font-weight:600;color:rgba(232,237,245,.8);margin-bottom:5px;">Phone</div>
+            <input type="tel" id="mentorPhone" placeholder="04xx xxx xxx"
+                   style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid rgba(148,163,184,.3);background:rgba(2,6,23,.4);color:#f1f5f9;font-size:14px;outline:none;"/>
+          </label>
+
+          <label style="display:block;margin-top:14px;">
+            <div style="font-size:12px;font-weight:600;color:rgba(232,237,245,.8);margin-bottom:5px;">Sport(s) you'd mentor in</div>
+            <input type="text" id="mentorSport" placeholder="e.g. Basketball, AFL, Netball"
+                   style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid rgba(148,163,184,.3);background:rgba(2,6,23,.4);color:#f1f5f9;font-size:14px;outline:none;"/>
+          </label>
+
+          <label style="display:block;margin-top:14px;margin-bottom:6px;">
+            <div style="font-size:12px;font-weight:600;color:rgba(232,237,245,.8);margin-bottom:5px;">Brief coaching experience</div>
+            <textarea id="mentorExperience" rows="4"
+                      placeholder="A short note on your coaching background — sports, levels coached, years of experience, qualifications, etc."
+                      style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid rgba(148,163,184,.3);background:rgba(2,6,23,.4);color:#f1f5f9;font-size:14px;outline:none;font-family:inherit;resize:vertical;min-height:80px;"></textarea>
+          </label>
+        </div>
 
         <button type="submit" class="submit-btn" id="wlSubmit">Join the waitlist →</button>
         <div class="form-fine">We'll only email you about CoachAnywhere. No spam, unsubscribe anytime.</div>
@@ -536,6 +543,42 @@
     }
   })();
 
+  // ── MENTOR MODE DETECTION ────────────────────────────────────────────
+  // If URL has ?role=mentor, swap the page copy and reveal mentor-only fields.
+  // Mentor flow only needs first name + email + the 3 mentor fields — the
+  // role / sport / country / level / notes / locker selectors are hidden and
+  // bypassed in validation.
+  const _waitlistParams = new URLSearchParams(window.location.search);
+  const _isMentor = _waitlistParams.get("role") === "mentor";
+  const _waitlistRole = _waitlistParams.get("role") || "athlete";
+
+  if (_isMentor) {
+    document.getElementById("mentorFields").style.display = "block";
+
+    // Hide the existing selectors that don't apply to mentors
+    [
+      "wlRole", "wlSport", "wlLevelGroup", "wlNotes"
+    ].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const wrap = el.closest(".fg") || el;
+      wrap.style.display = "none";
+    });
+
+    // Swap hero copy + form header
+    const heroH1 = document.querySelector(".hero h1");
+    if (heroH1) heroH1.textContent = "Register your interest — Mentor Programme";
+    const heroSub = document.querySelector(".hero-sub");
+    if (heroSub) heroSub.textContent =
+      "Share what you know and earn alongside your athlete coaching. We'll be in touch when Mentors launches.";
+    const formH2 = document.querySelector("#formCard h2");
+    if (formH2) formH2.textContent = "Register your interest";
+    const formSub = document.querySelector("#formCard .sub");
+    if (formSub) formSub.textContent = "We'll be in touch when Mentors launches.";
+
+    document.getElementById("wlSubmit").textContent = "Register interest →";
+  }
+
   function showErr(msg){
     const e = document.getElementById("formErr");
     e.textContent = msg; e.style.display = "block";
@@ -549,55 +592,79 @@
 
     const first   = document.getElementById("wlFirst").value.trim();
     const email   = document.getElementById("wlEmail").value.trim();
-    const role    = document.getElementById("wlRole").value;
-    const sport   = document.getElementById("wlSport").value;
-    const country = document.getElementById("wlCountry").value;
-    const levelEl = document.getElementById("wlLevelGroup");
-    const level   = levelEl.style.display !== "none" ? document.getElementById("wlLevel").value : null;
-    const notes   = document.getElementById("wlNotes").value.trim();
-    const lockerInterest = document.getElementById("wlLocker").checked;
 
-    // Minimal validation — keep friction low
+    // Minimal validation common to all modes
     if (!first) return showErr("Pop your first name in.");
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showErr("That email doesn't look right.");
-    if (!role)    return showErr("Tell us which one you are.");
-    if (!sport)   return showErr("Pick your primary sport.");
-    if (!country) return showErr("Choose your country.");
 
-    btn.disabled = true; btn.textContent = "Joining…";
+    let payload;
+    if (_isMentor) {
+      const phone = document.getElementById("mentorPhone").value.trim();
+      const sport = document.getElementById("mentorSport").value.trim();
+      const exp   = document.getElementById("mentorExperience").value.trim();
+      payload = {
+        first_name: first,
+        email:      email,
+        role:       "mentor",
+        country:    "AU",
+        source:     SRC,
+        phone:      phone || null,
+        sport:      sport || null,
+        coaching_experience: exp || null
+      };
+    } else {
+      const role    = document.getElementById("wlRole").value;
+      const sport   = document.getElementById("wlSport").value;
+      const levelEl = document.getElementById("wlLevelGroup");
+      const level   = levelEl.style.display !== "none" ? document.getElementById("wlLevel").value : null;
+      const notes   = document.getElementById("wlNotes").value.trim();
 
-    const { error } = await sb.from("waitlist").insert({
-      first_name: first,
-      email:      email,
-      role:       role,
-      sport:      sport,
-      country:    country,
-      level:      level || null,
-      notes:      notes || null,
-      source:     SRC,
-      interested_in_locker_room: lockerInterest
-    });
+      if (!role)  return showErr("Tell us which one you are.");
+      if (!sport) return showErr("Pick your primary sport.");
+
+      payload = {
+        first_name: first,
+        email:      email,
+        role:       role,
+        sport:      sport,
+        country:    "AU",
+        level:      level || null,
+        notes:      notes || null,
+        source:     SRC
+      };
+    }
+
+    btn.disabled = true; btn.textContent = _isMentor ? "Registering…" : "Joining…";
+
+    const { error } = await sb.from("waitlist").insert(payload);
 
     if (error) {
       // Unique-violation on email → they're already on the list. Treat as success.
       if (error.code === "23505" || /duplicate|unique/i.test(error.message || "")) {
         document.getElementById("successTitle").textContent = "You're already on the list!";
-        document.getElementById("successMsg").textContent =
-          "Looks like you've already signed up — you're all set. We'll be in touch before launch.";
+        document.getElementById("successMsg").textContent = _isMentor
+          ? "Looks like you've already registered — we'll be in touch when Mentors launches."
+          : "Looks like you've already signed up — you're all set. We'll be in touch before launch.";
         return showSuccess();
       }
-      btn.disabled = false; btn.textContent = "Join the waitlist →";
+      btn.disabled = false;
+      btn.textContent = _isMentor ? "Register interest →" : "Join the waitlist →";
       return showErr("Something went wrong — please try again. (" + (error.message || "unknown") + ")");
     }
 
-    // Fire the welcome email (fire-and-forget — don't block the success
-    // state on email delivery). The function no-ops gracefully if the
-    // Resend provider isn't configured.
-    fetch("/.netlify/functions/waitlist-welcome", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, first_name: first })
-    }).catch(() => {});
+    if (_isMentor) {
+      document.getElementById("successTitle").textContent = "Interest registered!";
+      document.getElementById("successMsg").textContent =
+        "Thanks — we'll be in touch when Mentors launches.";
+    } else {
+      // Fire the welcome email for athlete/coach waitlist signups only —
+      // mentors don't get the standard welcome since the programme isn't live.
+      fetch("/.netlify/functions/waitlist-welcome", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, first_name: first })
+      }).catch(() => {});
+    }
 
     showSuccess();
   });
